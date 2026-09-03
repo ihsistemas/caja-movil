@@ -17,6 +17,12 @@ const CONFIG_FIREBASE = {
   appId: "1:967603772155:web:ea47a58448851ede872e5e",
 };
 
+// REEMPLAZAR con la clave real de reCAPTCHA v3 una vez que Nacho la genere
+// (ver instrucciones en DISENO_MULTIDISPOSITIVO.md) - hasta entonces, App
+// Check no se activa y todo sigue funcionando igual que antes (sin esta
+// capa extra), no rompe nada mientras tanto.
+const RECAPTCHA_SITE_KEY = "6LditactAAAAAM_zGyjOGLT_WuaHnCYI1ZYh9qUu";
+
 let firebaseApp = null;
 let db = null;
 let unsubscribeActual = null;
@@ -29,6 +35,16 @@ function inicializarFirebase(configPersonalizada) {
   // internet. Si falla (ej: 2 pestañas abiertas a la vez), no es grave -
   // simplemente no habria cache offline en esa pestaña, el resto sigue igual.
   FirebaseSync.enableIndexedDbPersistence(db).catch(() => {});
+  // App Check - confirma que los pedidos vienen de verdad desde esta app
+  // (no desde alguien con la consola del navegador abierta a mano). Solo
+  // se activa si ya se configuro la clave real de reCAPTCHA - mientras
+  // diga el marcador, sigue funcionando todo igual, sin esta capa extra.
+  if (RECAPTCHA_SITE_KEY !== '6LditactAAAAAM_zGyjOGLT_WuaHnCYI1ZYh9qUu' && FirebaseSync.initializeAppCheck) {
+    FirebaseSync.initializeAppCheck(firebaseApp, {
+      provider: new FirebaseSync.ReCaptchaV3Provider(RECAPTCHA_SITE_KEY),
+      isTokenAutoRefreshEnabled: true,
+    });
+  }
 }
 
 function conectarAEmulador(host, puerto) {
