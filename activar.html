@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Activar equipo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: -apple-system, system-ui, sans-serif; }
+  body { background: #FBF7F0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .tarjeta { background: white; border-radius: 20px; padding: 28px 24px; max-width: 380px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+  .icono { width: 56px; height: 56px; border-radius: 16px; background: #FDF1E9; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px auto; }
+  h1 { font-size: 19px; text-align: center; color: #2A2118; margin-bottom: 4px; }
+  .sub { font-size: 13px; text-align: center; color: #9A8B76; margin-bottom: 22px; }
+
+  .caja-id { background: #FBF7F0; border: 1.5px dashed #DCCFBB; border-radius: 12px; padding: 14px; margin-bottom: 18px; }
+  .caja-id .etiqueta { font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: #9A8B76; margin-bottom: 5px; }
+  .caja-id .id-valor { font-family: monospace; font-size: 14px; font-weight: 700; color: #2A2118; word-break: break-all; }
+
+  label { font-size: 12.5px; color: #6B5C48; font-weight: 600; display: block; margin-bottom: 6px; }
+  textarea, input[type=text] { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #E4E1EC; font-size: 13px; margin-bottom: 12px; }
+  textarea { font-family: monospace; resize: none; height: 70px; }
+  .btn-activar { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #E0632A; color: white; font-weight: 700; font-size: 14.5px; }
+  .btn-activar:disabled { opacity: .4; }
+  .error { background: #FEF2F2; color: #B91C1C; border-radius: 10px; padding: 10px 12px; font-size: 12.5px; margin-bottom: 12px; }
+
+  .paso2 { display: none; }
+</style>
+</head>
+<body>
+
+<div class="tarjeta">
+  <div class="icono">🔒</div>
+  <h1 id="tituloActivar">Activar este equipo</h1>
+  <p class="sub" id="subActivar">Pega el código que te dieron, o escanéalo si viene como QR</p>
+
+  <div class="caja-id">
+    <div class="etiqueta">ID de este equipo</div>
+    <div class="id-valor" id="deviceIdMostrado">generando...</div>
+  </div>
+
+  <div id="cajaError"></div>
+
+  <div id="pasoCodigo">
+    <label>Código</label>
+    <textarea id="inputCodigo" placeholder="IHCLI-... o IHINV-..."></textarea>
+    <button class="btn-activar" id="btnValidar" onclick="validarCodigo()">Continuar</button>
+  </div>
+
+  <div id="pasoNombre" class="paso2">
+    <p class="sub" id="infoCliente" style="margin-bottom:14px;"></p>
+    <label>¿Cómo le quieres llamar a este equipo?</label>
+    <input type="text" id="inputNombreEquipo" placeholder="Ej: Caja 2, Celular de Juan...">
+    <button class="btn-activar" onclick="confirmarActivacion()">Activar</button>
+  </div>
+</div>
+
+<script src="firebase-sync.bundle.js"></script>
+<script src="carrito_compartido.js"></script>
+<script src="motor.js"></script>
+<script>
+  inicializarFirebase();
+
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('deviceIdMostrado').textContent = getDeviceId();
+    if (new URLSearchParams(location.search).get('vencida') === '1') {
+      document.getElementById('subActivar').textContent = 'Tu período de prueba venció — pide una clave nueva para seguir usando el programa.';
+      document.getElementById('subActivar').style.color = '#B91C1C';
+    }
+  });
+
+  let codigoValidado = null;
+
+  async function validarCodigo() {
+    const texto = document.getElementById('inputCodigo').value.trim();
+    const cajaError = document.getElementById('cajaError');
+    cajaError.innerHTML = '';
+    if (!texto) return;
+
+    const btn = document.getElementById('btnValidar');
+    btn.disabled = true;
+
+    const limpio = texto.toUpperCase();
+    if (limpio.startsWith('CLI-')) {
+      // Codigo de cliente directo - se consulta al servidor de verdad, no
+      // se calcula nada localmente (asi no se puede falsificar).
+      const [cliente, msg] = await obtenerClienteRemoto(texto);
+      if (!cliente) {
+        cajaError.innerHTML = `<div class="error">${msg}</div>`;
+        btn.disabled = false;
+        return;
+      }
+      codigoValidado = { tipo: 'cliente', data: cliente };
+      document.getElementById('infoCliente').textContent =
+        `Vas a activar "${cliente.nombre}" — serás el equipo PRINCIPAL (maestro) de este cliente.`;
+    } else if (limpio.startsWith('IHINV-')) {
+      const [inv, msg] = await validarInvitacion(texto);
+      if (!inv) {
+        cajaError.innerHTML = `<div class="error">${msg}</div>`;
+        btn.disabled = false;
+        return;
+      }
+      // La invitacion solo dice A QUE cliente unirse - los datos reales
+      // (capacidad, vencimiento) se consultan frescos al servidor aca.
+      const [cliente, msgCliente] = await obtenerClienteRemoto(inv.cliente_id);
+      if (!cliente) {
+        cajaError.innerHTML = `<div class="error">${msgCliente}</div>`;
+        btn.disabled = false;
+        return;
+      }
+      codigoValidado = { tipo: 'invitacion', data: cliente };
+      document.getElementById('infoCliente').textContent =
+        `Te vas a sumar a "${cliente.nombre}" como equipo adicional.`;
+    } else {
+      cajaError.innerHTML = `<div class="error">No reconozco este código — revisa que esté completo y sin espacios de más.</div>`;
+      btn.disabled = false;
+      return;
+    }
+
+    document.getElementById('pasoCodigo').style.display = 'none';
+    document.getElementById('pasoNombre').style.display = 'block';
+  }
+
+  async function confirmarActivacion() {
+    const nombreEquipo = document.getElementById('inputNombreEquipo').value.trim();
+    if (!nombreEquipo || !codigoValidado) return;
+
+    const deviceId = getDeviceId();
+    const cliente = codigoValidado.data;
+    const rol = codigoValidado.tipo === 'cliente' ? 'maestro' : 'sub';
+
+    guardarEstadoEquipo({
+      cliente_id: cliente.cliente_id, nombre_cliente: cliente.nombre, capacidad: cliente.capacidad,
+      rol, nombre_equipo: nombreEquipo,
+      tipo_licencia: cliente.tipo_licencia, vence: cliente.vence,
+    });
+    if (rol === 'maestro') {
+      agregarEquipoVinculado({ device_id: deviceId, nombre: nombreEquipo, rol: 'maestro' });
+    }
+
+    window.location.href = 'panel.html';
+  }
+</script>
+</body>
+</html>
