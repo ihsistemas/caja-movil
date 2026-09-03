@@ -21,7 +21,7 @@ const CONFIG_FIREBASE = {
 // (ver instrucciones en DISENO_MULTIDISPOSITIVO.md) - hasta entonces, App
 // Check no se activa y todo sigue funcionando igual que antes (sin esta
 // capa extra), no rompe nada mientras tanto.
-const RECAPTCHA_SITE_KEY = "6LditactAAAAAM_zGyjOGLT_WuaHnCYI1ZYh9qUu";
+const RECAPTCHA_SITE_KEY = "6LeLwactAAAAAF2nD88ZzMDM9icR49c6V1Js80GL";
 
 let firebaseApp = null;
 let db = null;
@@ -39,9 +39,9 @@ function inicializarFirebase(configPersonalizada) {
   // (no desde alguien con la consola del navegador abierta a mano). Solo
   // se activa si ya se configuro la clave real de reCAPTCHA - mientras
   // diga el marcador, sigue funcionando todo igual, sin esta capa extra.
-  if (RECAPTCHA_SITE_KEY !== '6LditactAAAAAM_zGyjOGLT_WuaHnCYI1ZYh9qUu' && FirebaseSync.initializeAppCheck) {
+  if (!RECAPTCHA_SITE_KEY.startsWith('REEMPLAZAR') && FirebaseSync.initializeAppCheck) {
     FirebaseSync.initializeAppCheck(firebaseApp, {
-      provider: new FirebaseSync.ReCaptchaV3Provider(RECAPTCHA_SITE_KEY),
+      provider: new FirebaseSync.ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
       isTokenAutoRefreshEnabled: true,
     });
   }
