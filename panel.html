@@ -579,8 +579,9 @@
     const cupo = estado.capacidad || 2;
     document.getElementById('cupoInfo').textContent = `${equipos.length} de ${cupo} equipos en uso`;
     const btnInvitar = document.getElementById('btnInvitar');
-    btnInvitar.disabled = equipos.length >= cupo;
-    btnInvitar.textContent = equipos.length >= cupo ? 'Sin cupo disponible' : '+ Sumar equipo';
+    const hayCupo = hayCupoDisponible(estado);
+    btnInvitar.disabled = !hayCupo;
+    btnInvitar.textContent = hayCupo ? '+ Sumar equipo' : 'Sin cupo disponible';
   }
 
   function soltarEquipo(deviceId) {
@@ -620,7 +621,7 @@
       return;
     }
     const equiposActuales = cargarEquiposVinculados();
-    if (equiposActuales.length >= (estado.capacidad || 2)) {
+    if (!hayCupoDisponible(estado)) {
       errorDiv.textContent = 'Ya no hay cupo — suelta un equipo primero si quieres agregar este.';
       return;
     }
