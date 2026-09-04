@@ -312,3 +312,33 @@ async function obtenerUsoUltimosDias(clienteId, nDias) {
   }
   return dias;
 }
+
+// ============================================================================
+// BIBLIOTECA DE PRODUCTOS - base compartida de codigo de barra -> nombre/foto,
+// alimentada por Nacho (Indexer) y por cualquier cliente que escanee algo
+// nuevo. Los clientes SOLO pueden crear entradas que no existan - nunca
+// modificar una que ya existe (eso lo protegen las reglas de Firestore, no
+// esta funcion). Lo que un cliente aporta de nuevo no entra directo a la
+// biblioteca - queda pendiente de que Nacho lo revise y apruebe.
+// ============================================================================
+
+// Busqueda puntual por codigo de barra - 1 lectura, no hace falta escuchar
+// toda la biblioteca (que puede crecer mucho con el tiempo).
+async function buscarEnBiblioteca(codigoBarra) {
+  if (!codigoBarra) return null;
+  const ref = FirebaseSync.doc(db, 'biblioteca_productos', codigoBarra);
+  const snap = await FirebaseSync.getDoc(ref);
+  return snap.exists() ? { codigo_barra: snap.id, ...snap.data() } : null;
+}
+
+// El cliente propone un producto nuevo (codigo que la biblioteca no conoce)
+// - NO se sube directo a la biblioteca general, queda pendiente de revision
+// de Nacho, bajo el cliente que lo mando.
+async function proponerProductoNuevo(clienteId, { codigoBarra, nombre, imagenData }) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'biblioteca_pendiente');
+  await FirebaseSync.addDoc(col, {
+    codigo_barra: codigoBarra, nombre, imagen_data: imagenData || null,
+    fecha_propuesto: FirebaseSync.serverTimestamp(),
+    estado: 'pendiente',
+  });
+}

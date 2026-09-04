@@ -353,7 +353,8 @@
   <div class="caja" style="max-height:85vh; overflow-y:auto;">
     <h3 id="tituloFormProducto">Nuevo producto</h3>
     <input type="text" id="inputPNombre" placeholder="Nombre del producto">
-    <input type="text" id="inputPCodigo" placeholder="Código de barra (opcional)">
+    <input type="text" id="inputPCodigo" placeholder="Código de barra (opcional)" onblur="revisarBibliotecaAlCambiarCodigo()">
+    <div id="avisoBiblioteca" style="display:none; font-size:11.5px; color:#1F6F5C; margin:-6px 0 8px 2px;">✓ Nombre encontrado en la biblioteca de productos</div>
     <input type="text" id="inputPCategoria" placeholder="Categoría (opcional)" list="listaCategoriasDatalist">
     <datalist id="listaCategoriasDatalist"></datalist>
     <div class="fila-2">
@@ -1287,6 +1288,24 @@
   }
 
   let productoEditandoId = null;
+  let _codigoEncontradoEnBiblioteca = false;
+
+  async function revisarBibliotecaAlCambiarCodigo() {
+    const codigo = document.getElementById('inputPCodigo').value.trim();
+    const avisoDiv = document.getElementById('avisoBiblioteca');
+    _codigoEncontradoEnBiblioteca = false;
+    avisoDiv.style.display = 'none';
+    if (!codigo) return;
+    const encontrado = await buscarEnBiblioteca(codigo);
+    if (encontrado) {
+      _codigoEncontradoEnBiblioteca = true;
+      avisoDiv.style.display = 'block';
+      // Solo autocompleta el nombre si la persona todavia no escribio uno -
+      // no le pisa algo que ya puso a mano.
+      const inputNombre = document.getElementById('inputPNombre');
+      if (!inputNombre.value.trim()) inputNombre.value = encontrado.nombre;
+    }
+  }
   async function abrirFormProducto(id) {
     productoEditandoId = id;
     document.getElementById('tituloFormProducto').textContent = id ? 'Editar producto' : 'Nuevo producto';
@@ -1337,6 +1356,8 @@
     } else {
       document.getElementById('inputPNombre').value = '';
       document.getElementById('inputPCodigo').value = '';
+      _codigoEncontradoEnBiblioteca = false;
+      document.getElementById('avisoBiblioteca').style.display = 'none';
       document.getElementById('inputPCategoria').value = '';
       document.getElementById('inputPPrecioVenta').value = '';
       document.getElementById('inputPPrecioCosto').value = '';
@@ -1450,8 +1471,16 @@
     }
 
     let idProducto = productoEditandoId;
-    if (idProducto) await editarProducto(idProducto, datos, sesionActual.nombre);
-    else idProducto = await crearProducto(datos);
+    if (idProducto) {
+      await editarProducto(idProducto, datos, sesionActual.nombre);
+    } else {
+      idProducto = await crearProducto(datos);
+      // Si el codigo no estaba en la biblioteca compartida, se propone como
+      // nuevo - queda pendiente de que Nacho lo revise, no se sube directo.
+      if (datos.codigo && !_codigoEncontradoEnBiblioteca) {
+        proponerProductoNuevo(estado.cliente_id, { codigoBarra: datos.codigo, nombre: datos.nombre, imagenData: null }).catch(() => {});
+      }
+    }
 
     if (document.getElementById('inputPVendePorCaja').checked) {
       const nombrePres = document.getElementById('inputPresNombre').value.trim();
