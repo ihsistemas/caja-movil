@@ -495,10 +495,10 @@ function _escribirEquipos(clienteId, obj) {
   localStorage.setItem('equipos_sim_' + clienteId, JSON.stringify(obj));
 }
 
-async function generarInvitacionRemota(clienteId) {
+async function generarInvitacionRemota(clienteId, fechaGeneradoSimulada) {
   const codigo = `IHINV-${clienteId}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
   const pendientes = _leerEquiposPendientes(clienteId);
-  pendientes[codigo] = { fecha_generado: Date.now() };
+  pendientes[codigo] = { fecha_generado: fechaGeneradoSimulada || Date.now() };
   _escribirEquiposPendientes(clienteId, pendientes);
   return codigo;
 }
@@ -510,6 +510,10 @@ async function validarInvitacionRemota(codigo) {
   const clienteId = partes.slice(1, -1).join('-');
   const pendientes = _leerEquiposPendientes(clienteId);
   if (!pendientes[raw]) return [null, 'Invitación inválida, ya usada, o expirada'];
+  const minutosPasados = (Date.now() - pendientes[raw].fecha_generado) / 60000;
+  if (minutosPasados > 15) {
+    return [null, 'Este código ya venció (dura 15 minutos) — pide uno nuevo al equipo principal.'];
+  }
   return [{ cliente_id: clienteId, codigo_invitacion: raw }, 'OK'];
 }
 

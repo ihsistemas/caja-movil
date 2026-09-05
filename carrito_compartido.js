@@ -551,6 +551,8 @@ async function generarInvitacionRemota(clienteId) {
   return codigo;
 }
 
+const MINUTOS_VENCIMIENTO_INVITACION = 15;
+
 async function validarInvitacionRemota(codigo) {
   const raw = (codigo || '').trim().toUpperCase().replace(/\s/g, '');
   const partes = raw.split('-');
@@ -559,6 +561,13 @@ async function validarInvitacionRemota(codigo) {
   const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'equipos_pendientes', raw);
   const snap = await FirebaseSync.getDoc(ref);
   if (!snap.exists()) return [null, 'Invitación inválida, ya usada, o expirada'];
+
+  const fechaGenerado = snap.data().fecha_generado;
+  const minutosPasados = fechaGenerado ? (Date.now() - fechaGenerado.toMillis()) / 60000 : 0;
+  if (minutosPasados > MINUTOS_VENCIMIENTO_INVITACION) {
+    return [null, 'Este código ya venció (dura 15 minutos) — pide uno nuevo al equipo principal.'];
+  }
+
   return [{ cliente_id: clienteId, codigo_invitacion: raw }, 'OK'];
 }
 
