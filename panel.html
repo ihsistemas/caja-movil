@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel del equipo</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#E0632A">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: -apple-system, system-ui, sans-serif; }
   body { background: #FBF7F0; min-height: 100vh; padding: 20px; }
@@ -125,13 +128,11 @@
   <div id="listaEquipos"></div>
   <div class="cupo-info" id="cupoInfo"></div>
   <button class="btn-invitar" id="btnInvitar" onclick="abrirInvitacion()">+ Sumar equipo</button>
-  <button class="btn-secundario" onclick="abrirConfirmarEquipo()">Ya tengo el código del equipo nuevo</button>
 </div>
 
 <div class="tarjeta" id="tarjetaSub" style="display:none;">
   <h2>Estado</h2>
-  <p style="font-size:13px; color:#6B5C48; line-height:1.6; margin-bottom:12px;">Conectado como equipo adicional. El equipo principal (maestro) es quien controla cuántos equipos hay y sus permisos.</p>
-  <button class="btn-secundario" onclick="mostrarMiConfirmacion()">Mostrar mi código (para que el equipo principal me reconozca)</button>
+  <p style="font-size:13px; color:#6B5C48; line-height:1.6;">Conectado como equipo adicional. El equipo principal (maestro) es quien controla cuántos equipos hay y sus permisos.</p>
 </div>
 
 <!-- ===== PANTALLA LOGIN (bloquea todo hasta iniciar sesion) ===== -->
@@ -181,7 +182,7 @@
   <button class="nav-item activo" data-pantalla="venta" onclick="irAPantallaApp('venta')">🛒<span>Venta</span></button>
   <button class="nav-item" data-pantalla="inventario" onclick="irAPantallaApp('inventario')">📦<span>Inventario</span></button>
   <button class="nav-item" data-pantalla="devolucion" onclick="irAPantallaApp('devolucion')">↩️<span>Devolución</span></button>
-  <button class="nav-item" data-pantalla="historial" onclick="irAPantallaApp('historial')">🧾<span>Historial</span></button>
+  <button class="nav-item" id="navBotonHistorial" data-pantalla="historial" onclick="irAPantallaApp('historial')">🧾<span>Historial</span></button>
   <button class="nav-item" id="navBotonCaja" data-pantalla="caja" onclick="irAPantallaApp('caja')" style="display:none;">🏪<span>Caja</span></button>
 </div>
 
@@ -480,28 +481,10 @@
 <div class="modal" id="modalInvitacion">
   <div class="caja">
     <h3>Código para sumar equipo</h3>
+    <p style="font-size:12px; color:#9A8B76; margin-bottom:10px;">Que la persona escanee o escriba este código al activar su equipo — queda sumado automáticamente, sin ningún paso más.</p>
     <canvas id="canvasInvitacion"></canvas>
     <div class="token-texto-chico" id="textoInvitacion"></div>
     <button class="btn-cerrar-modal" onclick="cerrarInvitacion()">Listo</button>
-  </div>
-</div>
-
-<div class="modal" id="modalConfirmarEquipo">
-  <div class="caja">
-    <h3>Pega el código del equipo nuevo</h3>
-    <textarea id="inputConfirmacion" placeholder="IHCONF-..." style="width:100%; height:70px; font-family:monospace; font-size:11px; padding:10px; border-radius:8px; border:1.5px solid #E4E1EC; margin-bottom:12px;"></textarea>
-    <div id="errorConfirmar" style="color:#B91C1C; font-size:12px; margin-bottom:10px;"></div>
-    <button class="btn-cerrar-modal" onclick="confirmarEquipoNuevo()">Agregar</button>
-    <button class="btn-secundario" onclick="cerrarConfirmarEquipo()" style="margin-top:8px;">Cancelar</button>
-  </div>
-</div>
-
-<div class="modal" id="modalMiConfirmacion">
-  <div class="caja">
-    <h3>Mi código</h3>
-    <canvas id="canvasMiConfirmacion"></canvas>
-    <div class="token-texto-chico" id="textoMiConfirmacion"></div>
-    <button class="btn-cerrar-modal" onclick="cerrarMiConfirmacion()">Listo</button>
   </div>
 </div>
 
@@ -521,6 +504,13 @@
   if (vigente) {
     inicializarFirebase();
     verificarLicenciaConServidorEnSegundoPlano();
+    iniciarEscuchaProductos(estado.cliente_id, () => {
+      if (sesionActual) pintarProductosVenta();
+    });
+    iniciarEscuchaPresentaciones(estado.cliente_id);
+    iniciarEscuchaPromociones(estado.cliente_id);
+    iniciarEscuchaCombos(estado.cliente_id);
+    iniciarEscuchaHistorialPrecios(estado.cliente_id);
     abrirDBCaja().then(() => {
       const sesionGuardada = localStorage.getItem('ih_sesion_usuario_' + estado.cliente_id);
       if (sesionGuardada) {
@@ -565,92 +555,54 @@
     }
   }
 
-  function pintarEquipos() {
-    const equipos = cargarEquiposVinculados();
+  async function pintarEquipos() {
+    const equipos = await listarEquiposRemoto(estado.cliente_id);
     document.getElementById('listaEquipos').innerHTML = equipos.map((eq) => `
       <div class="fila-equipo">
         <div>
-          <div class="nombre">${eq.nombre}</div>
-          <div class="rol-chica">${eq.rol === 'maestro' ? 'Principal' : 'Adicional'}</div>
+          <div class="nombre">${eq.nombre_equipo}</div>
+          <div class="rol-chica">${eq.device_id === getDeviceId() ? 'Este equipo' : 'Adicional'}</div>
         </div>
-        ${eq.rol !== 'maestro' ? `<button class="btn-soltar" onclick="soltarEquipo('${eq.device_id}')">Soltar</button>` : ''}
+        ${eq.device_id !== getDeviceId() ? `<button class="btn-soltar" onclick="soltarEquipo('${eq.device_id}')">Soltar</button>` : ''}
       </div>
     `).join('');
 
     const cupo = estado.capacidad || 2;
     document.getElementById('cupoInfo').textContent = `${equipos.length} de ${cupo} equipos en uso`;
     const btnInvitar = document.getElementById('btnInvitar');
-    const hayCupo = hayCupoDisponible(estado);
+    const hayCupo = hayCupoDisponibleRemoto(estado, equipos);
     btnInvitar.disabled = !hayCupo;
     btnInvitar.textContent = hayCupo ? '+ Sumar equipo' : 'Sin cupo disponible';
   }
 
-  function soltarEquipo(deviceId) {
+  async function soltarEquipo(deviceId) {
     if (!confirm('¿Soltar este equipo? Dejará de estar autorizado, y vas a poder usar ese cupo para uno nuevo.')) return;
-    soltarEquipoVinculado(deviceId);
+    await soltarEquipoRemoto(estado.cliente_id, deviceId);
     pintarEquipos();
   }
 
   async function abrirInvitacion() {
-    const cliente = { cliente_id: estado.cliente_id, nombre: estado.nombre_cliente, capacidad: estado.capacidad };
-    const codigo = await generarInvitacion(cliente);
+    const codigo = await generarInvitacionRemota(estado.cliente_id);
     document.getElementById('textoInvitacion').textContent = codigo;
     QRCodeLib.toCanvas(document.getElementById('canvasInvitacion'), codigo, { width: 220, margin: 1 });
     document.getElementById('modalInvitacion').classList.add('activo');
   }
   function cerrarInvitacion() {
     document.getElementById('modalInvitacion').classList.remove('activo');
-  }
-
-  function abrirConfirmarEquipo() {
-    document.getElementById('inputConfirmacion').value = '';
-    document.getElementById('errorConfirmar').textContent = '';
-    document.getElementById('modalConfirmarEquipo').classList.add('activo');
-  }
-  function cerrarConfirmarEquipo() {
-    document.getElementById('modalConfirmarEquipo').classList.remove('activo');
-  }
-  async function confirmarEquipoNuevo() {
-    const codigo = document.getElementById('inputConfirmacion').value.trim();
-    const errorDiv = document.getElementById('errorConfirmar');
-    errorDiv.textContent = '';
-    if (!codigo) return;
-
-    const [conf, msg] = await validarConfirmacion(codigo, estado.cliente_id);
-    if (!conf) {
-      errorDiv.textContent = msg;
-      return;
-    }
-    const equiposActuales = cargarEquiposVinculados();
-    if (!hayCupoDisponible(estado)) {
-      errorDiv.textContent = 'Ya no hay cupo — suelta un equipo primero si quieres agregar este.';
-      return;
-    }
-    if (equiposActuales.some((e) => e.device_id === conf.device_id)) {
-      errorDiv.textContent = 'Este equipo ya estaba agregado.';
-      return;
-    }
-    agregarEquipoVinculado({ device_id: conf.device_id, nombre: conf.nombre_equipo, rol: 'sub' });
-    cerrarConfirmarEquipo();
-    pintarEquipos();
-  }
-
-  async function mostrarMiConfirmacion() {
-    const codigo = await generarConfirmacion({
-      cliente_id: estado.cliente_id, device_id: getDeviceId(), nombre_equipo: estado.nombre_equipo,
-    });
-    document.getElementById('textoMiConfirmacion').textContent = codigo;
-    QRCodeLib.toCanvas(document.getElementById('canvasMiConfirmacion'), codigo, { width: 220, margin: 1 });
-    document.getElementById('modalMiConfirmacion').classList.add('activo');
-  }
-  function cerrarMiConfirmacion() {
-    document.getElementById('modalMiConfirmacion').classList.remove('activo');
+    pintarEquipos(); // por si el equipo invitado ya se sumo solo mientras el modal estaba abierto
   }
 
   // ============================================================
   // NAVEGACION ENTRE PANTALLAS
   // ============================================================
   function irAPantallaApp(nombre) {
+    // Chequeo real (no solo ocultar el boton) - Historial muestra ventas de
+    // TODO el negocio desde que se centralizaron, asi que solo jefe/delegado
+    // puede entrar, aunque intente llamar esto directo.
+    if (nombre === 'historial' && !(sesionActual.rol === 'jefe' || sesionActual.puede_gestionar_usuarios)) {
+      alert('Solo el jefe (o un jefe delegado) puede ver el historial completo del negocio.');
+      return;
+    }
     document.querySelectorAll('.pantalla-app').forEach((p) => p.style.display = 'none');
     document.getElementById('pantalla' + nombre.charAt(0).toUpperCase() + nombre.slice(1)).style.display = 'block';
     document.querySelectorAll('.nav-item').forEach((b) => b.classList.toggle('activo', b.dataset.pantalla === nombre));
@@ -741,6 +693,13 @@
 
     document.getElementById('btnEnviarACajaDesdeCobrar').style.display = sesionActual.modo_carrito ? 'block' : 'none';
     document.getElementById('navBotonCaja').style.display = sesionActual.modo_caja ? 'flex' : 'none';
+    document.getElementById('navBotonHistorial').style.display =
+      (sesionActual.rol === 'jefe' || sesionActual.puede_gestionar_usuarios) ? 'flex' : 'none';
+    // Historial ahora muestra las ventas de TODO el negocio (no solo este
+    // equipo, desde que se centralizaron en Firestore) - por eso queda
+    // restringido a jefe o jefe delegado, igual que Gestionar usuarios.
+    const puedeVerHistorial = sesionActual.rol === 'jefe' || sesionActual.puede_gestionar_usuarios;
+    document.getElementById('navBotonHistorial').style.display = puedeVerHistorial ? 'flex' : 'none';
     if (sesionActual.modo_caja) {
       asegurarCajaDelNegocio(estado.cliente_id).then(() => {
         escucharCarritosEntrantes(estado.cliente_id, pintarCarritosEntrantes);
@@ -993,11 +952,14 @@
 
     const cont = document.getElementById('listaProductosVenta');
     if (filtrados.length === 0) {
-      cont.innerHTML = `<p style="text-align:center; color:#C6B9A3; font-size:13px; padding:30px 0;">${productos.length === 0 ? 'Todavía no hay productos — agrégalos en Inventario' : 'Sin resultados'}</p>`;
+      const mensaje = !escuchaProductosActiva()
+        ? 'Cargando productos…'
+        : (productos.length === 0 ? 'Todavía no hay productos — agrégalos en Inventario' : 'Sin resultados');
+      cont.innerHTML = `<p style="text-align:center; color:#C6B9A3; font-size:13px; padding:30px 0;">${mensaje}</p>`;
       return;
     }
     cont.innerHTML = filtrados.map((p) => `
-      <div class="fila-producto-venta" onclick="agregarAlCarrito(${p.id})">
+      <div class="fila-producto-venta" onclick="agregarAlCarrito('${p.id}')">
         ${p.imagen_data ? `<img src="${p.imagen_data}">` : `<div class="sin-foto"></div>`}
         <div class="info">
           <div class="nombre">${p.nombre}</div>
@@ -1058,7 +1020,7 @@
     banner.innerHTML = `
       <div class="banner-combo">
         <span class="texto">🏷️ Aplica combo: ${combo.nombre} — ${formatoMoneda(combo.precio_combo)}</span>
-        <button onclick="aplicarCombo(${combo.id})">Aplicar</button>
+        <button onclick="aplicarCombo('${combo.id}')">Aplicar</button>
       </div>`;
     banner.style.display = 'block';
   }
@@ -1153,7 +1115,7 @@
     if (!medioPagoElegido || carrito.length === 0) return;
     const total = totalCarrito();
     try {
-      await registrarVenta({ items: carrito, total, medio_pago: medioPagoElegido });
+      await registrarVenta(estado.cliente_id, { items: carrito, total, medio_pago: medioPagoElegido });
     } catch (e) {
       cerrarCobrar();
       alert(e.message);
@@ -1265,25 +1227,25 @@
     }
     cont.innerHTML = filtrados.map((p) => `
       <div class="fila-producto-venta ${p.activo === false ? 'pausado' : ''}">
-        <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;" onclick="abrirFormProducto(${p.id})">
+        <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;" onclick="abrirFormProducto('${p.id}')">
           ${p.imagen_data ? `<img src="${p.imagen_data}">` : `<div class="sin-foto"></div>`}
           <div class="info">
             <div class="nombre">${p.nombre}${p.categoria ? ` <span style="color:#C6B9A3; font-weight:400;">· ${p.categoria}</span>` : ''}</div>
             <div class="precio-stock">${formatoMoneda(p.precio_venta)} · costo ${formatoMoneda(p.precio_costo)} · <span class="${p.stock <= 0 ? 'stock-bajo' : ''}">${p.stock} ${p.unidad_medida}</span></div>
           </div>
         </div>
-        <button class="btn-pausar" onclick="event.stopPropagation(); ${p.activo === false ? `reactivarProductoUI(${p.id})` : `pausarProductoUI(${p.id})`}">${p.activo === false ? '▶️' : '⏸️'}</button>
+        <button class="btn-pausar" onclick="event.stopPropagation(); ${p.activo === false ? `reactivarProductoUI('${p.id}')` : `pausarProductoUI('${p.id}')`}">${p.activo === false ? '▶️' : '⏸️'}</button>
       </div>
     `).join('');
   }
 
   async function pausarProductoUI(id) {
     if (!confirm('¿Pausar este producto? Deja de aparecer en Venta, pero no se pierde su historial.')) return;
-    await pausarProducto(id);
+    await pausarProducto(estado.cliente_id, id);
     pintarInventario();
   }
   async function reactivarProductoUI(id) {
-    await reactivarProducto(id);
+    await reactivarProducto(estado.cliente_id, id);
     pintarInventario();
   }
 
@@ -1441,7 +1403,7 @@
     const precio = document.getElementById('inputComboPrecio').value;
     const seleccionados = Array.from(document.querySelectorAll('.check-producto-combo:checked')).map((c) => Number(c.value));
     if (!nombre || !precio || seleccionados.length < 2) { alert('Elige al menos 2 productos y pon nombre + precio.'); return; }
-    await crearCombo({ nombre, productos_ids: seleccionados, precio_combo: precio });
+    await crearCombo(estado.cliente_id, { nombre, productos_ids: seleccionados, precio_combo: precio });
     cerrarFormCombo();
   }
 
@@ -1472,9 +1434,9 @@
 
     let idProducto = productoEditandoId;
     if (idProducto) {
-      await editarProducto(idProducto, datos, sesionActual.nombre);
+      await editarProducto(estado.cliente_id, idProducto, datos, sesionActual.nombre);
     } else {
-      idProducto = await crearProducto(datos);
+      idProducto = await crearProducto(estado.cliente_id, datos);
       // Si el codigo no estaba en la biblioteca compartida, se propone como
       // nuevo - queda pendiente de que Nacho lo revise, no se sube directo.
       if (datos.codigo && !_codigoEncontradoEnBiblioteca) {
@@ -1487,7 +1449,7 @@
       const cantidadPres = document.getElementById('inputPresCantidad').value;
       const precioPres = document.getElementById('inputPresPrecio').value;
       if (nombrePres && cantidadPres && precioPres) {
-        await crearPresentacion(idProducto, { nombre: nombrePres, cantidad_base: cantidadPres, precio_venta: precioPres });
+        await crearPresentacion(estado.cliente_id, idProducto, { nombre: nombrePres, cantidad_base: cantidadPres, precio_venta: precioPres });
       }
     }
 
@@ -1495,7 +1457,7 @@
       const tipoPromo = document.getElementById('inputPromoTipo').value;
       const valorPromo = document.getElementById('inputPromoValor').value;
       if (valorPromo) {
-        await crearPromocion(idProducto, { tipo: tipoPromo, valor: valorPromo });
+        await crearPromocion(estado.cliente_id, idProducto, { tipo: tipoPromo, valor: valorPromo });
       }
     }
 
@@ -1507,14 +1469,16 @@
   // PANTALLA DEVOLUCION
   // ============================================================
   async function pintarVentasDevolucion() {
-    const ventas = (await listarVentas()).slice(0, 30);
+    const hoy = new Date();
+    const hace30dias = new Date(hoy); hace30dias.setDate(hace30dias.getDate() - 30);
+    const ventas = (await listarVentas(estado.cliente_id, fechaISO(hace30dias), fechaISO(hoy))).slice(0, 30);
     const cont = document.getElementById('listaVentasDevolucion');
     if (ventas.length === 0) {
       cont.innerHTML = `<p style="text-align:center; color:#C6B9A3; font-size:13px; padding:30px 0;">Sin ventas todavía</p>`;
       return;
     }
     cont.innerHTML = ventas.map((v) => `
-      <div class="fila-historial" onclick="abrirDevolucionDeVenta(${v.id})">
+      <div class="fila-historial" onclick="abrirDevolucionDeVenta('${v.id}')">
         <div class="top"><span>${v.items.map((i) => i.nombre).join(', ').slice(0, 40)}</span><span>${formatoMoneda(v.total)}</span></div>
         <div class="fecha">${new Date(v.fecha).toLocaleString('es-CL')}</div>
       </div>
@@ -1523,7 +1487,7 @@
 
   let ventaDevolviendo = null;
   async function abrirDevolucionDeVenta(ventaId) {
-    const venta = await obtenerVenta(ventaId);
+    const venta = await obtenerVenta(estado.cliente_id, ventaId);
     if (!venta) return;
     ventaDevolviendo = venta;
 
@@ -1562,7 +1526,7 @@
       if (cant > 0) itemsADevolver.push({ ...it, cantidad: cant });
     });
     if (itemsADevolver.length === 0) { alert('Elige al menos una cantidad a devolver.'); return; }
-    await registrarDevolucion(ventaDevolviendo.id, itemsADevolver);
+    await registrarDevolucion(estado.cliente_id, ventaDevolviendo.id, itemsADevolver);
     cerrarModalDevolucion();
     alert('Devolución registrada — el stock ya se actualizó.');
     pintarVentasDevolucion();
@@ -1673,8 +1637,7 @@
   }
 
   async function pintarHistorial() {
-    const todas = await listarVentas();
-    const ventas = ventasDelPeriodo(todas, periodoActual);
+    const ventas = await listarVentas(estado.cliente_id, periodoActual.desde, periodoActual.hasta);
     const cont = document.getElementById('listaHistorial');
     if (ventas.length === 0) {
       cont.innerHTML = `<p style="text-align:center; color:#C6B9A3; font-size:13px; padding:30px 0;">Sin ventas en este período</p>`;
@@ -1726,8 +1689,7 @@
   }
 
   async function generarPDFVentas() {
-    const todas = await listarVentas();
-    const ventas = ventasDelPeriodo(todas, periodoActual);
+    const ventas = await listarVentas(estado.cliente_id, periodoActual.desde, periodoActual.hasta);
     if (ventas.length === 0) { alert('No hay ventas en este período para generar el reporte.'); return; }
 
     const totalVendido = ventas.reduce((s, v) => s + totalNetoVenta(v), 0);
@@ -1821,8 +1783,7 @@
   }
 
   async function generarExcelVentas() {
-    const todas = await listarVentas();
-    const ventas = ventasDelPeriodo(todas, periodoActual);
+    const ventas = await listarVentas(estado.cliente_id, periodoActual.desde, periodoActual.hasta);
     const productos = await listarProductos();
     if (ventas.length === 0 && productos.length === 0) { alert('Todavía no hay datos para exportar.'); return; }
 
@@ -1848,6 +1809,13 @@
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const blob = new Blob([wbout], { type: 'application/octet-stream' });
     descargarArchivo(blob, `reporte_${estado.nombre_cliente.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js').catch((e) => console.warn('No se pudo registrar el service worker:', e.message));
+    });
   }
 </script>
 </body>

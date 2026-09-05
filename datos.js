@@ -96,12 +96,11 @@ function idbCajaDelete(store, key) {
 // ---- Productos ----
 // Por defecto excluye los pausados (activo=false) - igual que Minimarket Pro,
 // para pedir tambien los pausados hay que pasar incluirPausados=true.
-async function listarProductos(incluirPausados) {
-  const todos = await idbCajaGetAll('productos');
-  return incluirPausados ? todos : todos.filter((p) => p.activo !== false);
+function listarProductos(incluirPausados) {
+  return listarProductosRemoto(incluirPausados);
 }
-async function crearProducto(datos) {
-  return await idbCajaAdd('productos', {
+async function crearProducto(clienteId, datos) {
+  return await crearProductoRemoto(clienteId, {
     codigo: datos.codigo || null, nombre: datos.nombre,
     categoria: datos.categoria || null,
     precio_venta: Number(datos.precio_venta) || 0,
@@ -115,32 +114,29 @@ async function crearProducto(datos) {
     activo: true,
   });
 }
-async function editarProducto(id, cambios, nombreQuienModifica) {
-  const p = await idbCajaGet('productos', id);
+// El historial de precios sigue local por ahora (Fase 2 lo centraliza
+// tambien) - por eso todavia usa idbCaja, mientras que el producto en si
+// ya vive en Firestore.
+async function editarProducto(clienteId, id, cambios, nombreQuienModifica) {
+  const p = listarProductosRemoto(true).find((prod) => prod.id === id);
   if (!p) return;
   if (cambios.precio_venta !== undefined && Number(cambios.precio_venta) !== Number(p.precio_venta)) {
-    await idbCajaAdd('historial_precios', {
+    await crearHistorialPrecioRemoto(clienteId, {
       producto_id: id, precio_anterior: p.precio_venta, precio_nuevo: Number(cambios.precio_venta),
       fecha: new Date().toISOString(), modificado_por: nombreQuienModifica || null,
     });
   }
-  await idbCajaPut('productos', { ...p, ...cambios });
+  await editarProductoRemoto(clienteId, id, cambios);
 }
-async function historialDePrecios(productoId) {
-  const historial = await idbCajaGetAll('historial_precios', 'producto_id', productoId);
+function historialDePrecios(productoId) {
+  const historial = listarHistorialPreciosRemoto().filter((h) => h.producto_id === productoId);
   return historial.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 }
-async function ajustarStock(id, diferencia) {
-  const p = await idbCajaGet('productos', id);
-  if (!p) return;
-  p.stock = Math.max(0, (Number(p.stock) || 0) + diferencia);
-  await idbCajaPut('productos', p);
+async function pausarProducto(clienteId, id) {
+  await editarProducto(clienteId, id, { activo: false });
 }
-async function pausarProducto(id) {
-  await editarProducto(id, { activo: false });
-}
-async function reactivarProducto(id) {
-  await editarProducto(id, { activo: true });
+async function reactivarProducto(clienteId, id) {
+  await editarProducto(clienteId, id, { activo: true });
 }
 async function listarCategorias() {
   const productos = await listarProductos(true);
@@ -231,64 +227,53 @@ async function saldoCajaChica() {
   return movs.reduce((s, m) => s + m.monto, 0);
 }
 
-async function listarPresentacionesDeProducto(productoId) {
-  return await idbCajaGetAll('presentaciones', 'producto_id', productoId);
+function listarPresentacionesDeProducto(productoId) {
+  return listarPresentacionesRemoto().filter((p) => p.producto_id === productoId);
 }
-async function crearPresentacion(productoId, datos) {
-  return await idbCajaAdd('presentaciones', {
+async function crearPresentacion(clienteId, productoId, datos) {
+  return await crearPresentacionRemota(clienteId, {
     producto_id: productoId, nombre: datos.nombre, codigo: datos.codigo || null,
     cantidad_base: Number(datos.cantidad_base) || 1, precio_venta: Number(datos.precio_venta) || 0,
   });
 }
 
 // ---- Ventas ----
-async function registrarVenta({ items, total, medio_pago }) {
+async function registrarVenta(clienteId, { items, total, medio_pago }) {
   const turno = await turnoActual();
   if (!turno) throw new Error('No se puede vender sin abrir la caja primero.');
+  // Primero se verifica y descuenta el stock de forma segura (todo o nada) -
+  // si falla (alguien mas se llevo el stock justo antes), la venta ni
+  // siquiera se crea, para no quedar con un registro de una venta que en
+  // los hechos no se pudo completar.
+  await venderConTransaccionSegura(clienteId, items);
   const venta = {
-    fecha: new Date().toISOString(), items, total, medio_pago, turno_id: turno.id,
+    fecha: new Date().toISOString(), items, total, medio_pago,
+    turno_id: turno.id, nombre_equipo: estado.nombre_equipo,
   };
-  const id = await idbCajaAdd('ventas', venta);
-  // Descontar stock de cada item vendido - si el item se vendio por
-  // presentacion (ej: una caja), se descuenta la cantidad BASE real, no 1.
-  for (const it of items) {
-    if (it.producto_id) {
-      const cantidadReal = it.cantidad * (it.cantidad_base_presentacion || 1);
-      await ajustarStock(it.producto_id, -cantidadReal);
-    }
-  }
-  return id;
+  return await crearVentaRemota(clienteId, venta);
 }
-async function listarVentas() {
-  const ventas = await idbCajaGetAll('ventas');
-  return ventas.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+async function listarVentas(clienteId, desde, hasta) {
+  return await listarVentasRemoto(clienteId, desde, hasta);
 }
-async function obtenerVenta(id) {
-  return await idbCajaGet('ventas', id);
+async function obtenerVenta(clienteId, id) {
+  return await obtenerVentaRemota(clienteId, id);
 }
-async function registrarDevolucion(ventaId, itemsDevueltos) {
-  const venta = await obtenerVenta(ventaId);
+async function registrarDevolucion(clienteId, ventaId, itemsDevueltos) {
+  const venta = await obtenerVenta(clienteId, ventaId);
   if (!venta) return;
-  for (const it of itemsDevueltos) {
-    if (it.producto_id) {
-      const cantidadReal = it.cantidad * (it.cantidad_base_presentacion || 1);
-      await ajustarStock(it.producto_id, cantidadReal);
-    }
-  }
-  venta.devoluciones = venta.devoluciones || [];
-  venta.devoluciones.push({ fecha: new Date().toISOString(), items: itemsDevueltos });
-  await idbCajaPut('ventas', venta);
+  await devolverStockSeguro(clienteId, itemsDevueltos);
+  await agregarDevolucionAVenta(clienteId, ventaId, { fecha: new Date().toISOString(), items: itemsDevueltos });
 }
 
 // ---- Promociones (descuento sobre un producto especifico) ----
-async function crearPromocion(productoId, datos) {
-  return await idbCajaAdd('promociones', {
+async function crearPromocion(clienteId, productoId, datos) {
+  return await crearPromocionRemota(clienteId, {
     producto_id: productoId, tipo: datos.tipo, valor: Number(datos.valor),
     activa: true, fecha_inicio: datos.fecha_inicio || null, fecha_fin: datos.fecha_fin || null,
   });
 }
-async function listarPromocionesDeProducto(productoId) {
-  const todas = await idbCajaGetAll('promociones', 'producto_id', productoId);
+function listarPromocionesDeProducto(productoId) {
+  const todas = listarPromocionesRemoto().filter((p) => p.producto_id === productoId);
   const hoy = new Date().toISOString().slice(0, 10);
   return todas.filter((p) => {
     if (!p.activa) return false;
@@ -305,14 +290,13 @@ function precioConPromocion(precioOriginal, promocion) {
 }
 
 // ---- Combos (varios productos juntos a un precio especial) ----
-async function crearCombo(datos) {
-  return await idbCajaAdd('combos', {
+async function crearCombo(clienteId, datos) {
+  return await crearComboRemoto(clienteId, {
     nombre: datos.nombre, productos_ids: datos.productos_ids, precio_combo: Number(datos.precio_combo), activo: true,
   });
 }
-async function listarCombos() {
-  const todos = await idbCajaGetAll('combos');
-  return todos.filter((c) => c.activo);
+function listarCombos() {
+  return listarCombosRemoto().filter((c) => c.activo);
 }
 
 // Revisa si el carrito actual (agrupado por producto_id) contiene TODOS los

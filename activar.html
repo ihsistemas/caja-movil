@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Activar equipo</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#E0632A">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: -apple-system, system-ui, sans-serif; }
   body { background: #FBF7F0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -93,7 +96,7 @@
       document.getElementById('infoCliente').textContent =
         `Vas a activar "${cliente.nombre}" — serás el equipo PRINCIPAL (maestro) de este cliente.`;
     } else if (limpio.startsWith('IHINV-')) {
-      const [inv, msg] = await validarInvitacion(texto);
+      const [inv, msg] = await validarInvitacionRemota(texto);
       if (!inv) {
         cajaError.innerHTML = `<div class="error">${msg}</div>`;
         btn.disabled = false;
@@ -107,7 +110,7 @@
         btn.disabled = false;
         return;
       }
-      codigoValidado = { tipo: 'invitacion', data: cliente };
+      codigoValidado = { tipo: 'invitacion', data: cliente, codigoInvitacion: inv.codigo_invitacion };
       document.getElementById('infoCliente').textContent =
         `Te vas a sumar a "${cliente.nombre}" como equipo adicional.`;
     } else {
@@ -122,11 +125,23 @@
 
   async function confirmarActivacion() {
     const nombreEquipo = document.getElementById('inputNombreEquipo').value.trim();
+    const errorDiv = document.getElementById('cajaError');
     if (!nombreEquipo || !codigoValidado) return;
 
     const deviceId = getDeviceId();
     const cliente = codigoValidado.data;
     const rol = codigoValidado.tipo === 'cliente' ? 'maestro' : 'sub';
+
+    if (rol === 'sub') {
+      // Antes este chequeo lo hacia el maestro al escanear la confirmacion
+      // de vuelta - ahora que el equipo se confirma solo, el chequeo de
+      // cupo se hace aca mismo, contra la lista real en Firestore.
+      const equiposActuales = await listarEquiposRemoto(cliente.cliente_id);
+      if (!hayCupoDisponibleRemoto(cliente, equiposActuales)) {
+        errorDiv.innerHTML = `<div class="error">Ya no hay cupo disponible para este cliente — pide al equipo principal que suelte uno primero.</div>`;
+        return;
+      }
+    }
 
     guardarEstadoEquipo({
       cliente_id: cliente.cliente_id, nombre_cliente: cliente.nombre, capacidad: cliente.capacidad,
@@ -134,10 +149,19 @@
       tipo_licencia: cliente.tipo_licencia, vence: cliente.vence,
     });
     if (rol === 'maestro') {
-      agregarEquipoVinculado({ device_id: deviceId, nombre: nombreEquipo, rol: 'maestro' });
+      await registrarEsteEquipo(cliente.cliente_id, deviceId, nombreEquipo);
+    } else {
+      await confirmarEquipoRemoto(cliente.cliente_id, deviceId, nombreEquipo, codigoValidado.codigoInvitacion);
     }
 
     window.location.href = 'panel.html';
+  }
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js').catch((e) => console.warn('No se pudo registrar el service worker:', e.message));
+    });
   }
 </script>
 </body>

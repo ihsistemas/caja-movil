@@ -276,3 +276,271 @@ async function proponerProductoNuevo(clienteId, { codigoBarra, nombre, imagenDat
   });
   localStorage.setItem(clave, JSON.stringify(lista));
 }
+
+// ============================================================================
+// PRODUCTOS Y STOCK SIMULADOS
+// ============================================================================
+
+let _cacheProductosSim = null;
+let _contadorProductoId = 0;
+let _listenersProductos = [];
+
+function _leerProductosNegocio(clienteId) {
+  const raw = localStorage.getItem('productos_sim_' + clienteId);
+  return raw ? JSON.parse(raw) : [];
+}
+function _escribirProductosNegocio(clienteId, productos) {
+  localStorage.setItem('productos_sim_' + clienteId, JSON.stringify(productos));
+  _cacheProductosSim = productos;
+  _listenersProductos.forEach((cb) => cb());
+}
+
+function iniciarEscuchaProductos(clienteId, alActualizar) {
+  _cacheProductosSim = _leerProductosNegocio(clienteId);
+  if (alActualizar) _listenersProductos.push(alActualizar);
+  const handler = (evento) => {
+    if (evento.data.productosDeCliente === clienteId) {
+      _cacheProductosSim = _leerProductosNegocio(clienteId);
+      if (alActualizar) alActualizar();
+    }
+  };
+  _canalSimulado.addEventListener('message', handler);
+  if (alActualizar) alActualizar();
+}
+function listarProductosRemoto(incluirPausados) {
+  if (_cacheProductosSim === null) return [];
+  return incluirPausados ? _cacheProductosSim : _cacheProductosSim.filter((p) => p.activo !== false);
+}
+function escuchaProductosActiva() {
+  return _cacheProductosSim !== null;
+}
+
+async function crearProductoRemoto(clienteId, datos) {
+  const productos = _leerProductosNegocio(clienteId);
+  const id = 'prod-sim-' + (_contadorProductoId++);
+  productos.push({ id, ...datos });
+  _escribirProductosNegocio(clienteId, productos);
+  _canalSimulado.postMessage({ productosDeCliente: clienteId });
+  return id;
+}
+
+async function editarProductoRemoto(clienteId, productoId, cambios) {
+  const productos = _leerProductosNegocio(clienteId);
+  const actualizado = productos.map((p) => p.id === productoId ? { ...p, ...cambios } : p);
+  _escribirProductosNegocio(clienteId, actualizado);
+  _canalSimulado.postMessage({ productosDeCliente: clienteId });
+}
+
+// Simula la misma logica de "todo o nada" que la transaccion real - no
+// simula la concurrencia real entre 2 dispositivos (eso Firestore ya lo
+// resuelve, es codigo probado de Google) pero SI prueba que el chequeo de
+// stock insuficiente funcione como corresponde.
+async function venderConTransaccionSegura(clienteId, itemsVendidos) {
+  const productos = _leerProductosNegocio(clienteId);
+  for (const it of itemsVendidos) {
+    if (!it.producto_id) continue;
+    const p = productos.find((prod) => prod.id === it.producto_id);
+    const cantidadReal = it.cantidad * (it.cantidad_base_presentacion || 1);
+    if (!p) throw new Error(`El producto "${it.nombre}" ya no existe.`);
+    if ((Number(p.stock) || 0) < cantidadReal) {
+      throw new Error(`No hay suficiente stock de "${it.nombre}" — quedan ${p.stock}, se intentaron vender ${cantidadReal}.`);
+    }
+  }
+  const actualizados = productos.map((p) => {
+    const it = itemsVendidos.find((i) => i.producto_id === p.id);
+    if (!it) return p;
+    const cantidadReal = it.cantidad * (it.cantidad_base_presentacion || 1);
+    return { ...p, stock: (Number(p.stock) || 0) - cantidadReal };
+  });
+  _escribirProductosNegocio(clienteId, actualizados);
+  _canalSimulado.postMessage({ productosDeCliente: clienteId });
+}
+
+async function devolverStockSeguro(clienteId, itemsDevueltos) {
+  const productos = _leerProductosNegocio(clienteId);
+  const actualizados = productos.map((p) => {
+    const it = itemsDevueltos.find((i) => i.producto_id === p.id);
+    if (!it) return p;
+    const cantidadReal = it.cantidad * (it.cantidad_base_presentacion || 1);
+    return { ...p, stock: (Number(p.stock) || 0) + cantidadReal };
+  });
+  _escribirProductosNegocio(clienteId, actualizados);
+  _canalSimulado.postMessage({ productosDeCliente: clienteId });
+}
+
+// ============================================================================
+// FASE 2 SIMULADA - presentaciones, promociones, combos, historial de precios
+// ============================================================================
+
+function _crearColeccionEnVivoSim(nombreColeccion) {
+  let cache = null;
+  let contador = 0;
+  let clienteEscuchado = null;
+  const escribir = (clienteId, items) => {
+    localStorage.setItem(nombreColeccion + '_sim_' + clienteId, JSON.stringify(items));
+    cache = items;
+    _canalSimulado.postMessage({ coleccionSim: nombreColeccion, clienteId });
+  };
+  const leer = (clienteId) => JSON.parse(localStorage.getItem(nombreColeccion + '_sim_' + clienteId) || '[]');
+
+  return {
+    iniciar(clienteId, alActualizar) {
+      clienteEscuchado = clienteId;
+      cache = leer(clienteId);
+      if (alActualizar) alActualizar();
+      _canalSimulado.addEventListener('message', (evento) => {
+        if (evento.data.coleccionSim === nombreColeccion && evento.data.clienteId === clienteId) {
+          cache = leer(clienteId);
+          if (alActualizar) alActualizar();
+        }
+      });
+    },
+    activa: () => cache !== null,
+    listar: () => cache || [],
+    async crear(clienteId, datos) {
+      const items = leer(clienteId);
+      const id = nombreColeccion + '-sim-' + (contador++);
+      items.push({ id, ...datos });
+      escribir(clienteId, items);
+      return id;
+    },
+    async editar(clienteId, id, cambios) {
+      const items = leer(clienteId);
+      escribir(clienteId, items.map((it) => it.id === id ? { ...it, ...cambios } : it));
+    },
+  };
+}
+
+const _presentacionesSim = _crearColeccionEnVivoSim('presentaciones');
+const _promocionesSim = _crearColeccionEnVivoSim('promociones');
+const _combosSim = _crearColeccionEnVivoSim('combos');
+const _historialPreciosSim = _crearColeccionEnVivoSim('historial_precios');
+
+function iniciarEscuchaPresentaciones(clienteId, alActualizar) { return _presentacionesSim.iniciar(clienteId, alActualizar); }
+function listarPresentacionesRemoto() { return _presentacionesSim.listar(); }
+async function crearPresentacionRemota(clienteId, datos) { return await _presentacionesSim.crear(clienteId, datos); }
+
+function iniciarEscuchaPromociones(clienteId, alActualizar) { return _promocionesSim.iniciar(clienteId, alActualizar); }
+function listarPromocionesRemoto() { return _promocionesSim.listar(); }
+async function crearPromocionRemota(clienteId, datos) { return await _promocionesSim.crear(clienteId, datos); }
+
+function iniciarEscuchaCombos(clienteId, alActualizar) { return _combosSim.iniciar(clienteId, alActualizar); }
+function listarCombosRemoto() { return _combosSim.listar(); }
+async function crearComboRemoto(clienteId, datos) { return await _combosSim.crear(clienteId, datos); }
+
+function iniciarEscuchaHistorialPrecios(clienteId, alActualizar) { return _historialPreciosSim.iniciar(clienteId, alActualizar); }
+function listarHistorialPreciosRemoto() { return _historialPreciosSim.listar(); }
+async function crearHistorialPrecioRemoto(clienteId, datos) { return await _historialPreciosSim.crear(clienteId, datos); }
+
+// ============================================================================
+// FASE 3 SIMULADA - ventas centralizadas (sin escucha permanente, por
+// consulta, igual que la version real)
+// ============================================================================
+
+let _contadorVentaId = 0;
+
+function _leerVentasNegocio(clienteId) {
+  return JSON.parse(localStorage.getItem('ventas_sim_' + clienteId) || '[]');
+}
+function _escribirVentasNegocio(clienteId, ventas) {
+  localStorage.setItem('ventas_sim_' + clienteId, JSON.stringify(ventas));
+}
+
+async function crearVentaRemota(clienteId, venta) {
+  const ventas = _leerVentasNegocio(clienteId);
+  const id = 'venta-sim-' + (_contadorVentaId++);
+  ventas.push({ id, ...venta });
+  _escribirVentasNegocio(clienteId, ventas);
+  return id;
+}
+
+async function listarVentasRemoto(clienteId, desde, hasta) {
+  let ventas = _leerVentasNegocio(clienteId);
+  if (desde && hasta) {
+    ventas = ventas.filter((v) => {
+      const f = v.fecha.slice(0, 10);
+      return f >= desde && f <= hasta;
+    });
+  }
+  return ventas.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+}
+
+async function obtenerVentaRemota(clienteId, ventaId) {
+  return _leerVentasNegocio(clienteId).find((v) => v.id === ventaId) || null;
+}
+
+async function agregarDevolucionAVenta(clienteId, ventaId, devolucion) {
+  const ventas = _leerVentasNegocio(clienteId);
+  const actualizadas = ventas.map((v) => {
+    if (v.id !== ventaId) return v;
+    return { ...v, devoluciones: [...(v.devoluciones || []), devolucion] };
+  });
+  _escribirVentasNegocio(clienteId, actualizadas);
+}
+
+// ============================================================================
+// EQUIPOS VINCULADOS SIMULADOS
+// ============================================================================
+
+function _leerEquiposPendientes(clienteId) {
+  return JSON.parse(localStorage.getItem('equipos_pendientes_sim_' + clienteId) || '{}');
+}
+function _escribirEquiposPendientes(clienteId, obj) {
+  localStorage.setItem('equipos_pendientes_sim_' + clienteId, JSON.stringify(obj));
+}
+function _leerEquipos(clienteId) {
+  return JSON.parse(localStorage.getItem('equipos_sim_' + clienteId) || '{}');
+}
+function _escribirEquipos(clienteId, obj) {
+  localStorage.setItem('equipos_sim_' + clienteId, JSON.stringify(obj));
+}
+
+async function generarInvitacionRemota(clienteId) {
+  const codigo = `IHINV-${clienteId}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
+  const pendientes = _leerEquiposPendientes(clienteId);
+  pendientes[codigo] = { fecha_generado: Date.now() };
+  _escribirEquiposPendientes(clienteId, pendientes);
+  return codigo;
+}
+
+async function validarInvitacionRemota(codigo) {
+  const raw = (codigo || '').trim().toUpperCase().replace(/\s/g, '');
+  const partes = raw.split('-');
+  if (partes[0] !== 'IHINV' || partes.length < 3) return [null, 'Formato inválido'];
+  const clienteId = partes.slice(1, -1).join('-');
+  const pendientes = _leerEquiposPendientes(clienteId);
+  if (!pendientes[raw]) return [null, 'Invitación inválida, ya usada, o expirada'];
+  return [{ cliente_id: clienteId, codigo_invitacion: raw }, 'OK'];
+}
+
+async function confirmarEquipoRemoto(clienteId, deviceId, nombreEquipo, codigoInvitacion) {
+  const equipos = _leerEquipos(clienteId);
+  equipos[deviceId] = { nombre_equipo: nombreEquipo, fecha_confirmado: Date.now() };
+  _escribirEquipos(clienteId, equipos);
+  if (codigoInvitacion) {
+    const pendientes = _leerEquiposPendientes(clienteId);
+    delete pendientes[codigoInvitacion];
+    _escribirEquiposPendientes(clienteId, pendientes);
+  }
+}
+
+async function listarEquiposRemoto(clienteId) {
+  const equipos = _leerEquipos(clienteId);
+  return Object.entries(equipos).map(([device_id, datos]) => ({ device_id, ...datos }));
+}
+
+async function soltarEquipoRemoto(clienteId, deviceId) {
+  const equipos = _leerEquipos(clienteId);
+  delete equipos[deviceId];
+  _escribirEquipos(clienteId, equipos);
+}
+
+async function registrarEsteEquipo(clienteId, deviceId, nombreEquipo) {
+  const equipos = _leerEquipos(clienteId);
+  equipos[deviceId] = { nombre_equipo: nombreEquipo, fecha_confirmado: Date.now() };
+  _escribirEquipos(clienteId, equipos);
+}
+
+function hayCupoDisponibleRemoto(cliente, equiposActuales) {
+  return equiposActuales.length < (cliente.capacidad || 2);
+}

@@ -342,3 +342,256 @@ async function proponerProductoNuevo(clienteId, { codigoBarra, nombre, imagenDat
     estado: 'pendiente',
   });
 }
+
+// ============================================================================
+// PRODUCTOS Y STOCK - FASE 1 del rediseño de datos compartidos. Viven en
+// negocios/{clienteId}/productos, en vivo para todos los equipos del mismo
+// negocio (a diferencia de usuarios, aca SI hace falta escuchar la lista
+// completa siempre - Venta necesita ver el catalogo entero para navegarlo).
+// ============================================================================
+
+let unsubscribeProductos = null;
+let _cacheProductos = null; // null = todavia no llego el primer valor
+
+function iniciarEscuchaProductos(clienteId, alActualizar) {
+  if (unsubscribeProductos) unsubscribeProductos();
+  const col = FirebaseSync.collection(db, 'negocios', clienteId, 'productos');
+  unsubscribeProductos = FirebaseSync.onSnapshot(col, (snap) => {
+    const productos = [];
+    snap.forEach((doc) => productos.push({ id: doc.id, ...doc.data() }));
+    _cacheProductos = productos;
+    if (alActualizar) alActualizar();
+  }, (error) => {
+    console.warn('Error escuchando productos:', error.message);
+  });
+  return unsubscribeProductos;
+}
+function dejarDeEscucharProductos() {
+  if (unsubscribeProductos) { unsubscribeProductos(); unsubscribeProductos = null; }
+}
+function listarProductosRemoto(incluirPausados) {
+  if (_cacheProductos === null) return [];
+  return incluirPausados ? _cacheProductos : _cacheProductos.filter((p) => p.activo !== false);
+}
+function escuchaProductosActiva() {
+  return _cacheProductos !== null;
+}
+
+async function crearProductoRemoto(clienteId, datos) {
+  const col = FirebaseSync.collection(db, 'negocios', clienteId, 'productos');
+  const ref = await FirebaseSync.addDoc(col, datos);
+  return ref.id;
+}
+
+async function editarProductoRemoto(clienteId, productoId, cambios) {
+  const ref = FirebaseSync.doc(db, 'negocios', clienteId, 'productos', productoId);
+  await FirebaseSync.updateDoc(ref, cambios);
+}
+
+// La pieza clave de seguridad: descuenta stock de VARIOS productos a la vez,
+// de forma atomica - si CUALQUIERA de los items no tiene stock suficiente en
+// el momento exacto de confirmar (alguien mas se lo llevo mientras tanto),
+// TODA la venta se cancela junta, no se descuenta ninguno a medias. Firestore
+// reintenta esta funcion sola si otro dispositivo escribio el mismo producto
+// justo al mismo tiempo (eso es lo que hace que sea "atomico" de verdad).
+async function venderConTransaccionSegura(clienteId, itemsVendidos) {
+  await FirebaseSync.runTransaction(db, async (transaccion) => {
+    const refs = itemsVendidos
+      .filter((it) => it.producto_id)
+      .map((it) => ({ item: it, ref: FirebaseSync.doc(db, 'negocios', clienteId, 'productos', it.producto_id) }));
+
+    // TODAS las lecturas de una transaccion tienen que pasar antes que
+    // cualquier escritura - regla de Firestore, no se pueden mezclar.
+    const snapshots = await Promise.all(refs.map((r) => transaccion.get(r.ref)));
+
+    for (let i = 0; i < refs.length; i++) {
+      const snap = snapshots[i];
+      const it = refs[i].item;
+      const cantidadReal = it.cantidad * (it.cantidad_base_presentacion || 1);
+      if (!snap.exists()) throw new Error(`El producto "${it.nombre}" ya no existe.`);
+      const stockActual = Number(snap.data().stock) || 0;
+      if (stockActual < cantidadReal) {
+        throw new Error(`No hay suficiente stock de "${it.nombre}" — quedan ${stockActual}, se intentaron vender ${cantidadReal}.`);
+      }
+    }
+    for (let i = 0; i < refs.length; i++) {
+      const it = refs[i].item;
+      const cantidadReal = it.cantidad * (it.cantidad_base_presentacion || 1);
+      transaccion.update(refs[i].ref, { stock: FirebaseSync.increment(-cantidadReal) });
+    }
+  });
+}
+
+// Para devoluciones - sumar stock de vuelta nunca "se queda sin stock", asi
+// que no hace falta la misma verificacion, pero se usa increment() igual
+// para que sea seguro si 2 devoluciones del mismo producto pasan a la vez.
+async function devolverStockSeguro(clienteId, itemsDevueltos) {
+  for (const it of itemsDevueltos) {
+    if (!it.producto_id) continue;
+    const cantidadReal = it.cantidad * (it.cantidad_base_presentacion || 1);
+    const ref = FirebaseSync.doc(db, 'negocios', clienteId, 'productos', it.producto_id);
+    await FirebaseSync.updateDoc(ref, { stock: FirebaseSync.increment(cantidadReal) });
+  }
+}
+
+// ============================================================================
+// FASE 2 - Presentaciones, promociones, combos, historial de precios. Mismo
+// patron que productos: escucha en vivo + cache en memoria, filtrado del
+// lado del cliente cuando hace falta (por producto_id, etc.) en vez de
+// hacer una consulta nueva a Firestore cada vez.
+// ============================================================================
+
+function _crearColeccionEnVivo(nombreColeccion) {
+  let unsubscribe = null;
+  let cache = null;
+  return {
+    iniciar(clienteId, alActualizar) {
+      if (unsubscribe) unsubscribe();
+      const col = FirebaseSync.collection(db, 'negocios', clienteId, nombreColeccion);
+      unsubscribe = FirebaseSync.onSnapshot(col, (snap) => {
+        const items = [];
+        snap.forEach((doc) => items.push({ id: doc.id, ...doc.data() }));
+        cache = items;
+        if (alActualizar) alActualizar();
+      }, (error) => console.warn(`Error escuchando ${nombreColeccion}:`, error.message));
+      return unsubscribe;
+    },
+    activa: () => cache !== null,
+    listar: () => cache || [],
+    async crear(clienteId, datos) {
+      const col = FirebaseSync.collection(db, 'negocios', clienteId, nombreColeccion);
+      const ref = await FirebaseSync.addDoc(col, datos);
+      return ref.id;
+    },
+    async editar(clienteId, id, cambios) {
+      const ref = FirebaseSync.doc(db, 'negocios', clienteId, nombreColeccion, id);
+      await FirebaseSync.updateDoc(ref, cambios);
+    },
+  };
+}
+
+const _presentaciones = _crearColeccionEnVivo('presentaciones');
+const _promociones = _crearColeccionEnVivo('promociones');
+const _combos = _crearColeccionEnVivo('combos');
+const _historialPrecios = _crearColeccionEnVivo('historial_precios');
+
+function iniciarEscuchaPresentaciones(clienteId, alActualizar) { return _presentaciones.iniciar(clienteId, alActualizar); }
+function listarPresentacionesRemoto() { return _presentaciones.listar(); }
+async function crearPresentacionRemota(clienteId, datos) { return await _presentaciones.crear(clienteId, datos); }
+
+function iniciarEscuchaPromociones(clienteId, alActualizar) { return _promociones.iniciar(clienteId, alActualizar); }
+function listarPromocionesRemoto() { return _promociones.listar(); }
+async function crearPromocionRemota(clienteId, datos) { return await _promociones.crear(clienteId, datos); }
+
+function iniciarEscuchaCombos(clienteId, alActualizar) { return _combos.iniciar(clienteId, alActualizar); }
+function listarCombosRemoto() { return _combos.listar(); }
+async function crearComboRemoto(clienteId, datos) { return await _combos.crear(clienteId, datos); }
+
+function iniciarEscuchaHistorialPrecios(clienteId, alActualizar) { return _historialPrecios.iniciar(clienteId, alActualizar); }
+function listarHistorialPreciosRemoto() { return _historialPrecios.listar(); }
+async function crearHistorialPrecioRemoto(clienteId, datos) { return await _historialPrecios.crear(clienteId, datos); }
+
+// ============================================================================
+// FASE 3 - Ventas centralizadas. A diferencia de productos, NO usa una
+// escucha en vivo permanente - las ventas crecen sin parar con el tiempo,
+// asi que "escuchar todas para siempre" saldria caro con el tiempo. En vez
+// de eso, se consulta por rango de fechas cada vez que se abre Historial o
+// se necesita un reporte - igual que ya funciona el filtro de periodo hoy,
+// solo que ahora la consulta la hace Firestore, no un filtro local.
+// ============================================================================
+
+async function crearVentaRemota(clienteId, venta) {
+  const col = FirebaseSync.collection(db, 'negocios', clienteId, 'ventas');
+  const ref = await FirebaseSync.addDoc(col, venta);
+  return ref.id;
+}
+
+// desde/hasta en formato YYYY-MM-DD, o null para "todo" (sin acotar - se
+// usa poco, solo cuando alguien elige explicitamente "Todo" el historial).
+async function listarVentasRemoto(clienteId, desde, hasta) {
+  const col = FirebaseSync.collection(db, 'negocios', clienteId, 'ventas');
+  let consulta = col;
+  if (desde && hasta) {
+    consulta = FirebaseSync.query(col,
+      FirebaseSync.where('fecha', '>=', desde + 'T00:00:00'),
+      FirebaseSync.where('fecha', '<=', hasta + 'T23:59:59'));
+  }
+  const snap = await FirebaseSync.getDocs(consulta);
+  const ventas = [];
+  snap.forEach((doc) => ventas.push({ id: doc.id, ...doc.data() }));
+  return ventas.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+}
+
+async function obtenerVentaRemota(clienteId, ventaId) {
+  const ref = FirebaseSync.doc(db, 'negocios', clienteId, 'ventas', ventaId);
+  const snap = await FirebaseSync.getDoc(ref);
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+async function agregarDevolucionAVenta(clienteId, ventaId, devolucion) {
+  const ref = FirebaseSync.doc(db, 'negocios', clienteId, 'ventas', ventaId);
+  await FirebaseSync.updateDoc(ref, { devoluciones: FirebaseSync.arrayUnion(devolucion) });
+}
+
+// ============================================================================
+// EQUIPOS VINCULADOS - reemplaza el viejo sistema de invitaciones/
+// confirmaciones firmadas con HMAC (que se diseño antes de tener Firestore
+// como fuente de verdad). Ahora el maestro escribe una invitacion pendiente
+// directo en Firestore, el equipo nuevo confirma directo en Firestore, sin
+// firmar nada - igual que ya funciona con usuarios y carritos. Ademas, esto
+// le da a Nacho visibilidad real desde App Soporte de cuantos equipos tiene
+// cada cliente y cuales son (antes esa lista solo vivia en el celular
+// maestro, sin respaldo en ningun lado).
+// ============================================================================
+
+async function generarInvitacionRemota(clienteId) {
+  const codigo = `IHINV-${clienteId}-${crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'equipos_pendientes', codigo);
+  await FirebaseSync.setDoc(ref, { fecha_generado: FirebaseSync.serverTimestamp() });
+  return codigo;
+}
+
+async function validarInvitacionRemota(codigo) {
+  const raw = (codigo || '').trim().toUpperCase().replace(/\s/g, '');
+  const partes = raw.split('-');
+  if (partes[0] !== 'IHINV' || partes.length < 3) return [null, 'Formato inválido'];
+  const clienteId = partes.slice(1, -1).join('-'); // el cliente_id puede tener guiones adentro
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'equipos_pendientes', raw);
+  const snap = await FirebaseSync.getDoc(ref);
+  if (!snap.exists()) return [null, 'Invitación inválida, ya usada, o expirada'];
+  return [{ cliente_id: clienteId, codigo_invitacion: raw }, 'OK'];
+}
+
+async function confirmarEquipoRemoto(clienteId, deviceId, nombreEquipo, codigoInvitacion) {
+  const refEquipo = FirebaseSync.doc(db, 'clientes', clienteId, 'equipos', deviceId);
+  await FirebaseSync.setDoc(refEquipo, {
+    nombre_equipo: nombreEquipo, fecha_confirmado: FirebaseSync.serverTimestamp(),
+  });
+  // La invitacion ya se uso - se borra para que nadie mas la pueda reusar.
+  if (codigoInvitacion) {
+    const refInv = FirebaseSync.doc(db, 'clientes', clienteId, 'equipos_pendientes', codigoInvitacion);
+    await FirebaseSync.deleteDoc(refInv);
+  }
+}
+
+async function listarEquiposRemoto(clienteId) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'equipos');
+  const snap = await FirebaseSync.getDocs(col);
+  const equipos = [];
+  snap.forEach((doc) => equipos.push({ device_id: doc.id, ...doc.data() }));
+  return equipos;
+}
+
+async function soltarEquipoRemoto(clienteId, deviceId) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'equipos', deviceId);
+  await FirebaseSync.deleteDoc(ref);
+}
+
+async function registrarEsteEquipo(clienteId, deviceId, nombreEquipo) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'equipos', deviceId);
+  await FirebaseSync.setDoc(ref, { nombre_equipo: nombreEquipo, fecha_confirmado: FirebaseSync.serverTimestamp() });
+}
+
+function hayCupoDisponibleRemoto(cliente, equiposActuales) {
+  return equiposActuales.length < (cliente.capacidad || 2);
+}
