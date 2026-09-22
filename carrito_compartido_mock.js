@@ -548,3 +548,34 @@ async function registrarEsteEquipo(clienteId, deviceId, nombreEquipo) {
 function hayCupoDisponibleRemoto(cliente, equiposActuales) {
   return equiposActuales.length < (cliente.capacidad || 2);
 }
+
+// ============================================================================
+// CONFIGURACION DE NEGOCIO Y AUDITORIA DE PERMISOS SIMULADAS
+// ============================================================================
+
+async function obtenerNegocioRemoto(clienteId) {
+  const raw = localStorage.getItem('negocio_sim_' + clienteId);
+  return raw ? JSON.parse(raw) : {};
+}
+
+async function editarNegocioRemoto(clienteId, cambios) {
+  const actual = await obtenerNegocioRemoto(clienteId);
+  localStorage.setItem('negocio_sim_' + clienteId, JSON.stringify({ ...actual, ...cambios }));
+}
+
+let _contadorAuditoriaId = 0;
+async function registrarCambioPermiso(clienteId, { usuarioAfectado, campo, valorAnterior, valorNuevo, hechoPor }) {
+  const clave = 'auditoria_permisos_sim_' + clienteId;
+  const lista = JSON.parse(localStorage.getItem(clave) || '[]');
+  lista.push({
+    id: 'aud-' + (_contadorAuditoriaId++),
+    usuario_afectado: usuarioAfectado, campo, valor_anterior: valorAnterior, valor_nuevo: valorNuevo,
+    hecho_por: hechoPor, fecha: new Date().toISOString(),
+  });
+  localStorage.setItem(clave, JSON.stringify(lista));
+}
+
+async function listarAuditoriaPermisos(clienteId, desde, hasta) {
+  const lista = JSON.parse(localStorage.getItem('auditoria_permisos_sim_' + clienteId) || '[]');
+  return lista.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+}

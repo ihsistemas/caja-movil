@@ -114,10 +114,18 @@ let unsubscribeUsuarios = null;
 let _cacheUsuarios = null; // null = todavia no llego el primer valor
 
 // Hay que llamar esto UNA vez, apenas se conoce el cliente_id (antes de
-// intentar loguear a nadie) - deja _cacheUsuarios lista para consultar.
+// intentar loguear a nadie) - deja _cacheUsuarios lista para consultar. Los
+// usuarios son del CLIENTE entero (2026-09-15: antes de cada local por
+// separado - se corrigió porque, para que "cualquier equipo sirva para
+// cualquier local" funcione, hace falta poder encontrar a un usuario por
+// nombre ANTES de saber en qué local va a trabajar - si estuvieran
+// separados por local no habría forma de buscarlo sin adivinar primero
+// dónde está). Cada usuario tiene un campo negocio_id (el local "de
+// origen") y locales_permitidos (en cuáles puede trabajar) - mismo
+// esquema que ya usa Parking con estacionamiento_id.
 function iniciarEscuchaUsuarios(clienteId, alListo) {
   if (unsubscribeUsuarios) unsubscribeUsuarios();
-  const col = FirebaseSync.collection(db, 'negocios', clienteId, 'usuarios');
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'usuarios');
   let esPrimeraVez = true;
   unsubscribeUsuarios = FirebaseSync.onSnapshot(col, (snap) => {
     const usuarios = [];
@@ -141,7 +149,7 @@ function escuchaUsuariosActiva() {
 // es jefe/delegado, no se usa en cada apertura de la app) sigue usando la
 // lista completa via iniciarEscuchaUsuarios, ahi si hace falta verla entera.
 async function buscarUsuarioPorNombre(clienteId, nombre) {
-  const col = FirebaseSync.collection(db, 'negocios', clienteId, 'usuarios');
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'usuarios');
   const consulta = FirebaseSync.query(col, FirebaseSync.where('nombre', '==', nombre), FirebaseSync.where('activo', '==', true));
   const snap = await FirebaseSync.getDocs(consulta);
   if (snap.empty) return null;
@@ -150,14 +158,14 @@ async function buscarUsuarioPorNombre(clienteId, nombre) {
 }
 
 async function crearUsuarioRemoto(clienteId, datos) {
-  const col = FirebaseSync.collection(db, 'negocios', clienteId, 'usuarios');
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'usuarios');
   const ref = await FirebaseSync.addDoc(col, { ...datos, activo: true });
   incrementarUsoDiario(clienteId, 'usuario_creado');
   return ref.id;
 }
 
 async function editarUsuarioRemoto(clienteId, usuarioId, cambios) {
-  const ref = FirebaseSync.doc(db, 'negocios', clienteId, 'usuarios', usuarioId);
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'usuarios', usuarioId);
   await FirebaseSync.updateDoc(ref, cambios);
   incrementarUsoDiario(clienteId, 'usuario_editado');
 }
@@ -170,17 +178,17 @@ async function editarUsuarioRemoto(clienteId, usuarioId, cambios) {
 
 let unsubscribeCierreMaestro = null;
 
-async function avisarCierreDeSesionMaestro(clienteId) {
-  const ref = FirebaseSync.doc(db, 'negocios', clienteId);
+async function avisarCierreDeSesionMaestro(clienteId, negocioId) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId);
   await FirebaseSync.setDoc(ref, { ultimo_cierre_maestro: FirebaseSync.serverTimestamp() }, { merge: true });
 }
 
 // callback() se llama SOLO cuando aparece un cierre NUEVO (no en el primer
 // valor que ya hubiera de antes) - asi un equipo que recien se conecta no se
 // cierra solo por un aviso viejo de la ultima vez que el maestro cerro.
-function escucharCierreDeSesionMaestro(clienteId, callback) {
+function escucharCierreDeSesionMaestro(clienteId, negocioId, callback) {
   if (unsubscribeCierreMaestro) unsubscribeCierreMaestro();
-  const ref = FirebaseSync.doc(db, 'negocios', clienteId);
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId);
   let esPrimeraVez = true;
   unsubscribeCierreMaestro = FirebaseSync.onSnapshot(ref, (snap) => {
     if (esPrimeraVez) { esPrimeraVez = false; return; }
@@ -190,6 +198,17 @@ function escucharCierreDeSesionMaestro(clienteId, callback) {
 }
 function dejarDeEscucharCierreMaestro() {
   if (unsubscribeCierreMaestro) { unsubscribeCierreMaestro(); unsubscribeCierreMaestro = null; }
+}
+
+// Lista los locales del cliente (lectura puntual, no listener) - la usa el
+// selector de local al loguearse (resolverLocalYCompletarLogin) y la
+// pantalla de permisos de usuario (¿en qué otros locales puede trabajar?).
+async function listarNegociosRemoto(clienteId) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios');
+  const snap = await FirebaseSync.getDocs(col);
+  const items = [];
+  snap.forEach((doc) => items.push({ negocio_id: doc.id, ...doc.data() }));
+  return items.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
 }
 
 // ============================================================================
@@ -271,6 +290,26 @@ async function obtenerClienteRemoto(clienteId) {
   return [cliente, 'OK'];
 }
 
+// Parseo del codigo de activacion "CLI-XXXXXXXXXX#N1" (cliente + local) -
+// mismo formato exacto que usa Parking para cliente+sede.
+function parsearCodigoNegocio(codigo) {
+  const raw = (codigo || '').trim().toUpperCase().replace(/\s/g, '');
+  if (!raw.startsWith('CLI-') || !raw.includes('#')) return null;
+  const [clienteId, negocioId] = raw.split('#');
+  if (!clienteId || !negocioId) return null;
+  return { clienteId, negocioId };
+}
+
+// Version para ACTIVAR un equipo (a diferencia de obtenerNegocioRemoto, que
+// asume que el local existe y solo trae su config) - devuelve [null, msg]
+// si no existe, igual que obtenerEstacionamientoRemoto en Parking.
+async function obtenerNegocioParaActivarRemoto(clienteId, negocioId) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId);
+  const snap = await FirebaseSync.getDoc(ref);
+  if (!snap.exists()) return [null, 'Ese local no existe o fue eliminado.'];
+  return [{ negocio_id: snap.id, ...snap.data() }, 'OK'];
+}
+
 // ============================================================================
 // USO DIARIO POR CLIENTE - para poder avisarle a Nacho si un negocio se
 // esta acercando al cupo gratis de Firebase, sin depender de que revise la
@@ -316,24 +355,19 @@ async function obtenerUsoUltimosDias(clienteId, nDias) {
 // ============================================================================
 // BIBLIOTECA DE PRODUCTOS - base compartida de codigo de barra -> nombre/foto,
 // alimentada por Nacho (Indexer) y por cualquier cliente que escanee algo
-// nuevo. Los clientes SOLO pueden crear entradas que no existan - nunca
-// modificar una que ya existe (eso lo protegen las reglas de Firestore, no
-// esta funcion). Lo que un cliente aporta de nuevo no entra directo a la
-// biblioteca - queda pendiente de que Nacho lo revise y apruebe.
+// nuevo. Via de UNA SOLA MANO: el cliente solo puede PROPONER (escribir en su
+// propio biblioteca_pendiente) - nunca leer la biblioteca compartida en si.
+// Nacho es el unico que consulta/revisa/reparte desde Manager IH o Indexer
+// (ambos autenticados) - por eso esta funcion NO tiene una busqueda directa a
+// biblioteca_productos, a proposito (esa lectura la bloquean tambien las
+// reglas de Firestore para quien no esta autenticado).
 // ============================================================================
 
-// Busqueda puntual por codigo de barra - 1 lectura, no hace falta escuchar
-// toda la biblioteca (que puede crecer mucho con el tiempo).
-async function buscarEnBiblioteca(codigoBarra) {
-  if (!codigoBarra) return null;
-  const ref = FirebaseSync.doc(db, 'biblioteca_productos', codigoBarra);
-  const snap = await FirebaseSync.getDoc(ref);
-  return snap.exists() ? { codigo_barra: snap.id, ...snap.data() } : null;
-}
-
-// El cliente propone un producto nuevo (codigo que la biblioteca no conoce)
-// - NO se sube directo a la biblioteca general, queda pendiente de revision
-// de Nacho, bajo el cliente que lo mando.
+// El cliente propone un producto nuevo - NO se sube directo a la biblioteca
+// general, queda pendiente de revision de Nacho, bajo el cliente que lo
+// mando. No hay forma de saber desde aca si el codigo ya estaba en la
+// biblioteca (el cliente no puede consultarla) - si ya estaba, Nacho
+// simplemente descarta la propuesta duplicada al revisarla.
 async function proponerProductoNuevo(clienteId, { codigoBarra, nombre, imagenData }) {
   const col = FirebaseSync.collection(db, 'clientes', clienteId, 'biblioteca_pendiente');
   await FirebaseSync.addDoc(col, {
@@ -353,9 +387,9 @@ async function proponerProductoNuevo(clienteId, { codigoBarra, nombre, imagenDat
 let unsubscribeProductos = null;
 let _cacheProductos = null; // null = todavia no llego el primer valor
 
-function iniciarEscuchaProductos(clienteId, alActualizar) {
+function iniciarEscuchaProductos(clienteId, negocioId, alActualizar) {
   if (unsubscribeProductos) unsubscribeProductos();
-  const col = FirebaseSync.collection(db, 'negocios', clienteId, 'productos');
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'productos');
   unsubscribeProductos = FirebaseSync.onSnapshot(col, (snap) => {
     const productos = [];
     snap.forEach((doc) => productos.push({ id: doc.id, ...doc.data() }));
@@ -377,14 +411,14 @@ function escuchaProductosActiva() {
   return _cacheProductos !== null;
 }
 
-async function crearProductoRemoto(clienteId, datos) {
-  const col = FirebaseSync.collection(db, 'negocios', clienteId, 'productos');
+async function crearProductoRemoto(clienteId, negocioId, datos) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'productos');
   const ref = await FirebaseSync.addDoc(col, datos);
   return ref.id;
 }
 
-async function editarProductoRemoto(clienteId, productoId, cambios) {
-  const ref = FirebaseSync.doc(db, 'negocios', clienteId, 'productos', productoId);
+async function editarProductoRemoto(clienteId, negocioId, productoId, cambios) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'productos', productoId);
   await FirebaseSync.updateDoc(ref, cambios);
 }
 
@@ -394,11 +428,11 @@ async function editarProductoRemoto(clienteId, productoId, cambios) {
 // TODA la venta se cancela junta, no se descuenta ninguno a medias. Firestore
 // reintenta esta funcion sola si otro dispositivo escribio el mismo producto
 // justo al mismo tiempo (eso es lo que hace que sea "atomico" de verdad).
-async function venderConTransaccionSegura(clienteId, itemsVendidos) {
+async function venderConTransaccionSegura(clienteId, negocioId, itemsVendidos) {
   await FirebaseSync.runTransaction(db, async (transaccion) => {
     const refs = itemsVendidos
       .filter((it) => it.producto_id)
-      .map((it) => ({ item: it, ref: FirebaseSync.doc(db, 'negocios', clienteId, 'productos', it.producto_id) }));
+      .map((it) => ({ item: it, ref: FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'productos', it.producto_id) }));
 
     // TODAS las lecturas de una transaccion tienen que pasar antes que
     // cualquier escritura - regla de Firestore, no se pueden mezclar.
@@ -425,11 +459,11 @@ async function venderConTransaccionSegura(clienteId, itemsVendidos) {
 // Para devoluciones - sumar stock de vuelta nunca "se queda sin stock", asi
 // que no hace falta la misma verificacion, pero se usa increment() igual
 // para que sea seguro si 2 devoluciones del mismo producto pasan a la vez.
-async function devolverStockSeguro(clienteId, itemsDevueltos) {
+async function devolverStockSeguro(clienteId, negocioId, itemsDevueltos) {
   for (const it of itemsDevueltos) {
     if (!it.producto_id) continue;
     const cantidadReal = it.cantidad * (it.cantidad_base_presentacion || 1);
-    const ref = FirebaseSync.doc(db, 'negocios', clienteId, 'productos', it.producto_id);
+    const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'productos', it.producto_id);
     await FirebaseSync.updateDoc(ref, { stock: FirebaseSync.increment(cantidadReal) });
   }
 }
@@ -445,9 +479,9 @@ function _crearColeccionEnVivo(nombreColeccion) {
   let unsubscribe = null;
   let cache = null;
   return {
-    iniciar(clienteId, alActualizar) {
+    iniciar(clienteId, negocioId, alActualizar) {
       if (unsubscribe) unsubscribe();
-      const col = FirebaseSync.collection(db, 'negocios', clienteId, nombreColeccion);
+      const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, nombreColeccion);
       unsubscribe = FirebaseSync.onSnapshot(col, (snap) => {
         const items = [];
         snap.forEach((doc) => items.push({ id: doc.id, ...doc.data() }));
@@ -458,13 +492,13 @@ function _crearColeccionEnVivo(nombreColeccion) {
     },
     activa: () => cache !== null,
     listar: () => cache || [],
-    async crear(clienteId, datos) {
-      const col = FirebaseSync.collection(db, 'negocios', clienteId, nombreColeccion);
+    async crear(clienteId, negocioId, datos) {
+      const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, nombreColeccion);
       const ref = await FirebaseSync.addDoc(col, datos);
       return ref.id;
     },
-    async editar(clienteId, id, cambios) {
-      const ref = FirebaseSync.doc(db, 'negocios', clienteId, nombreColeccion, id);
+    async editar(clienteId, negocioId, id, cambios) {
+      const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, nombreColeccion, id);
       await FirebaseSync.updateDoc(ref, cambios);
     },
   };
@@ -475,21 +509,30 @@ const _promociones = _crearColeccionEnVivo('promociones');
 const _combos = _crearColeccionEnVivo('combos');
 const _historialPrecios = _crearColeccionEnVivo('historial_precios');
 
-function iniciarEscuchaPresentaciones(clienteId, alActualizar) { return _presentaciones.iniciar(clienteId, alActualizar); }
+function iniciarEscuchaPresentaciones(clienteId, negocioId, alActualizar) { return _presentaciones.iniciar(clienteId, negocioId, alActualizar); }
 function listarPresentacionesRemoto() { return _presentaciones.listar(); }
-async function crearPresentacionRemota(clienteId, datos) { return await _presentaciones.crear(clienteId, datos); }
+async function crearPresentacionRemota(clienteId, negocioId, datos) { return await _presentaciones.crear(clienteId, negocioId, datos); }
 
-function iniciarEscuchaPromociones(clienteId, alActualizar) { return _promociones.iniciar(clienteId, alActualizar); }
+function iniciarEscuchaPromociones(clienteId, negocioId, alActualizar) { return _promociones.iniciar(clienteId, negocioId, alActualizar); }
 function listarPromocionesRemoto() { return _promociones.listar(); }
-async function crearPromocionRemota(clienteId, datos) { return await _promociones.crear(clienteId, datos); }
+async function crearPromocionRemota(clienteId, negocioId, datos) { return await _promociones.crear(clienteId, negocioId, datos); }
 
-function iniciarEscuchaCombos(clienteId, alActualizar) { return _combos.iniciar(clienteId, alActualizar); }
+function iniciarEscuchaCombos(clienteId, negocioId, alActualizar) { return _combos.iniciar(clienteId, negocioId, alActualizar); }
 function listarCombosRemoto() { return _combos.listar(); }
-async function crearComboRemoto(clienteId, datos) { return await _combos.crear(clienteId, datos); }
+async function crearComboRemoto(clienteId, negocioId, datos) { return await _combos.crear(clienteId, negocioId, datos); }
 
-function iniciarEscuchaHistorialPrecios(clienteId, alActualizar) { return _historialPrecios.iniciar(clienteId, alActualizar); }
+function iniciarEscuchaHistorialPrecios(clienteId, negocioId, alActualizar) { return _historialPrecios.iniciar(clienteId, negocioId, alActualizar); }
 function listarHistorialPreciosRemoto() { return _historialPrecios.listar(); }
-async function crearHistorialPrecioRemoto(clienteId, datos) { return await _historialPrecios.crear(clienteId, datos); }
+async function crearHistorialPrecioRemoto(clienteId, negocioId, datos) { return await _historialPrecios.crear(clienteId, negocioId, datos); }
+
+// Turnos de caja (apertura/cierre) - antes vivian SOLO en el IndexedDB de
+// cada celular (sin historial, sin verse entre equipos ni desde Manager
+// IH). Mismo patron de coleccion en vivo que productos/promociones/etc.
+const _turnos = _crearColeccionEnVivo('turnos');
+function iniciarEscuchaTurnos(clienteId, negocioId, alActualizar) { return _turnos.iniciar(clienteId, negocioId, alActualizar); }
+function listarTurnosRemoto() { return _turnos.listar(); }
+async function crearTurnoRemoto(clienteId, negocioId, datos) { return await _turnos.crear(clienteId, negocioId, datos); }
+async function editarTurnoRemoto(clienteId, negocioId, id, cambios) { return await _turnos.editar(clienteId, negocioId, id, cambios); }
 
 // ============================================================================
 // FASE 3 - Ventas centralizadas. A diferencia de productos, NO usa una
@@ -500,16 +543,16 @@ async function crearHistorialPrecioRemoto(clienteId, datos) { return await _hist
 // solo que ahora la consulta la hace Firestore, no un filtro local.
 // ============================================================================
 
-async function crearVentaRemota(clienteId, venta) {
-  const col = FirebaseSync.collection(db, 'negocios', clienteId, 'ventas');
+async function crearVentaRemota(clienteId, negocioId, venta) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'ventas');
   const ref = await FirebaseSync.addDoc(col, venta);
   return ref.id;
 }
 
 // desde/hasta en formato YYYY-MM-DD, o null para "todo" (sin acotar - se
 // usa poco, solo cuando alguien elige explicitamente "Todo" el historial).
-async function listarVentasRemoto(clienteId, desde, hasta) {
-  const col = FirebaseSync.collection(db, 'negocios', clienteId, 'ventas');
+async function listarVentasRemoto(clienteId, negocioId, desde, hasta) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'ventas');
   let consulta = col;
   if (desde && hasta) {
     consulta = FirebaseSync.query(col,
@@ -522,15 +565,44 @@ async function listarVentasRemoto(clienteId, desde, hasta) {
   return ventas.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 }
 
-async function obtenerVentaRemota(clienteId, ventaId) {
-  const ref = FirebaseSync.doc(db, 'negocios', clienteId, 'ventas', ventaId);
+async function obtenerVentaRemota(clienteId, negocioId, ventaId) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'ventas', ventaId);
   const snap = await FirebaseSync.getDoc(ref);
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
-async function agregarDevolucionAVenta(clienteId, ventaId, devolucion) {
-  const ref = FirebaseSync.doc(db, 'negocios', clienteId, 'ventas', ventaId);
+async function agregarDevolucionAVenta(clienteId, negocioId, ventaId, devolucion) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'ventas', ventaId);
   await FirebaseSync.updateDoc(ref, { devoluciones: FirebaseSync.arrayUnion(devolucion) });
+}
+
+async function editarVentaRemota(clienteId, negocioId, ventaId, cambios) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'ventas', ventaId);
+  await FirebaseSync.updateDoc(ref, cambios);
+}
+
+// Movimientos de inventario (ajustes de stock) - igual concepto que la tabla
+// del mismo nombre en Minimarket Pro (el exe): un ajuste SIEMPRE tiene
+// motivo, y no se puede tocar el stock de otra forma que no sea vendiendo,
+// devolviendo, o por esta via (ver ajustarStockProducto en datos.js). Mismo
+// patron que ventas: sin escucha permanente, por rango de fecha.
+async function crearMovimientoInventarioRemoto(clienteId, negocioId, datos) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'movimientos_inventario');
+  const ref = await FirebaseSync.addDoc(col, datos);
+  return ref.id;
+}
+async function listarMovimientosInventarioRemoto(clienteId, negocioId, desde, hasta) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'movimientos_inventario');
+  let consulta = col;
+  if (desde && hasta) {
+    consulta = FirebaseSync.query(col,
+      FirebaseSync.where('fecha', '>=', desde + 'T00:00:00'),
+      FirebaseSync.where('fecha', '<=', hasta + 'T23:59:59'));
+  }
+  const snap = await FirebaseSync.getDocs(consulta);
+  const items = [];
+  snap.forEach((doc) => items.push({ id: doc.id, ...doc.data() }));
+  return items.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 }
 
 // ============================================================================
@@ -544,9 +616,9 @@ async function agregarDevolucionAVenta(clienteId, ventaId, devolucion) {
 // maestro, sin respaldo en ningun lado).
 // ============================================================================
 
-async function generarInvitacionRemota(clienteId) {
-  const codigo = `IHINV-${clienteId}-${crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()}`;
-  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'equipos_pendientes', codigo);
+async function generarInvitacionRemota(clienteId, negocioId) {
+  const codigo = `IHINV-${clienteId}#${negocioId}-${crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'equipos_pendientes', codigo);
   await FirebaseSync.setDoc(ref, { fecha_generado: FirebaseSync.serverTimestamp() });
   return codigo;
 }
@@ -557,8 +629,13 @@ async function validarInvitacionRemota(codigo) {
   const raw = (codigo || '').trim().toUpperCase().replace(/\s/g, '');
   const partes = raw.split('-');
   if (partes[0] !== 'IHINV' || partes.length < 3) return [null, 'Formato inválido'];
-  const clienteId = partes.slice(1, -1).join('-'); // el cliente_id puede tener guiones adentro
-  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'equipos_pendientes', raw);
+  // El medio (clienteId#negocioId) puede tener guiones adentro (el
+  // clienteId ya los tiene) - se recupera uniendo todo menos el primer y
+  // último trozo, igual que en Parking.
+  const claveCompuesta = partes.slice(1, -1).join('-');
+  const [clienteId, negocioId] = claveCompuesta.split('#');
+  if (!clienteId || !negocioId) return [null, 'Formato inválido'];
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'equipos_pendientes', raw);
   const snap = await FirebaseSync.getDoc(ref);
   if (!snap.exists()) return [null, 'Invitación inválida, ya usada, o expirada'];
 
@@ -568,39 +645,116 @@ async function validarInvitacionRemota(codigo) {
     return [null, 'Este código ya venció (dura 15 minutos) — pide uno nuevo al equipo principal.'];
   }
 
-  return [{ cliente_id: clienteId, codigo_invitacion: raw }, 'OK'];
+  return [{ cliente_id: clienteId, negocio_id: negocioId, codigo_invitacion: raw }, 'OK'];
 }
 
-async function confirmarEquipoRemoto(clienteId, deviceId, nombreEquipo, codigoInvitacion) {
-  const refEquipo = FirebaseSync.doc(db, 'clientes', clienteId, 'equipos', deviceId);
+async function confirmarEquipoRemoto(clienteId, negocioId, deviceId, nombreEquipo, codigoInvitacion) {
+  const refEquipo = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'equipos', deviceId);
   await FirebaseSync.setDoc(refEquipo, {
     nombre_equipo: nombreEquipo, fecha_confirmado: FirebaseSync.serverTimestamp(),
   });
   // La invitacion ya se uso - se borra para que nadie mas la pueda reusar.
   if (codigoInvitacion) {
-    const refInv = FirebaseSync.doc(db, 'clientes', clienteId, 'equipos_pendientes', codigoInvitacion);
+    const refInv = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'equipos_pendientes', codigoInvitacion);
     await FirebaseSync.deleteDoc(refInv);
   }
 }
 
-async function listarEquiposRemoto(clienteId) {
-  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'equipos');
+async function listarEquiposRemoto(clienteId, negocioId) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'equipos');
   const snap = await FirebaseSync.getDocs(col);
   const equipos = [];
   snap.forEach((doc) => equipos.push({ device_id: doc.id, ...doc.data() }));
   return equipos;
 }
 
-async function soltarEquipoRemoto(clienteId, deviceId) {
-  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'equipos', deviceId);
+async function soltarEquipoRemoto(clienteId, negocioId, deviceId) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'equipos', deviceId);
   await FirebaseSync.deleteDoc(ref);
 }
 
-async function registrarEsteEquipo(clienteId, deviceId, nombreEquipo) {
-  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'equipos', deviceId);
+async function registrarEsteEquipo(clienteId, negocioId, deviceId, nombreEquipo) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'equipos', deviceId);
   await FirebaseSync.setDoc(ref, { nombre_equipo: nombreEquipo, fecha_confirmado: FirebaseSync.serverTimestamp() });
 }
 
-function hayCupoDisponibleRemoto(cliente, equiposActuales) {
-  return equiposActuales.length < (cliente.capacidad || 2);
+function hayCupoDisponibleRemoto(negocio, equiposActuales) {
+  return equiposActuales.length < (negocio.capacidad_equipos || 2);
+}
+
+// Escucha en vivo de "clientes/{clienteId}/equipos" para el panel del
+// maestro (a diferencia de listarEquiposRemoto arriba, que es una lectura
+// unica usada antes de iniciar sesion - ej. para chequear cupo en
+// activar.html, donde todavia no hay una sesion activa que mantenga viva
+// esta escucha) - asi la lista de "Equipos vinculados" y el cupo se
+// actualizan solos cuando otro equipo se suma o se saca, sin que el
+// maestro tenga que recargar la pagina o cambiar de pestaña.
+let unsubscribeEquiposPanel = null;
+let _cacheEquiposPanel = null;
+
+function iniciarEscuchaEquiposPanel(clienteId, negocioId, alActualizar) {
+  if (unsubscribeEquiposPanel) unsubscribeEquiposPanel();
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'equipos');
+  unsubscribeEquiposPanel = FirebaseSync.onSnapshot(col, (snap) => {
+    const equipos = [];
+    snap.forEach((doc) => equipos.push({ device_id: doc.id, ...doc.data() }));
+    _cacheEquiposPanel = equipos;
+    if (alActualizar) alActualizar();
+  }, (error) => {
+    console.warn('Error escuchando equipos:', error.message);
+  });
+  return unsubscribeEquiposPanel;
+}
+function dejarDeEscucharEquiposPanel() {
+  if (unsubscribeEquiposPanel) { unsubscribeEquiposPanel(); unsubscribeEquiposPanel = null; }
+  _cacheEquiposPanel = null;
+}
+function equiposPanelEnCache() {
+  return _cacheEquiposPanel || [];
+}
+
+// ============================================================================
+// CONFIGURACION DEL LOCAL (documento raiz clientes/{clienteId}/negocios/
+// {negocioId}, no una subcoleccion) - hoy solo se usa para las frecuencias
+// del reporte periodico que el jefe elige (diario/semanal/mensual).
+// ============================================================================
+
+async function obtenerNegocioRemoto(clienteId, negocioId) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId);
+  const snap = await FirebaseSync.getDoc(ref);
+  return snap.exists() ? snap.data() : {};
+}
+
+async function editarNegocioRemoto(clienteId, negocioId, cambios) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId);
+  await FirebaseSync.setDoc(ref, cambios, { merge: true });
+}
+
+// ============================================================================
+// AUDITORIA DE PERMISOS - registro de cada cambio de permiso que un jefe
+// (o delegado) le hace a un usuario, para que aparezca en el reporte
+// periodico por correo. NO registra la creacion inicial de un usuario,
+// solo cambios posteriores a uno que ya existia.
+// ============================================================================
+
+async function registrarCambioPermiso(clienteId, negocioId, { usuarioAfectado, campo, valorAnterior, valorNuevo, hechoPor }) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'auditoria_permisos');
+  await FirebaseSync.addDoc(col, {
+    usuario_afectado: usuarioAfectado, campo, valor_anterior: valorAnterior, valor_nuevo: valorNuevo,
+    hecho_por: hechoPor, fecha: new Date().toISOString(),
+  });
+}
+
+async function listarAuditoriaPermisos(clienteId, negocioId, desde, hasta) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'auditoria_permisos');
+  let consulta = col;
+  if (desde && hasta) {
+    consulta = FirebaseSync.query(col,
+      FirebaseSync.where('fecha', '>=', desde + 'T00:00:00'),
+      FirebaseSync.where('fecha', '<=', hasta + 'T23:59:59'));
+  }
+  const snap = await FirebaseSync.getDocs(consulta);
+  const items = [];
+  snap.forEach((doc) => items.push({ id: doc.id, ...doc.data() }));
+  return items.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 }

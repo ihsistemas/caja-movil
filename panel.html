@@ -5,122 +5,234 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel del equipo</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#E0632A">
+<meta name="theme-color" content="#2E4374">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: -apple-system, system-ui, sans-serif; }
-  body { background: #FBF7F0; min-height: 100vh; padding: 20px; }
-  .encabezado { margin-bottom: 20px; }
-  .nombre-cliente { font-size: 19px; color: #2A2118; font-weight: 700; }
-  .rol-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; }
-  .rol-badge.maestro { background: #FDF1E9; color: #B8410F; }
-  .rol-badge.sub { background: #EEF1FF; color: #3A45C4; }
-  .mi-nombre { font-size: 13px; color: #9A8B76; margin-top: 4px; }
-  .indicador-caja { display: block; margin-top: 8px; padding: 8px 12px; border-radius: 9px; border: none; font-size: 12px; font-weight: 700; background: #FEF2F2; color: #B91C1C; }
-  .indicador-caja.abierta { background: #F0FDF4; color: #15803D; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: 'IBM Plex Sans', -apple-system, system-ui, sans-serif; }
+  body { background: #F3F5F7; min-height: 100vh; padding: 20px; }
+  .encabezado-app { margin-bottom: 20px; }
+  .fila-negocio { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .logo-negocio {
+    width: 34px; height: 34px; border-radius: 8px; background: #2E4374;
+    color: white; font-weight: 700; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden;
+  }
+  .logo-negocio img { width: 100%; height: 100%; object-fit: cover; }
+  .info-negocio { flex: 1; min-width: 0; }
+  .nombre-negocio { font-weight: 600; font-size: 14.5px; line-height: 1.2; color: #1A2530; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nombre-equipo { font-size: 11.5px; color: #64707C; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pill-usuario {
+    font-size: 12px; color: #64707C; background: white; border: 1px solid #DCE2E7; border-radius: 20px;
+    padding: 5px 10px 5px 5px; display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  }
+  .avatar-mini { width: 20px; height: 20px; border-radius: 50%; background: #E8A23D; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; }
+  .flecha-mini { font-size: 9px; color: #64707C; }
+  .indicador-caja { display: block; margin-top: 8px; padding: 8px 12px; border-radius: 9px; border: none; font-size: 12px; font-weight: 700; background: #F7E5E3; color: #C5433A; }
+  .indicador-caja.abierta { background: #E3F0EA; color: #2F7A5C; }
 
   .tarjeta { background: white; border-radius: 16px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
-  .tarjeta h2 { font-size: 13.5px; color: #6B5C48; margin-bottom: 12px; }
+  .tarjeta h2 { font-size: 13.5px; color: #64707C; margin-bottom: 12px; }
 
-  .fila-equipo { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F3EBDD; }
+  .fila-equipo { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #DCE2E7; }
   .fila-equipo:last-child { border-bottom: none; }
-  .fila-equipo .nombre { font-size: 13.5px; font-weight: 600; color: #2A2118; }
-  .fila-equipo .rol-chica { font-size: 10.5px; color: #9A8B76; }
-  .btn-soltar { background: none; border: none; color: #C6B9A3; font-size: 12px; padding: 6px; }
-  .btn-soltar:active { color: #B91C1C; }
+  .fila-equipo .nombre { font-size: 13.5px; font-weight: 600; color: #1A2530; }
+  .fila-equipo .rol-chica { font-size: 10.5px; color: #64707C; }
+  .btn-soltar { background: none; border: none; color: #96A2AC; font-size: 12px; padding: 6px; }
+  .btn-soltar:active { color: #C5433A; }
 
-  .cupo-info { font-size: 12px; color: #9A8B76; margin-bottom: 10px; }
-  .btn-invitar { width: 100%; padding: 13px; border-radius: 12px; border: none; background: #E0632A; color: white; font-weight: 700; font-size: 13.5px; }
-  .btn-invitar:disabled { background: #E4E1EC; color: #ACA7BC; }
+  .cupo-info { font-size: 12px; color: #64707C; margin-bottom: 10px; }
+  .btn-invitar { width: 100%; padding: 13px; border-radius: 12px; border: none; background: #2E4374; color: white; font-weight: 700; font-size: 13.5px; }
+  .btn-invitar:disabled { background: #DCE2E7; color: #96A2AC; }
 
-  .btn-secundario { width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid #DCCFBB; background: white; color: #6B5C48; font-weight: 600; font-size: 13px; margin-top: 8px; }
+  .btn-secundario { width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid #DCE2E7; background: white; color: #64707C; font-weight: 600; font-size: 13px; margin-top: 8px; }
 
   .modal { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
   .modal.activo { display: flex; }
   .modal .caja { background: white; border-radius: 18px; padding: 22px; max-width: 340px; width: 100%; text-align: center; }
-  .modal h3 { font-size: 15px; color: #2A2118; margin-bottom: 14px; }
+  .modal h3 { font-size: 15px; color: #1A2530; margin-bottom: 14px; }
   #canvasInvitacion { margin: 0 auto 14px auto; border-radius: 10px; }
-  .token-texto-chico { font-family: monospace; font-size: 10.5px; word-break: break-all; color: #6B5C48; background: #FBF7F0; padding: 10px; border-radius: 8px; margin-bottom: 12px; text-align: left; }
-  .btn-cerrar-modal { width: 100%; padding: 11px; border-radius: 10px; border: none; background: #2A2118; color: white; font-weight: 700; font-size: 13px; }
+  .token-texto-chico { font-family: monospace; font-size: 10.5px; word-break: break-all; color: #64707C; background: #F3F5F7; padding: 10px; border-radius: 8px; margin-bottom: 12px; text-align: left; }
+  .btn-cerrar-modal { width: 100%; padding: 11px; border-radius: 10px; border: none; background: #1A2530; color: white; font-weight: 700; font-size: 13px; }
 
-  .placeholder-venta { background: white; border-radius: 16px; padding: 30px 18px; text-align: center; color: #C6B9A3; }
+  .placeholder-venta { background: white; border-radius: 16px; padding: 30px 18px; text-align: center; color: #96A2AC; }
 
   body { padding-bottom: 76px; }
 
-  .nav-app { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex;
-             box-shadow: 0 -2px 10px rgba(0,0,0,.06); z-index: 30; }
+  .nav-app { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; align-items: flex-end;
+             box-shadow: 0 -2px 10px rgba(0,0,0,.06); z-index: 30; padding: 0 6px; }
   .nav-item { flex: 1; border: none; background: none; padding: 10px 4px 8px 4px; font-size: 19px;
-              display: flex; flex-direction: column; align-items: center; gap: 2px; color: #C6B9A3; }
+              display: flex; flex-direction: column; align-items: center; gap: 2px; color: #96A2AC; }
   .nav-item span { font-size: 10px; font-weight: 600; }
-  .nav-item.activo { color: #E0632A; }
+  .nav-item.activo { color: #2E4374; }
+  .nav-item-venta-cont { flex: 1; display: flex; justify-content: center; }
+  .nav-item-venta { border: none; background: none; display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: -26px; }
+  .circulo-venta {
+    width: 50px; height: 50px; border-radius: 50%; background: #96A2AC; color: white;
+    display: flex; align-items: center; justify-content: center; font-size: 21px;
+    box-shadow: 0 6px 16px rgba(0,0,0,.15); border: 4px solid white;
+  }
+  .nav-item-venta.activo .circulo-venta { background: #2E4374; box-shadow: 0 6px 16px rgba(46,67,116,.35); }
+  .etiqueta-venta { font-size: 10px; font-weight: 700; color: #96A2AC; padding-bottom: 8px; }
+  .nav-item-venta.activo .etiqueta-venta { color: #2E4374; }
 
-  .pantalla-app { padding-top: 4px; }
+  .pantalla-app { display: none; padding-top: 4px; }
+  .pantalla-app.activa { display: block; }
 
   .buscador-venta { display: flex; gap: 8px; margin-bottom: 14px; }
-  .buscador-venta input { flex: 1; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #E4E1EC; font-size: 14px; }
-  .btn-escanear-venta { width: 46px; border-radius: 10px; border: none; background: #2A2118; color: white; font-size: 18px; }
+  .buscador-venta input { flex: 1; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #DCE2E7; font-size: 14px; }
+  .btn-escanear-venta { width: 46px; border-radius: 10px; border: none; background: #1A2530; color: white; font-size: 18px; }
 
   .fila-producto-venta { display: flex; align-items: center; gap: 10px; background: white; border-radius: 12px;
                           padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
-  .fila-producto-venta img, .fila-producto-venta .sin-foto { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; background: #F0EEF7; flex-shrink: 0; }
+  .fila-producto-venta img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; background: #DCE2E7; flex-shrink: 0; }
+  .fila-producto-venta .sin-foto {
+    width: 60px; height: 60px; border-radius: 8px; flex-shrink: 0;
+    border: 1.5px dashed #DCE2E7; background: #F3F5F7;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; opacity: .5;
+  }
+  .foto-upload-cont { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .preview-foto {
+    width: 64px; height: 64px; border-radius: 10px; background: #F3F5F7; border: 1.5px dashed #DCE2E7;
+    display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; overflow: hidden;
+  }
+  .preview-foto img { width: 100%; height: 100%; object-fit: cover; }
+  .btn-elegir-foto {
+    padding: 10px 16px; border-radius: 9px; border: 1.5px solid #DCE2E7; background: white;
+    color: #2E4374; font-weight: 600; font-size: 12.5px; cursor: pointer;
+  }
   .fila-producto-venta .info { flex: 1; min-width: 0; }
-  .fila-producto-venta .nombre { font-size: 13.5px; font-weight: 600; color: #2A2118; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .fila-producto-venta .precio-stock { font-size: 11.5px; color: #9A8B76; }
-  .fila-producto-venta .stock-bajo { color: #B91C1C; }
+  .fila-producto-venta .nombre { font-size: 13.5px; font-weight: 600; color: #1A2530; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fila-producto-venta .precio-stock { font-size: 11.5px; color: #64707C; }
+  .fila-producto-venta .stock-bajo { color: #C5433A; }
+  .fila-producto-venta .stock-medio { color: #B8860B; }
+  .banner-stock-bajo { background:#FFF4E0; border:1.5px solid #F0C674; color:#8A6100; border-radius:10px; padding:10px 14px; font-size:12.5px; font-weight:600; margin-bottom:14px; }
 
   .carrito-flotante { position: fixed; bottom: 66px; left: 0; right: 0; background: white; border-radius: 16px 16px 0 0;
                        box-shadow: 0 -4px 16px rgba(0,0,0,.1); padding: 12px 16px; z-index: 25; }
-  .carrito-resumen { display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; font-weight: 700; color: #2A2118; padding: 4px 0; }
-  .carrito-total { color: #E0632A; }
+  .carrito-resumen { display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; font-weight: 700; color: #1A2530; padding: 4px 0; }
+  .carrito-total { color: #2E4374; }
   .carrito-detalle { max-height: 200px; overflow-y: auto; margin: 8px 0; }
-  .fila-carrito { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #F3EBDD; font-size: 12.5px; }
+  .fila-carrito { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #DCE2E7; font-size: 12.5px; }
   .fila-carrito .cant-controles { display: flex; align-items: center; gap: 8px; }
-  .fila-carrito .cant-controles button { width: 22px; height: 22px; border-radius: 6px; border: 1px solid #DCCFBB; background: white; }
-  .btn-cobrar { width: 100%; padding: 13px; border-radius: 12px; border: none; background: #E0632A; color: white; font-weight: 700; font-size: 14px; margin-top: 6px; }
+  .fila-carrito .cant-controles button { width: 22px; height: 22px; border-radius: 6px; border: 1px solid #DCE2E7; background: white; }
+  .btn-cobrar { width: 100%; padding: 13px; border-radius: 12px; border: none; background: #2E4374; color: white; font-weight: 700; font-size: 14px; margin-top: 6px; }
 
   .modal-full { position: fixed; inset: 0; background: black; z-index: 60; display: none; flex-direction: column; }
   .modal-full.activo { display: flex; }
   .header-escaner { color: white; padding: 16px; display: flex; justify-content: space-between; font-size: 14px; }
 
-  .titulo-pantalla { font-size: 13px; color: #9A8B76; margin-bottom: 12px; font-weight: 600; }
-  .btn-agregar-producto { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #2A2118; color: white; font-weight: 700; font-size: 13px; margin-bottom: 14px; }
+  .titulo-pantalla { font-size: 13px; color: #64707C; margin-bottom: 12px; font-weight: 600; }
+  .btn-agregar-producto { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #1A2530; color: white; font-weight: 700; font-size: 13px; margin-bottom: 14px; }
 
   .fila-2 { display: flex; gap: 8px; }
   .fila-2 input, .fila-2 select { flex: 1; }
-  #modalProducto input, #modalProducto select { width: 100%; padding: 11px 13px; border-radius: 9px; border: 1.5px solid #E4E1EC; font-size: 13.5px; margin-bottom: 10px; }
+  #modalProducto input, #modalProducto select { width: 100%; padding: 11px 13px; border-radius: 9px; border: 1.5px solid #DCE2E7; font-size: 13.5px; margin-bottom: 10px; }
 
-  .total-cobrar { font-size: 26px; font-weight: 800; color: #2A2118; text-align: center; margin: 10px 0 16px 0; }
+  .total-cobrar { font-size: 26px; font-weight: 800; color: #1A2530; text-align: center; margin: 10px 0 16px 0; }
+  .fila-item-cobro { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid #DCE2E7; }
+  .fila-item-cobro img, .sin-foto-chica { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+  .sin-foto-chica { background: #F3F5F7; border: 1.5px dashed #DCE2E7; display: flex; align-items: center; justify-content: center; font-size: 15px; opacity: .5; }
+  .info-item-cobro { flex: 1; min-width: 0; }
+  .nombre-item-cobro { font-size: 13.5px; font-weight: 600; color: #1A2530; }
+  .detalle-item-cobro { font-size: 11px; color: #64707C; margin-top: 1px; }
+  .monto-item-cobro { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 13.5px; white-space: nowrap; color: #1A2530; }
   .opciones-pago { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
-  .opcion-pago { padding: 12px; border-radius: 10px; border: 1.5px solid #E4E1EC; background: white; font-size: 12.5px; font-weight: 600; color: #6B5C48; }
-  .opcion-pago.elegido { border-color: #E0632A; background: #FDF1E9; color: #B8410F; }
+  .opcion-pago { padding: 12px; border-radius: 10px; border: 1.5px solid #DCE2E7; background: white; font-size: 12.5px; font-weight: 600; color: #64707C; }
+  .opcion-pago.elegido { border-color: #2E4374; background: #E7EBF3; color: #22345C; }
 
   .fila-historial { background: white; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
-  .fila-historial .top { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #2A2118; }
-  .fila-historial .fecha { font-size: 11px; color: #9A8B76; margin-top: 2px; }
-  .btn-reporte { padding: 11px; border-radius: 10px; border: 1.5px solid #DCCFBB; background: white; color: #6B5C48; font-weight: 700; font-size: 12.5px; }
-  .nav-item-toggle { padding: 9px; border-radius: 9px; border: 1.5px solid #E4E1EC; background: white; color: #9A8B76; font-weight: 700; font-size: 12px; }
-  .nav-item-toggle.activo { background: #2A2118; color: white; border-color: #2A2118; }
+  .fila-historial .top { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #1A2530; }
+  .fila-historial .fecha { font-size: 11px; color: #64707C; margin-top: 2px; }
+  .btn-reporte { padding: 11px; border-radius: 10px; border: 1.5px solid #DCE2E7; background: white; color: #64707C; font-weight: 700; font-size: 12.5px; }
+  .nav-item-toggle { padding: 9px; border-radius: 9px; border: 1.5px solid #DCE2E7; background: white; color: #64707C; font-weight: 700; font-size: 12px; }
+  .nav-item-toggle.activo { background: #1A2530; color: white; border-color: #1A2530; }
   .fila-producto-venta.pausado { opacity: .55; }
   .btn-pausar { background: none; border: none; padding: 6px; font-size: 15px; }
-  .opcion-presentacion { width: 100%; padding: 13px; border-radius: 10px; border: 1.5px solid #E4E1EC; background: white; font-size: 13.5px; font-weight: 600; color: #2A2118; margin-bottom: 8px; text-align: left; }
-  .banner-combo { background: #FDF1E9; border: 1.5px solid #E0632A; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-  .banner-combo .texto { font-size: 12px; color: #B8410F; font-weight: 600; }
-  .banner-combo button { padding: 7px 12px; border-radius: 8px; border: none; background: #E0632A; color: white; font-weight: 700; font-size: 11.5px; }
-  .pantalla-login { position: fixed; inset: 0; background: #FBF7F0; z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .opcion-presentacion { width: 100%; padding: 13px; border-radius: 10px; border: 1.5px solid #DCE2E7; background: white; font-size: 13.5px; font-weight: 600; color: #1A2530; margin-bottom: 8px; text-align: left; }
+  .banner-combo { background: #E7EBF3; border: 1.5px solid #2E4374; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .banner-combo .texto { font-size: 12px; color: #22345C; font-weight: 600; }
+  .banner-combo button { padding: 7px 12px; border-radius: 8px; border: none; background: #2E4374; color: white; font-weight: 700; font-size: 11.5px; }
+  .pantalla-login { position: fixed; inset: 0; background: #F3F5F7; z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
   #modalClaveRespaldo { z-index: 110; }
   .pantalla-login.activa { display: flex; }
   .caja-login { background: white; border-radius: 18px; padding: 24px; max-width: 340px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
-  .caja-login input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #E4E1EC; font-size: 14px; margin-bottom: 10px; }
+  .caja-login input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #DCE2E7; font-size: 14px; margin-bottom: 10px; }
+
+  /* ============================================================
+     VISTA TABLET (ancho >= 900px) - el mismo HTML de siempre, solo
+     reorganizado con CSS: la pantalla de Venta pasa a 2 columnas
+     (grilla de productos + carrito fijo al costado, no flotante),
+     y la lista de productos usa grilla en vez de una sola columna.
+     El resto de pantallas (Inventario, Historial, etc.) se quedan
+     con el mismo layout de una columna, mas ancho y centrado.
+     ============================================================ */
+  @media (min-width: 900px) {
+    body { max-width: 1100px; margin: 0 auto; padding: 24px 24px 90px 24px; }
+    .encabezado-app, .tarjeta, #pantallaInventario, #pantallaDevolucion, #pantallaCaja, #pantallaHistorial { max-width: 700px; }
+
+    #pantallaVenta.activa { display: flex; align-items: flex-start; gap: 20px; }
+    .columna-productos-venta { flex: 1; min-width: 0; }
+    #pantallaVenta #listaProductosVenta {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-content: start;
+    }
+    #pantallaVenta .fila-producto-venta { flex-direction: column; align-items: stretch; text-align: left; }
+    #pantallaVenta .fila-producto-venta img, #pantallaVenta .fila-producto-venta .sin-foto { height: 90px; border-radius: 8px 8px 0 0; margin: -10px -12px 8px -12px; width: calc(100% + 24px); }
+
+    /* El carrito deja de flotar y pasa a ser un panel fijo al costado */
+    .carrito-flotante {
+      position: sticky; top: 20px; bottom: auto; left: auto; right: auto;
+      width: 320px; flex-shrink: 0; border-radius: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06); max-height: calc(100vh - 40px); overflow-y: auto;
+    }
+    .carrito-detalle { display: block !important; max-height: none; }
+  }
+
+  .seccion-label-usuarios { font-size: 12px; font-weight: 600; color: #64707C; margin: 16px 0 8px 2px; }
+  .seccion-label-usuarios:first-of-type { margin-top: 0; }
+  .tarjeta-cuenta {
+    background: white; border: 1.5px solid #DCE2E7; border-radius: 10px;
+    padding: 13px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+  }
+  .avatar-usuario {
+    width: 38px; height: 38px; border-radius: 50%; background: #2E4374; color: white;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13.5px; flex-shrink: 0;
+  }
+  .avatar-usuario.empleado { background: #E8A23D; }
+  .info-usuario { flex: 1; min-width: 0; }
+  .nombre-usuario { font-size: 14px; font-weight: 600; color: #1A2530; }
+  .rol-usuario { font-size: 11.5px; color: #64707C; margin-top: 1px; }
+  .rol-usuario.jefe { color: #2E4374; font-weight: 600; }
+  .accion-usuario { font-size: 12px; color: #2E4374; font-weight: 600; flex-shrink: 0; cursor: pointer; }
+  .icono-mas { font-size: 17px; color: #96A2AC; flex-shrink: 0; padding: 4px 6px; cursor: pointer; }
+  .btn-agregar-usuario {
+    width: 100%; background: white; border: 1.5px dashed #DCE2E7; border-radius: 10px;
+    padding: 12px; color: #2E4374; font-weight: 600; font-size: 13px;
+  }
+  .separador-cerrar { height: 1px; background: #DCE2E7; margin: 22px 0 14px 0; }
+  .btn-cerrar-sesion {
+    width: 100%; background: white; border: 1.5px solid #C5433A; border-radius: 10px;
+    padding: 13px; color: #C5433A; font-weight: 700; font-size: 14px;
+  }
 </style>
 </head>
 <body>
 
-<div class="encabezado">
-  <div class="nombre-cliente" id="nombreCliente">—</div>
-  <span class="rol-badge" id="rolBadge">—</span>
-  <div class="mi-nombre" id="miNombre"></div>
+<div class="encabezado-app">
+  <div class="fila-negocio">
+    <div class="logo-negocio" id="logoNegocio">—</div>
+    <div class="info-negocio">
+      <div class="nombre-negocio" id="nombreCliente">—</div>
+      <div class="nombre-equipo" id="nombreEquipoMostrado">—</div>
+    </div>
+    <button class="pill-usuario" id="indicadorSesion" onclick="abrirModalUsuarios()">
+      <div class="avatar-mini" id="avatarUsuarioMini">—</div>
+      <span id="nombreUsuarioPill">—</span>
+      <span class="flecha-mini">▾</span>
+    </button>
+  </div>
   <button class="indicador-caja" id="indicadorCaja" onclick="abrirModalCaja()">Caja cerrada — abrir</button>
-  <button class="indicador-caja" id="indicadorSesion" onclick="abrirModalUsuarios()" style="background:#EEF1FF; color:#3A45C4; margin-top:6px;"></button>
 </div>
 
 <div class="tarjeta" id="tarjetaEquipos" style="display:none;">
@@ -132,7 +244,7 @@
 
 <div class="tarjeta" id="tarjetaSub" style="display:none;">
   <h2>Estado</h2>
-  <p style="font-size:13px; color:#6B5C48; line-height:1.6;">Conectado como equipo adicional. El equipo principal (maestro) es quien controla cuántos equipos hay y sus permisos.</p>
+  <p style="font-size:13px; color:#64707C; line-height:1.6;">Conectado como equipo adicional. El equipo principal (maestro) es quien controla cuántos equipos hay y sus permisos.</p>
 </div>
 
 <!-- ===== PANTALLA LOGIN (bloquea todo hasta iniciar sesion) ===== -->
@@ -140,28 +252,40 @@
   <div class="caja-login">
     <div id="loginCrearPrimero" style="display:none;">
       <h3>Primer usuario (jefe)</h3>
-      <p style="font-size:12.5px; color:#9A8B76; margin-bottom:14px;">Este va a ser el usuario principal, con todos los permisos.</p>
+      <p style="font-size:12.5px; color:#64707C; margin-bottom:14px;">Este va a ser el usuario principal, con todos los permisos.</p>
       <input type="text" id="inputPrimerNombre" placeholder="Tu nombre">
       <input type="password" id="inputPrimerClave" placeholder="Clave (mín 4 caracteres)">
-      <div id="errorPrimerUsuario" style="color:#B91C1C; font-size:12px; margin-bottom:8px;"></div>
+      <div id="errorPrimerUsuario" style="color:#C5433A; font-size:12px; margin-bottom:8px;"></div>
       <button class="btn-cerrar-modal" onclick="confirmarCrearPrimerUsuario()">Crear</button>
     </div>
     <div id="loginIngresar" style="display:none;">
       <h3>Iniciar sesión</h3>
       <input type="text" id="inputLoginNombre" placeholder="Tu nombre de usuario" onkeydown="if(event.key==='Enter') document.getElementById('inputLoginClave').focus()">
       <input type="password" id="inputLoginClave" placeholder="Tu clave" onkeydown="if(event.key==='Enter') confirmarLogin()">
-      <div id="errorLogin" style="color:#B91C1C; font-size:12px; margin-bottom:8px;"></div>
+      <div id="errorLogin" style="color:#C5433A; font-size:12px; margin-bottom:8px;"></div>
       <button class="btn-cerrar-modal" onclick="confirmarLogin()">Entrar</button>
       <button class="btn-secundario" onclick="mostrarPantallaRecuperar()" style="margin-top:8px;">¿Olvidaste tu clave?</button>
     </div>
     <div id="loginRecuperar" style="display:none;">
       <h3>Recuperar acceso</h3>
-      <p style="font-size:12.5px; color:#9A8B76; margin-bottom:14px;">Ingresa tu clave de respaldo (la que se mostró una sola vez cuando se creó tu usuario).</p>
+      <p style="font-size:12.5px; color:#64707C; margin-bottom:14px;">Ingresa tu clave de respaldo (la que se mostró una sola vez cuando se creó tu usuario).</p>
       <input type="text" id="inputClaveRespaldo" placeholder="XXXX-XXXX-XXXX" style="text-transform:uppercase;">
       <input type="password" id="inputClaveNuevaRecuperar" placeholder="Tu clave nueva (mín 4 caracteres)">
-      <div id="errorRecuperar" style="color:#B91C1C; font-size:12px; margin-bottom:8px;"></div>
+      <div id="errorRecuperar" style="color:#C5433A; font-size:12px; margin-bottom:8px;"></div>
       <button class="btn-cerrar-modal" onclick="confirmarRecuperarClave()">Restablecer clave</button>
       <button class="btn-secundario" onclick="mostrarPantallaLoginNormal()" style="margin-top:8px;">Volver</button>
+    </div>
+    <div id="loginElegirClave" style="display:none;">
+      <h3>Elige tu clave</h3>
+      <p style="font-size:12.5px; color:#64707C; margin-bottom:14px;">Estás entrando con una clave temporal — elige la que vas a usar de ahora en adelante.</p>
+      <input type="password" id="inputClaveNuevaPrimeraVez" placeholder="Tu clave nueva (mín 4 caracteres)">
+      <div id="errorElegirClave" style="color:#C5433A; font-size:12px; margin-bottom:8px;"></div>
+      <button class="btn-cerrar-modal" onclick="confirmarClaveElegidaPrimeraVez()">Guardar y entrar</button>
+    </div>
+    <div id="loginElegirLocal" style="display:none;">
+      <h3>¿Dónde vas a trabajar?</h3>
+      <p style="font-size:12.5px; color:#64707C; margin-bottom:14px;">Tenés acceso a más de un local — elegí en cuál vas a trabajar ahora.</p>
+      <div id="listaLocalesLogin"></div>
     </div>
   </div>
 </div>
@@ -170,29 +294,35 @@
 <div class="modal" id="modalClaveRespaldo">
   <div class="caja">
     <h3>Guarda esta clave de respaldo</h3>
-    <p style="font-size:12.5px; color:#9A8B76; margin-bottom:14px;">
+    <p style="font-size:12.5px; color:#64707C; margin-bottom:14px;">
       Te va a servir si algún día olvidas tu clave normal. <b>Solo se muestra esta vez</b> — guárdala en un lugar seguro (una foto, un papel, donde no se te pierda).
     </p>
-    <div style="font-size:22px; font-weight:800; text-align:center; background:#FBF7F0; border-radius:10px; padding:16px; margin-bottom:16px; letter-spacing:1px;" id="textoClaveRespaldo"></div>
+    <div style="font-size:22px; font-weight:800; text-align:center; background:#F3F5F7; border-radius:10px; padding:16px; margin-bottom:16px; letter-spacing:1px;" id="textoClaveRespaldo"></div>
     <button class="btn-cerrar-modal" onclick="cerrarModalClaveRespaldo()">Ya la guardé</button>
   </div>
 </div>
 
 <div class="nav-app" id="navApp" style="display:none;">
-  <button class="nav-item activo" data-pantalla="venta" onclick="irAPantallaApp('venta')">🛒<span>Venta</span></button>
   <button class="nav-item" data-pantalla="inventario" onclick="irAPantallaApp('inventario')">📦<span>Inventario</span></button>
   <button class="nav-item" data-pantalla="devolucion" onclick="irAPantallaApp('devolucion')">↩️<span>Devolución</span></button>
+  <div class="nav-item-venta-cont">
+    <button class="nav-item-venta activo" data-pantalla="venta" onclick="irAPantallaApp('venta')">
+      <span class="circulo-venta">🛒</span><span class="etiqueta-venta">Venta</span>
+    </button>
+  </div>
   <button class="nav-item" id="navBotonHistorial" data-pantalla="historial" onclick="irAPantallaApp('historial')">🧾<span>Historial</span></button>
   <button class="nav-item" id="navBotonCaja" data-pantalla="caja" onclick="irAPantallaApp('caja')" style="display:none;">🏪<span>Caja</span></button>
 </div>
 
 <!-- ===== PANTALLA VENTA ===== -->
-<div class="pantalla-app activa" id="pantallaVenta">
-  <div class="buscador-venta">
-    <input type="text" id="inputBuscarProducto" placeholder="Buscar producto por nombre..." oninput="filtrarProductosVenta()">
-    <button class="btn-escanear-venta" onclick="abrirEscanerVenta()">📷</button>
+<div class="pantalla-app" id="pantallaVenta">
+  <div class="columna-productos-venta">
+    <div class="buscador-venta">
+      <input type="text" id="inputBuscarProducto" placeholder="Buscar producto por nombre..." oninput="filtrarProductosVenta()">
+      <button class="btn-escanear-venta" onclick="abrirEscanerVenta()">📷</button>
+    </div>
+    <div id="listaProductosVenta"></div>
   </div>
-  <div id="listaProductosVenta"></div>
 
   <div class="carrito-flotante" id="carritoFlotante" style="display:none;">
     <div id="bannerCombo" style="display:none;"></div>
@@ -206,7 +336,7 @@
 </div>
 
 <!-- ===== PANTALLA INVENTARIO ===== -->
-<div class="pantalla-app" id="pantallaInventario" style="display:none;">
+<div class="pantalla-app" id="pantallaInventario">
   <div class="buscador-venta">
     <input type="text" id="inputBuscarInventario" placeholder="Buscar producto..." oninput="pintarInventario()">
   </div>
@@ -216,27 +346,34 @@
   </div>
   <div class="fila-2" style="margin-bottom:14px;">
     <button class="btn-agregar-producto" style="margin-bottom:0;" onclick="abrirFormProducto(null)">+ Producto</button>
-    <button class="btn-agregar-producto" style="margin-bottom:0; background:#E0632A;" onclick="abrirFormCombo()">+ Combo</button>
+    <button class="btn-agregar-producto" style="margin-bottom:0; background:#2E4374;" onclick="abrirFormCombo()">+ Combo</button>
   </div>
   <button class="btn-secundario" style="width:100%; margin-bottom:14px;" onclick="abrirFormFactura()">📋 Agregar mercadería (factura de proveedor)</button>
+  <div id="avisoStockBajo" style="display:none;"></div>
   <div id="listaInventario"></div>
 </div>
 
 <!-- ===== PANTALLA DEVOLUCION ===== -->
-<div class="pantalla-app" id="pantallaDevolucion" style="display:none;">
+<div class="pantalla-app" id="pantallaDevolucion">
   <p class="titulo-pantalla">Elige la venta a devolver</p>
   <div id="listaVentasDevolucion"></div>
 </div>
 
 <!-- ===== PANTALLA CAJA (recibe carritos de otros dispositivos) ===== -->
-<div class="pantalla-app" id="pantallaCaja" style="display:none;">
+<div class="pantalla-app" id="pantallaCaja">
   <p class="titulo-pantalla">Carritos recibidos</p>
   <div id="listaCarritosEntrantes"></div>
 </div>
 
 <!-- ===== PANTALLA HISTORIAL ===== -->
-<div class="pantalla-app" id="pantallaHistorial" style="display:none;">
+<div class="pantalla-app" id="pantallaHistorial">
   <p class="titulo-pantalla">Historial de ventas</p>
+  <div class="fila-2" style="margin-bottom:14px;">
+    <button class="nav-item-toggle activo" id="btnTabVentas" onclick="cambiarTabHistorial('ventas')">Ventas</button>
+    <button class="nav-item-toggle" id="btnTabPanel" onclick="cambiarTabHistorial('panel')">📊 Panel</button>
+  </div>
+
+  <div id="subVentasHistorial">
   <div class="fila-2" style="margin-bottom:8px;">
     <button class="nav-item-toggle activo" id="btnPeriodoHoy" onclick="elegirPeriodo('hoy')">Hoy</button>
     <button class="nav-item-toggle" id="btnPeriodoSemana" onclick="elegirPeriodo('semana')">Semana</button>
@@ -249,12 +386,35 @@
     <button class="btn-reporte" onclick="generarPDFVentas()">📄 PDF</button>
     <button class="btn-reporte" onclick="generarExcelVentas()">📊 Excel</button>
   </div>
+  <div class="tarjeta" style="margin-bottom:14px;">
+    <h2>Reporte periódico por correo</h2>
+    <p style="font-size:11.5px; color:#64707C; margin-bottom:10px;">A qué correo y a qué hora se manda lo configura Nacho — acá eliges con qué frecuencia (puedes marcar más de una).</p>
+    <label style="font-size:13px; display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+      <input type="checkbox" id="inputFrecuenciaDiario" style="width:auto;" onchange="guardarFrecuenciasReporte()"> Diario
+    </label>
+    <label style="font-size:13px; display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+      <input type="checkbox" id="inputFrecuenciaSemanal" style="width:auto;" onchange="guardarFrecuenciasReporte()"> Semanal
+    </label>
+    <label style="font-size:13px; display:flex; align-items:center; gap:8px;">
+      <input type="checkbox" id="inputFrecuenciaMensual" style="width:auto;" onchange="guardarFrecuenciasReporte()"> Mensual
+    </label>
+  </div>
   <div class="fila-2" style="margin-bottom:14px;">
     <button class="btn-reporte" onclick="descargarRespaldoUI()">💾 Exportar respaldo</button>
     <button class="btn-reporte" onclick="document.getElementById('inputArchivoRespaldo').click()">📥 Restaurar</button>
   </div>
   <input type="file" id="inputArchivoRespaldo" accept=".json" style="display:none;" onchange="restaurarRespaldoUI(event)">
   <div id="listaHistorial"></div>
+  </div>
+
+  <div id="subPanelHistorial" style="display:none;">
+    <div class="tarjeta" style="margin-bottom:14px;">
+      <h2>Rentabilidad por producto</h2>
+      <p style="font-size:11.5px; color:#64707C; margin-bottom:12px;">Se actualiza solo — no hace falta generar ni descargar nada.</p>
+      <div id="resumenMargenPromedio" style="font-size:13px; color:#64707C; margin-bottom:12px;"></div>
+      <div id="listaRentabilidad"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ===== MODAL: Escaner de camara (venta) ===== -->
@@ -268,9 +428,10 @@
 
 <!-- ===== MODAL: Cobrar ===== -->
 <div class="modal" id="modalCobrar">
-  <div class="caja">
+  <div class="caja" style="max-height:85vh; overflow-y:auto;">
     <h3>Cobrar</h3>
     <div class="total-cobrar" id="totalCobrar">$0</div>
+    <div id="itemsCobrar" style="margin-bottom:14px;"></div>
     <label>Medio de pago</label>
     <div class="opciones-pago">
       <button class="opcion-pago" data-medio="efectivo" onclick="elegirMedioPago('efectivo')">💵 Efectivo</button>
@@ -286,38 +447,98 @@
 
 <!-- ===== MODAL: Usuarios (sesion + gestion) ===== -->
 <div class="modal" id="modalUsuarios">
-  <div class="caja" style="max-height:80vh; overflow-y:auto;">
-    <h3 id="tituloModalUsuarios">Sesión</h3>
-    <p style="font-size:12.5px; color:#9A8B76; margin-bottom:14px;" id="infoSesionActual"></p>
-    <button class="btn-secundario" onclick="cerrarSesionActual()" style="margin-bottom:14px;">Cerrar sesión</button>
+  <div class="caja" style="max-height:80vh; overflow-y:auto; text-align:left;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+      <span style="font-size:20px; color:#64707C; cursor:pointer;" onclick="cerrarModalUsuarios()">←</span>
+      <h3 style="margin:0; font-size:16px;">Usuarios</h3>
+    </div>
+
+    <div class="seccion-label-usuarios">Tu cuenta</div>
+    <div class="tarjeta-cuenta">
+      <div class="avatar-usuario" id="avatarTarjetaPropia">—</div>
+      <div class="info-usuario">
+        <div class="nombre-usuario" id="nombreTarjetaPropia">—</div>
+        <div class="rol-usuario jefe" id="rolTarjetaPropia">—</div>
+      </div>
+      <div class="accion-usuario" onclick="abrirCambiarClave()">Cambiar clave</div>
+    </div>
 
     <div id="seccionGestionUsuarios" style="display:none;">
-      <div style="border-top:1px solid #F3EBDD; padding-top:14px;">
-        <h3 style="font-size:14px;">Usuarios</h3>
-        <div id="listaUsuarios" style="margin-bottom:14px;"></div>
+      <div class="seccion-label-usuarios" id="labelSeccionEmpleados">Empleados</div>
+      <div id="listaUsuarios" style="margin-bottom:6px;"></div>
+      <button class="btn-agregar-usuario" onclick="mostrarFormNuevoUsuario()">+ Agregar usuario</button>
+
+      <div id="formNuevoUsuario" style="display:none; margin-top:12px;">
         <input type="text" id="inputNuevoUsuarioNombre" placeholder="Nombre">
-        <input type="password" id="inputNuevoUsuarioClave" placeholder="Clave (mín 4 caracteres)">
-        <select id="inputNuevoUsuarioRol" style="width:100%; padding:11px; border-radius:9px; border:1.5px solid #E4E1EC; margin-bottom:10px;">
+        <select id="inputNuevoUsuarioRol" style="width:100%; padding:11px; border-radius:9px; border:1.5px solid #DCE2E7; margin-bottom:10px;">
           <option value="empleado">Empleado</option>
           <option value="jefe" id="opcionRolJefe">Jefe</option>
         </select>
-        <label style="font-size:12.5px; color:#6B5C48; display:flex; align-items:center; gap:6px; margin-bottom:10px;" id="labelPuedeCambiarPrecio">
+        <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin-bottom:10px;" id="labelPuedeCambiarPrecio">
           <input type="checkbox" id="inputNuevoUsuarioPuedeCambiarPrecio" style="width:auto;"> Puede cambiar precios
         </label>
-        <label style="font-size:12.5px; color:#6B5C48; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+        <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
           <input type="checkbox" id="inputNuevoUsuarioModoCarrito" style="width:auto;"> Puede mandar carritos a caja (varios dispositivos)
         </label>
-        <label style="font-size:12.5px; color:#6B5C48; display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+        <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin-bottom:10px;">
           <input type="checkbox" id="inputNuevoUsuarioModoCaja" style="width:auto;"> Puede recibir carritos como caja
         </label>
-        <label style="font-size:12.5px; color:#6B5C48; display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+        <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin-bottom:10px;">
           <input type="checkbox" id="inputNuevoUsuarioGestionaUsuarios" style="width:auto;"> Jefe delegado (puede crear y gestionar otros usuarios)
         </label>
-        <div id="errorNuevoUsuario" style="color:#B91C1C; font-size:12px; margin-bottom:8px;"></div>
-        <button class="btn-cerrar-modal" onclick="confirmarCrearUsuario()">+ Agregar usuario</button>
+        <div id="errorNuevoUsuario" style="color:#C5433A; font-size:12px; margin-bottom:8px;"></div>
+        <button class="btn-cerrar-modal" onclick="confirmarCrearUsuario()">Crear usuario</button>
       </div>
     </div>
-    <button class="btn-secundario" onclick="cerrarModalUsuarios()" style="margin-top:10px;">Cerrar</button>
+
+    <div class="separador-cerrar"></div>
+    <button class="btn-cerrar-sesion" onclick="cerrarSesionActual()">Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="modal" id="modalCambiarClave">
+  <div class="caja">
+    <h3>Cambiar tu clave</h3>
+    <input type="password" id="inputClaveNuevaPropia" placeholder="Clave nueva (mín 4 caracteres)">
+    <div id="errorCambiarClave" style="color:#C5433A; font-size:12px; margin-bottom:8px;"></div>
+    <button class="btn-cerrar-modal" onclick="confirmarCambiarClavePropia()">Guardar</button>
+    <button class="btn-secundario" onclick="cerrarCambiarClave()" style="margin-top:8px;">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal" id="modalQrAccesoUsuario">
+  <div class="caja">
+    <h3>Código de acceso</h3>
+    <p style="font-size:12.5px; color:#64707C; margin-bottom:14px;">Que la persona escanee esto desde <b>su propio celular</b> — entra directo, y le va a pedir elegir su propia clave antes de seguir.</p>
+    <canvas id="canvasQrAccesoUsuario"></canvas>
+    <div class="token-texto-chico" id="textoQrAccesoUsuario"></div>
+    <button class="btn-cerrar-modal" onclick="cerrarQrAccesoUsuario()">Listo</button>
+  </div>
+</div>
+
+<div class="modal" id="modalEditarPermisos">
+  <div class="caja">
+    <h3 id="tituloEditarPermisos">Permisos</h3>
+    <label style="font-size:13px; display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+      <input type="checkbox" id="inputEditarPuedeCambiarPrecio" style="width:auto;"> Puede cambiar precios
+    </label>
+    <label style="font-size:13px; display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+      <input type="checkbox" id="inputEditarModoCarrito" style="width:auto;"> Puede mandar carritos a caja
+    </label>
+    <label style="font-size:13px; display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+      <input type="checkbox" id="inputEditarModoCaja" style="width:auto;"> Puede recibir carritos como caja
+    </label>
+    <div id="filaLocalesPermitidos" style="text-align:left; margin-bottom:16px; display:none;">
+      <label style="font-size:12px; color:#64707C; font-weight:600; display:block; margin-bottom:6px;">¿En qué otros locales puede trabajar?</label>
+      <div id="listaLocalesPermitidos"></div>
+      <p style="font-size:11px; color:#96A2AC; margin-top:4px;">Si marcás más de uno, al loguearse va a poder elegir en cuál trabajar.</p>
+    </div>
+    <label style="font-size:13px; display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+      <input type="checkbox" id="inputEditarGestionaUsuarios" style="width:auto;"> Jefe delegado (puede gestionar otros usuarios)
+    </label>
+    <button class="btn-cerrar-modal" onclick="guardarEdicionPermisos()">Guardar cambios</button>
+    <button class="btn-secundario" onclick="cerrarEditarPermisos()" style="margin-top:8px;">Cancelar</button>
+    <button class="btn-secundario" onclick="eliminarUsuarioUI(usuarioEditandoPermisos)" style="margin-top:8px; color:#C5433A; border-color:#C5433A;">Quitar este usuario</button>
   </div>
 </div>
 
@@ -328,7 +549,7 @@
     <input type="text" id="inputFacturaProveedor" placeholder="Proveedor" list="listaProveedoresDatalist">
     <datalist id="listaProveedoresDatalist"></datalist>
     <input type="text" id="inputFacturaNumero" placeholder="N° de factura (opcional)">
-    <div style="font-size:12px; color:#9A8B76; margin:10px 0 6px 0;">Productos que llegaron:</div>
+    <div style="font-size:12px; color:#64707C; margin:10px 0 6px 0;">Productos que llegaron:</div>
     <div id="itemsFactura"></div>
     <button class="btn-secundario" onclick="agregarFilaFactura()" style="margin-bottom:10px;">+ Agregar producto a la factura</button>
     <button class="btn-cerrar-modal" onclick="guardarFactura()">Guardar factura</button>
@@ -341,7 +562,7 @@
   <div class="caja" style="max-height:80vh; overflow-y:auto;">
     <h3>Nuevo combo</h3>
     <input type="text" id="inputComboNombre" placeholder="Ej: Combo Almuerzo">
-    <div style="font-size:12px; color:#9A8B76; margin-bottom:8px;">Elige los productos que lo forman:</div>
+    <div style="font-size:12px; color:#64707C; margin-bottom:8px;">Elige los productos que lo forman:</div>
     <div id="listaProductosCombo" style="margin-bottom:12px;"></div>
     <input type="number" id="inputComboPrecio" placeholder="Precio del combo">
     <button class="btn-cerrar-modal" onclick="guardarCombo()">Crear combo</button>
@@ -353,9 +574,15 @@
 <div class="modal" id="modalProducto">
   <div class="caja" style="max-height:85vh; overflow-y:auto;">
     <h3 id="tituloFormProducto">Nuevo producto</h3>
+
+    <div class="foto-upload-cont">
+      <div class="preview-foto" id="previewFotoProducto"><span>📷</span></div>
+      <label class="btn-elegir-foto" for="inputPFotoArchivo" id="labelElegirFoto">Elegir foto</label>
+      <input type="file" id="inputPFotoArchivo" accept="image/*" style="display:none;" onchange="alElegirFotoProducto(event)">
+    </div>
+
     <input type="text" id="inputPNombre" placeholder="Nombre del producto">
-    <input type="text" id="inputPCodigo" placeholder="Código de barra (opcional)" onblur="revisarBibliotecaAlCambiarCodigo()">
-    <div id="avisoBiblioteca" style="display:none; font-size:11.5px; color:#1F6F5C; margin:-6px 0 8px 2px;">✓ Nombre encontrado en la biblioteca de productos</div>
+    <input type="text" id="inputPCodigo" placeholder="Código de barra (opcional)">
     <input type="text" id="inputPCategoria" placeholder="Categoría (opcional)" list="listaCategoriasDatalist">
     <datalist id="listaCategoriasDatalist"></datalist>
     <div class="fila-2">
@@ -371,17 +598,20 @@
         <option value="gramo">Gramo</option>
       </select>
     </div>
-    <label style="font-size:12px; color:#6B5C48; font-weight:600; display:block; margin-bottom:4px;">Vence (opcional)</label>
+    <button type="button" class="btn-secundario" id="btnAbrirAjusteStock" style="display:none; margin:-6px 0 10px 0;" onclick="abrirModalAjusteStock()">📦 Ajustar stock (con motivo)</button>
+    <label style="font-size:12px; color:#64707C; font-weight:600; display:block; margin-bottom:4px;">Avisar cuando el stock llegue a (opcional)</label>
+    <input type="number" id="inputPStockMinimo" placeholder="Ej: 5">
+    <label style="font-size:12px; color:#64707C; font-weight:600; display:block; margin-bottom:4px;">Vence (opcional)</label>
     <input type="date" id="inputPVencimiento">
-    <label style="font-size:12.5px; color:#6B5C48; display:flex; align-items:center; gap:6px; margin-bottom:12px;">
+    <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin-bottom:12px;">
       <input type="checkbox" id="inputPAplicaIva" checked style="width:auto; margin:0;"> Aplica IVA
     </label>
 
-    <label style="font-size:12.5px; color:#6B5C48; display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+    <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin-bottom:10px;">
       <input type="checkbox" id="inputPVendePorCaja" onchange="document.getElementById('camposPresentacion').style.display = this.checked ? 'block' : 'none'" style="width:auto; margin:0;">
       También se vende por caja o paquete
     </label>
-    <div id="camposPresentacion" style="display:none; background:#FBF7F0; border-radius:9px; padding:10px; margin-bottom:10px;">
+    <div id="camposPresentacion" style="display:none; background:#F3F5F7; border-radius:9px; padding:10px; margin-bottom:10px;">
       <input type="text" id="inputPresNombre" placeholder="Ej: Caja x6">
       <div class="fila-2">
         <input type="number" id="inputPresCantidad" placeholder="Unidades por caja">
@@ -390,13 +620,14 @@
     </div>
     <div id="presentacionesExistentes"></div>
     <div id="historialPreciosProducto"></div>
+    <div id="historialAjustesProducto"></div>
 
-    <label style="font-size:12.5px; color:#6B5C48; display:flex; align-items:center; gap:6px; margin:10px 0;">
+    <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin:10px 0;">
       <input type="checkbox" id="inputPTienePromo" onchange="document.getElementById('camposPromo').style.display = this.checked ? 'block' : 'none'" style="width:auto; margin:0;">
       Tiene promoción activa
     </label>
-    <div id="camposPromo" style="display:none; background:#FDF1E9; border-radius:9px; padding:10px; margin-bottom:10px;">
-      <select id="inputPromoTipo" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid #E4E1EC; margin-bottom:8px;">
+    <div id="camposPromo" style="display:none; background:#E7EBF3; border-radius:9px; padding:10px; margin-bottom:10px;">
+      <select id="inputPromoTipo" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid #DCE2E7; margin-bottom:8px;">
         <option value="porcentaje">% de descuento</option>
         <option value="monto_fijo">Monto fijo de descuento</option>
         <option value="precio_fijo">Precio final fijo</option>
@@ -409,13 +640,49 @@
   </div>
 </div>
 
+<!-- ===== MODAL: Ajustar stock (merma, rotura, diferencia de conteo, etc.) ===== -->
+<div class="modal" id="modalAjusteStock">
+  <div class="caja">
+    <h3>Ajustar stock</h3>
+    <p style="font-size:12.5px; color:#64707C; margin-bottom:10px;" id="infoAjusteStock"></p>
+    <label style="font-size:12.5px; color:#64707C; font-weight:600; display:block; margin-bottom:6px;">Diferencia (negativo = perdida, positivo = se encontró más)</label>
+    <input type="number" id="inputAjusteDiferencia" placeholder="Ej: -2 ó 3">
+    <select id="inputAjusteTipo" style="margin-bottom:10px;">
+      <option value="merma">Merma</option>
+      <option value="rotura">Rotura</option>
+      <option value="consumo_interno">Consumo interno</option>
+      <option value="diferencia_conteo">Diferencia de conteo</option>
+      <option value="otro">Otro</option>
+    </select>
+    <input type="text" id="inputAjusteMotivo" placeholder="Motivo (obligatorio)">
+    <div id="errorAjusteStock" style="color:#C5433A; font-size:12px; margin-bottom:8px;"></div>
+    <button class="btn-cerrar-modal" onclick="confirmarAjusteStock()">Confirmar ajuste</button>
+    <button class="btn-secundario" onclick="cerrarModalAjusteStock()">Cancelar</button>
+  </div>
+</div>
+
 <!-- ===== MODAL: Devolucion parcial ===== -->
 <div class="modal" id="modalDevolucion">
   <div class="caja" style="max-height:80vh; overflow-y:auto;">
     <h3>¿Qué devuelves?</h3>
     <div id="itemsDevolucion" style="margin-bottom:14px;"></div>
+    <input type="text" id="inputMotivoDevolucion" placeholder="Motivo (obligatorio)">
+    <div id="errorDevolucion" style="color:#C5433A; font-size:12px; margin-bottom:8px;"></div>
     <button class="btn-cerrar-modal" onclick="confirmarDevolucionParcial()">Confirmar devolución</button>
+    <button class="btn-secundario" id="btnAnularVentaCompleta" style="display:none; margin-top:8px;" onclick="abrirModalAnularVenta()">✕ Anular venta completa</button>
     <button class="btn-secundario" onclick="cerrarModalDevolucion()">Cancelar</button>
+  </div>
+</div>
+
+<!-- ===== MODAL: Anular venta completa ===== -->
+<div class="modal" id="modalAnularVenta">
+  <div class="caja">
+    <h3>Anular venta completa</h3>
+    <p style="font-size:12.5px; color:#64707C; margin-bottom:10px;">Se restaura el stock de todo lo que no se haya devuelto antes. Esta acción no se puede deshacer.</p>
+    <input type="text" id="inputMotivoAnulacion" placeholder="Motivo (obligatorio)">
+    <div id="errorAnularVenta" style="color:#C5433A; font-size:12px; margin-bottom:8px;"></div>
+    <button class="btn-cerrar-modal" onclick="confirmarAnularVenta()">Anular venta</button>
+    <button class="btn-secundario" onclick="cerrarModalAnularVenta()">Cancelar</button>
   </div>
 </div>
 
@@ -424,21 +691,31 @@
   <div class="caja">
     <div id="cajaContenidoAbrir" style="display:none;">
       <h3>Abrir caja</h3>
-      <label style="font-size:12.5px; color:#6B5C48; font-weight:600; display:block; margin-bottom:6px;">Monto inicial en efectivo</label>
+      <label style="font-size:12.5px; color:#64707C; font-weight:600; display:block; margin-bottom:6px;">Monto inicial en efectivo</label>
       <input type="number" id="inputMontoApertura" placeholder="0">
       <button class="btn-cerrar-modal" onclick="confirmarAbrirCaja()">Abrir caja</button>
     </div>
     <div id="cajaContenidoCerrar" style="display:none;">
       <h3>Cerrar caja</h3>
-      <p style="font-size:12.5px; color:#9A8B76; margin-bottom:10px;" id="infoCajaAbierta"></p>
+      <p style="font-size:12.5px; color:#64707C; margin-bottom:10px;" id="infoCajaAbierta"></p>
       <button class="btn-secundario" onclick="cerrarModalCaja(); abrirModalCajaChica();" style="margin-bottom:10px;">💰 Caja chica (ingreso/gasto)</button>
-      <label style="font-size:12.5px; color:#6B5C48; font-weight:600; display:block; margin-bottom:6px;">Efectivo contado ahora</label>
+      <label style="font-size:12.5px; color:#64707C; font-weight:600; display:block; margin-bottom:6px;">Efectivo contado ahora</label>
       <input type="number" id="inputEfectivoContado" placeholder="0">
-      <div id="errorCierreCaja" style="color:#B91C1C; font-size:12px; margin-bottom:8px;"></div>
+      <div id="errorCierreCaja" style="color:#C5433A; font-size:12px; margin-bottom:8px;"></div>
       <input type="text" id="inputNotaCierre" placeholder="Motivo de la diferencia (si hay)">
       <button class="btn-cerrar-modal" onclick="confirmarCerrarCaja()">Cerrar caja</button>
     </div>
-    <button class="btn-secundario" onclick="cerrarModalCaja()">Cancelar</button>
+    <button class="btn-secundario" id="btnVerHistorialCajas" style="display:none; margin-top:10px;" onclick="cerrarModalCaja(); abrirModalHistorialCajas();">📋 Historial de cajas</button>
+    <button class="btn-secundario" onclick="reabrirCobroAlAbrirCaja = false; cerrarModalCaja()">Cancelar</button>
+  </div>
+</div>
+
+<!-- ===== MODAL: Historial de cajas (aperturas/cierres pasados, de todos los equipos) ===== -->
+<div class="modal" id="modalHistorialCajas">
+  <div class="caja">
+    <h3>Historial de cajas</h3>
+    <div id="listaHistorialCajas" style="max-height:60vh; overflow-y:auto; margin-bottom:10px;"></div>
+    <button class="btn-secundario" onclick="cerrarModalHistorialCajas()">Cerrar</button>
   </div>
 </div>
 
@@ -446,14 +723,14 @@
 <div class="modal" id="modalCajaChica">
   <div class="caja">
     <h3>Caja chica</h3>
-    <p style="font-size:12.5px; color:#9A8B76; margin-bottom:10px;">Saldo actual: <b id="saldoCajaChicaTexto">$0</b></p>
+    <p style="font-size:12.5px; color:#64707C; margin-bottom:10px;">Saldo actual: <b id="saldoCajaChicaTexto">$0</b></p>
     <div class="fila-2" style="margin-bottom:12px;">
       <button class="opcion-pago" id="btnTipoIngreso" onclick="elegirTipoMovCaja('ingreso')">+ Ingreso</button>
       <button class="opcion-pago" id="btnTipoGasto" onclick="elegirTipoMovCaja('gasto')">− Gasto</button>
     </div>
     <input type="number" id="inputMontoCajaChica" placeholder="Monto">
     <input type="text" id="inputDescripcionCajaChica" placeholder="Motivo (obligatorio)">
-    <div id="errorCajaChica" style="color:#B91C1C; font-size:12px; margin-bottom:8px;"></div>
+    <div id="errorCajaChica" style="color:#C5433A; font-size:12px; margin-bottom:8px;"></div>
     <button class="btn-cerrar-modal" onclick="confirmarMovimientoCajaChica()">Registrar</button>
     <button class="btn-secundario" onclick="cerrarModalCajaChica()">Cancelar</button>
   </div>
@@ -468,6 +745,22 @@
   </div>
 </div>
 
+<!-- ===== MODAL: Confirmar / Avisar (reemplaza confirm()/alert() nativos,
+     feos e inconsistentes con el resto de la UI) ===== -->
+<div class="modal" id="modalConfirmar">
+  <div class="caja" style="text-align:center;">
+    <p id="mensajeModalConfirmar" style="margin-bottom:16px; font-size:14px;"></p>
+    <button class="btn-cerrar-modal" id="btnModalConfirmarSi">Confirmar</button>
+    <button class="btn-secundario" id="btnModalConfirmarNo" style="margin-top:8px;">Cancelar</button>
+  </div>
+</div>
+<div class="modal" id="modalAviso">
+  <div class="caja" style="text-align:center;">
+    <p id="mensajeModalAviso" style="margin-bottom:16px; font-size:14px; white-space:pre-line;"></p>
+    <button class="btn-cerrar-modal" id="btnModalAvisoOk">Entendido</button>
+  </div>
+</div>
+
 <!-- ===== MODAL: Venta confirmada ===== -->
 <div class="modal" id="modalVentaOk">
   <div class="caja" style="text-align:center;">
@@ -478,10 +771,20 @@
   </div>
 </div>
 
+<!-- ===== MODAL: Devolucion confirmada ===== -->
+<div class="modal" id="modalDevolucionOk">
+  <div class="caja" style="text-align:center;">
+    <div style="font-size:40px; margin-bottom:10px;">✓</div>
+    <h3>Devolución registrada</h3>
+    <p style="color:#64707C; font-size:13px; margin-bottom:14px;">El stock ya se actualizó.</p>
+    <button class="btn-cerrar-modal" onclick="document.getElementById('modalDevolucionOk').classList.remove('activo')">Listo</button>
+  </div>
+</div>
+
 <div class="modal" id="modalInvitacion">
   <div class="caja">
     <h3>Código para sumar equipo</h3>
-    <p style="font-size:12px; color:#9A8B76; margin-bottom:10px;">Que la persona escanee o escriba este código al activar su equipo — queda sumado automáticamente, sin ningún paso más. <b>Válido por 15 minutos</b> — si se vence, generas uno nuevo sin problema.</p>
+    <p style="font-size:12px; color:#64707C; margin-bottom:10px;">Que la persona escanee o escriba este código al activar su equipo — queda sumado automáticamente, sin ningún paso más. <b>Válido por 15 minutos</b> — si se vence, generas uno nuevo sin problema.</p>
     <canvas id="canvasInvitacion"></canvas>
     <div class="token-texto-chico" id="textoInvitacion"></div>
     <button class="btn-cerrar-modal" onclick="cerrarInvitacion()">Listo</button>
@@ -495,31 +798,97 @@
 <script src="reportes.js"></script>
 <script src="firebase-sync.bundle.js"></script>
 <script src="carrito_compartido.js"></script>
+<script src="modal_historial.js"></script>
 <script>
+  // Al tocar/enfocar cualquier campo numérico, selecciona todo su
+  // contenido - así escribir "1" sobre un campo que muestra "0" da "1",
+  // no "01" (sin esto, el cursor se posiciona después del 0 existente y
+  // el dígito nuevo se agrega en vez de reemplazarlo).
+  document.addEventListener('focusin', (e) => {
+    if (e.target.matches('input[type="number"]')) e.target.select();
+  });
+
+  // Reemplaza confirm()/alert() nativos del navegador (feos, bloqueantes, y
+  // fuera de estilo con el resto de la app) por un modal propio.
+  // confirmarModal() devuelve una Promise<boolean> (true = confirmó);
+  // avisoModal() es solo informativo, se cierra con un botón.
+  function confirmarModal(mensaje) {
+    return new Promise((resolve) => {
+      document.getElementById('mensajeModalConfirmar').textContent = mensaje;
+      const modal = document.getElementById('modalConfirmar');
+      modal.classList.add('activo');
+      document.getElementById('btnModalConfirmarSi').onclick = () => { modal.classList.remove('activo'); resolve(true); };
+      document.getElementById('btnModalConfirmarNo').onclick = () => { modal.classList.remove('activo'); resolve(false); };
+    });
+  }
+  function avisoModal(mensaje) {
+    return new Promise((resolve) => {
+      document.getElementById('mensajeModalAviso').textContent = mensaje;
+      const modal = document.getElementById('modalAviso');
+      modal.classList.add('activo');
+      document.getElementById('btnModalAvisoOk').onclick = () => { modal.classList.remove('activo'); resolve(); };
+    });
+  }
+
   const _estadoInicial = estadoEquipoVigente();
   const vigente = _estadoInicial.vigente, motivo = _estadoInicial.motivo;
   let estado = _estadoInicial.estado;
+  // El local donde se activó ESTE equipo fisicamente - se guarda aparte
+  // porque estado.negocio_id puede cambiar durante la sesion (ver
+  // activarLocalDeSesion) si el usuario logueado tiene acceso a mas de un
+  // local. La gestion de equipos (que es del EQUIPO, no del usuario de
+  // turno) sigue usando esta, nunca la que el selector haya elegido.
+  const _negocioEquipoOriginal = vigente ? estado.negocio_id : null;
   let sesionActual = null;
+  let _negociosCache = null; // lista de locales del cliente, cargada al abrir "editar permisos"
 
   if (vigente) {
     inicializarFirebase();
     verificarLicenciaConServidorEnSegundoPlano();
-    iniciarEscuchaProductos(estado.cliente_id, () => {
+    iniciarEscuchaProductos(estado.cliente_id, estado.negocio_id, () => {
       if (sesionActual) pintarProductosVenta();
+      if (document.getElementById('subPanelHistorial') && document.getElementById('subPanelHistorial').style.display !== 'none') {
+        pintarPanelRentabilidad();
+      }
     });
-    iniciarEscuchaPresentaciones(estado.cliente_id);
-    iniciarEscuchaPromociones(estado.cliente_id);
-    iniciarEscuchaCombos(estado.cliente_id);
-    iniciarEscuchaHistorialPrecios(estado.cliente_id);
-    abrirDBCaja().then(() => {
+    iniciarEscuchaPresentaciones(estado.cliente_id, estado.negocio_id);
+    iniciarEscuchaPromociones(estado.cliente_id, estado.negocio_id);
+    iniciarEscuchaCombos(estado.cliente_id, estado.negocio_id);
+    iniciarEscuchaHistorialPrecios(estado.cliente_id, estado.negocio_id);
+    iniciarEscuchaTurnos(estado.cliente_id, estado.negocio_id, () => { if (sesionActual) pintarIndicadorCaja(); });
+    abrirDBCaja().then(async () => {
+      // Si viene de un QR de "primer ingreso" (usuario + clave temporal en
+      // la URL), se intenta entrar con eso primero, antes que la sesion
+      // guardada - es la señal mas especifica de las 2.
+      const params = new URLSearchParams(location.search);
+      const loginUsuario = params.get('loginUsuario');
+      const loginClave = params.get('loginClave');
+      if (loginUsuario && loginClave) {
+        const usuario = await verificarClaveUsuarioPorNombre(estado.cliente_id, loginUsuario, loginClave);
+        history.replaceState({}, '', location.pathname); // saca los datos de la URL, no deben quedar en el historial
+        if (usuario) {
+          sesionActual = usuario;
+          if (usuario.clave_temporal) {
+            abrirPantallaElegirClave();
+          } else {
+            await resolverLocalYCompletarLogin();
+          }
+          return;
+        }
+        // Si el codigo ya no sirve (alguien ya lo uso, o se equivoco al
+        // escribirlo a mano), sigue de largo al login normal, sin trabarse.
+      }
+
       const sesionGuardada = localStorage.getItem('ih_sesion_usuario_' + estado.cliente_id);
       if (sesionGuardada) {
         // Ya habia iniciado sesion antes en este mismo celular - entra
         // directo, sin consultar Firestore de nuevo (eso es lo que ahorra
         // lecturas). El listener de usuarios solo arranca despues, si hace
-        // falta (ej: el jefe abre "Gestionar usuarios").
+        // falta (ej: el jefe abre "Gestionar usuarios"). Se re-resuelve el
+        // local cada vez (no solo al loguearse con clave) porque cualquier
+        // equipo sirve para cualquier local del cliente.
         sesionActual = JSON.parse(sesionGuardada);
-        completarLogin();
+        resolverLocalYCompletarLogin();
         return;
       }
       iniciarEscuchaUsuarios(estado.cliente_id, () => {
@@ -538,25 +907,27 @@
   if (!vigente) {
     window.location.href = 'activar.html' + (motivo === 'vencida' ? '?vencida=1' : '');
   } else {
-    document.getElementById('nombreCliente').textContent = estado.nombre_cliente;
-    document.getElementById('miNombre').textContent = 'Este equipo: ' + estado.nombre_equipo;
-    const badge = document.getElementById('rolBadge');
-    badge.textContent = estado.rol === 'maestro' ? 'PRINCIPAL' : 'ADICIONAL';
-    badge.classList.add(estado.rol);
+    document.getElementById('nombreCliente').textContent = estado.nombre_cliente + (estado.nombre_negocio ? ' · ' + estado.nombre_negocio : '');
+    pintarLogoNegocio();
+    let textoEquipo = estado.nombre_equipo;
     if (estado.tipo_licencia === 'trial' && estado.vence) {
-      document.getElementById('miNombre').textContent += ` · Prueba, vence el ${estado.vence}`;
+      textoEquipo += ` · Prueba vence ${estado.vence}`;
     }
+    document.getElementById('nombreEquipoMostrado').textContent = textoEquipo;
 
     if (estado.rol === 'maestro') {
       document.getElementById('tarjetaEquipos').style.display = 'block';
-      pintarEquipos();
+      // _negocioEquipoOriginal, no estado.negocio_id - los equipos son del
+      // local físico de ESTE dispositivo, no del local que haya elegido
+      // operar quien esté logueado ahora (ver activarLocalDeSesion).
+      iniciarEscuchaEquiposPanel(estado.cliente_id, _negocioEquipoOriginal, pintarEquipos);
     } else {
       document.getElementById('tarjetaSub').style.display = 'block';
     }
   }
 
-  async function pintarEquipos() {
-    const equipos = await listarEquiposRemoto(estado.cliente_id);
+  function pintarEquipos() {
+    const equipos = equiposPanelEnCache();
     document.getElementById('listaEquipos').innerHTML = equipos.map((eq) => `
       <div class="fila-equipo">
         <div>
@@ -567,22 +938,22 @@
       </div>
     `).join('');
 
-    const cupo = estado.capacidad || 2;
+    const cupo = estado.capacidad_equipos || 2;
     document.getElementById('cupoInfo').textContent = `${equipos.length} de ${cupo} equipos en uso`;
     const btnInvitar = document.getElementById('btnInvitar');
-    const hayCupo = hayCupoDisponibleRemoto(estado, equipos);
+    const hayCupo = hayCupoDisponibleRemoto({ capacidad_equipos: cupo }, equipos);
     btnInvitar.disabled = !hayCupo;
     btnInvitar.textContent = hayCupo ? '+ Sumar equipo' : 'Sin cupo disponible';
   }
 
   async function soltarEquipo(deviceId) {
-    if (!confirm('¿Soltar este equipo? Dejará de estar autorizado, y vas a poder usar ese cupo para uno nuevo.')) return;
-    await soltarEquipoRemoto(estado.cliente_id, deviceId);
+    if (!(await confirmarModal('¿Soltar este equipo? Dejará de estar autorizado, y vas a poder usar ese cupo para uno nuevo.'))) return;
+    await soltarEquipoRemoto(estado.cliente_id, _negocioEquipoOriginal, deviceId);
     pintarEquipos();
   }
 
   async function abrirInvitacion() {
-    const codigo = await generarInvitacionRemota(estado.cliente_id);
+    const codigo = await generarInvitacionRemota(estado.cliente_id, _negocioEquipoOriginal);
     document.getElementById('textoInvitacion').textContent = codigo;
     QRCodeLib.toCanvas(document.getElementById('canvasInvitacion'), codigo, { width: 220, margin: 1 });
     document.getElementById('modalInvitacion').classList.add('activo');
@@ -595,25 +966,92 @@
   // ============================================================
   // NAVEGACION ENTRE PANTALLAS
   // ============================================================
-  function irAPantallaApp(nombre) {
+  async function irAPantallaApp(nombre) {
     // Chequeo real (no solo ocultar el boton) - Historial muestra ventas de
     // TODO el negocio desde que se centralizaron, asi que solo jefe/delegado
     // puede entrar, aunque intente llamar esto directo.
     if (nombre === 'historial' && !(sesionActual.rol === 'jefe' || sesionActual.puede_gestionar_usuarios)) {
-      alert('Solo el jefe (o un jefe delegado) puede ver el historial completo del negocio.');
+      await avisoModal('Solo el jefe (o un jefe delegado) puede ver el historial completo del negocio.');
       return;
     }
-    document.querySelectorAll('.pantalla-app').forEach((p) => p.style.display = 'none');
-    document.getElementById('pantalla' + nombre.charAt(0).toUpperCase() + nombre.slice(1)).style.display = 'block';
-    document.querySelectorAll('.nav-item').forEach((b) => b.classList.toggle('activo', b.dataset.pantalla === nombre));
+    document.querySelectorAll('.pantalla-app').forEach((p) => p.classList.remove('activa'));
+    document.getElementById('pantalla' + nombre.charAt(0).toUpperCase() + nombre.slice(1)).classList.add('activa');
+    document.querySelectorAll('.nav-item, .nav-item-venta').forEach((b) => b.classList.toggle('activo', b.dataset.pantalla === nombre));
     if (nombre === 'venta') pintarProductosVenta();
     if (nombre === 'inventario') pintarInventario();
     if (nombre === 'devolucion') pintarVentasDevolucion();
-    if (nombre === 'historial') pintarHistorial();
+    if (nombre === 'historial') { pintarHistorial(); cargarFrecuenciasReporte(); }
+  }
+
+  async function cargarFrecuenciasReporte() {
+    const negocio = await obtenerNegocioRemoto(estado.cliente_id, estado.negocio_id);
+    const frecuencias = negocio.reporte_frecuencias || [];
+    document.getElementById('inputFrecuenciaDiario').checked = frecuencias.includes('diario');
+    document.getElementById('inputFrecuenciaSemanal').checked = frecuencias.includes('semanal');
+    document.getElementById('inputFrecuenciaMensual').checked = frecuencias.includes('mensual');
+  }
+
+  function cambiarTabHistorial(tab) {
+    document.getElementById('subVentasHistorial').style.display = tab === 'ventas' ? 'block' : 'none';
+    document.getElementById('subPanelHistorial').style.display = tab === 'panel' ? 'block' : 'none';
+    document.getElementById('btnTabVentas').classList.toggle('activo', tab === 'ventas');
+    document.getElementById('btnTabPanel').classList.toggle('activo', tab === 'panel');
+    if (tab === 'panel') pintarPanelRentabilidad();
+  }
+
+  // Mismos umbrales que ya usa Minimarket Pro (PC), para que el mismo
+  // producto se clasifique igual sin importar donde se mire.
+  function clasificarMargen(pct) {
+    if (pct >= 35) return { texto: 'Alto', color: '#2F7A5C', bg: '#E3F0EA' };
+    if (pct >= 20) return { texto: 'Medio', color: '#B8860B', bg: '#FBEEDA' };
+    return { texto: 'Bajo', color: '#C5433A', bg: '#F7E5E3' };
+  }
+
+  function pintarPanelRentabilidad() {
+    const productos = listarProductosRemoto(true).filter((p) => p.precio_costo > 0);
+    const conMargen = productos.map((p) => {
+      const margen = p.precio_venta - p.precio_costo;
+      const margenPct = (margen / p.precio_costo) * 100;
+      return { ...p, margen, margenPct, clase: clasificarMargen(margenPct) };
+    }).sort((a, b) => b.margenPct - a.margenPct);
+
+    const promedio = conMargen.length ? conMargen.reduce((s, p) => s + p.margenPct, 0) / conMargen.length : 0;
+    document.getElementById('resumenMargenPromedio').innerHTML =
+      `Margen promedio: <b style="color:#1A2530;">${promedio.toFixed(0)}%</b> · ${conMargen.length} producto(s) con costo cargado`;
+
+    if (conMargen.length === 0) {
+      document.getElementById('listaRentabilidad').innerHTML =
+        `<p style="text-align:center; color:#96A2AC; font-size:13px; padding:20px 0;">Ningún producto tiene precio de costo cargado todavía — sin costo no se puede calcular margen.</p>`;
+      return;
+    }
+    document.getElementById('listaRentabilidad').innerHTML = conMargen.map((p) => `
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #DCE2E7;">
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:13.5px; font-weight:600; color:#1A2530;">${p.nombre}</div>
+          <div style="font-size:11px; color:#64707C;">Venta ${formatoMoneda(p.precio_venta)} · Costo ${formatoMoneda(p.precio_costo)}</div>
+        </div>
+        <div style="background:${p.clase.bg}; color:${p.clase.color}; font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:20px; white-space:nowrap;">${p.margenPct.toFixed(0)}% · ${p.clase.texto}</div>
+      </div>
+    `).join('');
+  }
+  async function guardarFrecuenciasReporte() {
+    const frecuencias = [];
+    if (document.getElementById('inputFrecuenciaDiario').checked) frecuencias.push('diario');
+    if (document.getElementById('inputFrecuenciaSemanal').checked) frecuencias.push('semanal');
+    if (document.getElementById('inputFrecuenciaMensual').checked) frecuencias.push('mensual');
+    await editarNegocioRemoto(estado.cliente_id, estado.negocio_id, { reporte_frecuencias: frecuencias });
   }
 
   function formatoMoneda(n) {
     return '$' + Math.round(n).toLocaleString('es-CL');
+  }
+  // 'stock-bajo' (rojo) = agotado. 'stock-medio' (naranja) = por debajo del
+  // umbral que se define por producto (stock_minimo, default 5, igual que
+  // Minimarket Pro) pero todavia queda algo.
+  function claseStock(p) {
+    if (Number(p.stock) <= 0) return 'stock-bajo';
+    if (Number(p.stock) <= (p.stock_minimo ?? 5)) return 'stock-medio';
+    return '';
   }
 
   // ============================================================
@@ -655,6 +1093,85 @@
     document.getElementById('loginRecuperar').style.display = 'none';
     document.getElementById('loginIngresar').style.display = 'block';
   }
+  function abrirPantallaElegirClave() {
+    document.getElementById('pantallaLogin').classList.add('activa');
+    document.getElementById('loginCrearPrimero').style.display = 'none';
+    document.getElementById('loginIngresar').style.display = 'none';
+    document.getElementById('loginRecuperar').style.display = 'none';
+    document.getElementById('loginElegirClave').style.display = 'block';
+  }
+  async function confirmarClaveElegidaPrimeraVez() {
+    const claveNueva = document.getElementById('inputClaveNuevaPrimeraVez').value;
+    const errorDiv = document.getElementById('errorElegirClave');
+    errorDiv.textContent = '';
+    if (claveNueva.length < 4) { errorDiv.textContent = 'La clave debe tener al menos 4 caracteres.'; return; }
+    const claveRespaldoNueva = await restablecerClaveConRespaldo(estado.cliente_id, sesionActual.id, claveNueva);
+    sesionActual.clave_temporal = false;
+    document.getElementById('loginElegirClave').style.display = 'none';
+    mostrarClaveRespaldo(claveRespaldoNueva, () => resolverLocalYCompletarLogin());
+  }
+
+  // ============================================================
+  // SELECTOR DE LOCAL AL LOGUEARSE - un usuario normal solo opera en el
+  // local donde lo creó el jefe (comportamiento de siempre), PERO si el
+  // jefe le dio acceso a más de uno (locales_permitidos), se le pregunta en
+  // cuál va a trabajar. Si solo tiene uno, entra derecho, sin nada que
+  // elegir - cero cambio de comportamiento para el caso de siempre. El
+  // jefe (rol==='jefe') sigue viendo TODOS los locales del cliente.
+  // ============================================================
+  async function resolverLocalYCompletarLogin() {
+    const todosLosNegocios = await listarNegociosRemoto(estado.cliente_id);
+    const permitidos = sesionActual.rol === 'jefe'
+      ? todosLosNegocios.map((n) => n.negocio_id)
+      : (sesionActual.locales_permitidos && sesionActual.locales_permitidos.length ? sesionActual.locales_permitidos : [sesionActual.negocio_id || estado.negocio_id]);
+    const disponibles = todosLosNegocios.filter((n) => permitidos.includes(n.negocio_id));
+    if (disponibles.length === 0) {
+      await avisoModal('Tu usuario no tiene ningún local asignado todavía — pídele al jefe que te asigne uno.');
+      cerrarSesionActual();
+      return;
+    }
+    if (disponibles.length === 1) {
+      await activarLocalDeSesion(disponibles[0].negocio_id, disponibles[0].nombre);
+      completarLogin();
+      return;
+    }
+    mostrarSelectorLocal(disponibles);
+  }
+  function mostrarSelectorLocal(disponibles) {
+    document.getElementById('pantallaLogin').classList.add('activa');
+    document.getElementById('loginCrearPrimero').style.display = 'none';
+    document.getElementById('loginIngresar').style.display = 'none';
+    document.getElementById('loginRecuperar').style.display = 'none';
+    document.getElementById('loginElegirClave').style.display = 'none';
+    document.getElementById('loginElegirLocal').style.display = 'block';
+    document.getElementById('listaLocalesLogin').innerHTML = disponibles.map((n) => `
+      <button class="btn-secundario" style="width:100%; margin-bottom:8px; text-align:left;" onclick="elegirLocalLoginUI('${n.negocio_id}', '${(n.nombre || '').replace(/'/g, "\\'")}')">${n.nombre}</button>
+    `).join('');
+  }
+  async function elegirLocalLoginUI(negocioId, nombre) {
+    await activarLocalDeSesion(negocioId, nombre);
+    completarLogin();
+  }
+  // Cambia en MEMORIA el local activo de esta sesion (no la identidad del
+  // equipo en si, que sigue siendo la de su activacion original - ver
+  // _negocioEquipoOriginal, usada aparte para gestionar equipos/invitaciones).
+  async function activarLocalDeSesion(negocioId, nombre) {
+    if (negocioId === estado.negocio_id) return;
+    estado.negocio_id = negocioId;
+    estado.nombre_negocio = nombre || estado.nombre_negocio;
+    document.getElementById('nombreCliente').textContent = estado.nombre_cliente + (estado.nombre_negocio ? ' · ' + estado.nombre_negocio : '');
+    iniciarEscuchaProductos(estado.cliente_id, estado.negocio_id, () => {
+      if (sesionActual) pintarProductosVenta();
+      if (document.getElementById('subPanelHistorial') && document.getElementById('subPanelHistorial').style.display !== 'none') {
+        pintarPanelRentabilidad();
+      }
+    });
+    iniciarEscuchaPresentaciones(estado.cliente_id, estado.negocio_id);
+    iniciarEscuchaPromociones(estado.cliente_id, estado.negocio_id);
+    iniciarEscuchaCombos(estado.cliente_id, estado.negocio_id);
+    iniciarEscuchaHistorialPrecios(estado.cliente_id, estado.negocio_id);
+    iniciarEscuchaTurnos(estado.cliente_id, estado.negocio_id, () => { if (sesionActual) pintarIndicadorCaja(); });
+  }
   async function confirmarRecuperarClave() {
     const claveRespaldo = document.getElementById('inputClaveRespaldo').value.trim();
     const claveNueva = document.getElementById('inputClaveNuevaRecuperar').value;
@@ -664,8 +1181,8 @@
     const usuario = await verificarClaveRespaldo(claveRespaldo);
     if (!usuario) { errorDiv.textContent = 'Esa clave de respaldo no es válida.'; return; }
     const claveRespaldoNueva = await restablecerClaveConRespaldo(estado.cliente_id, usuario.id, claveNueva);
-    mostrarClaveRespaldo(claveRespaldoNueva, () => {
-      alert('Clave restablecida — ya puedes iniciar sesión con tu clave nueva.');
+    mostrarClaveRespaldo(claveRespaldoNueva, async () => {
+      await avisoModal('Clave restablecida — ya puedes iniciar sesión con tu clave nueva.');
       mostrarPantallaLoginNormal();
     });
   }
@@ -681,13 +1198,15 @@
     sesionActual = usuario;
     document.getElementById('inputLoginNombre').value = '';
     document.getElementById('inputLoginClave').value = '';
-    completarLogin();
+    await resolverLocalYCompletarLogin();
   }
   function completarLogin() {
     localStorage.setItem('ih_sesion_usuario_' + estado.cliente_id, JSON.stringify(sesionActual));
     document.getElementById('pantallaLogin').classList.remove('activa');
+    document.getElementById('pantallaVenta').classList.add('activa');
     document.getElementById('navApp').style.display = 'flex';
-    document.getElementById('indicadorSesion').textContent = `👤 ${sesionActual.nombre} (${sesionActual.rol === 'jefe' ? 'jefe' : 'empleado'})`;
+    document.getElementById('avatarUsuarioMini').textContent = sesionActual.nombre.charAt(0).toUpperCase();
+    document.getElementById('nombreUsuarioPill').textContent = sesionActual.nombre;
     pintarProductosVenta();
     pintarIndicadorCaja();
 
@@ -709,14 +1228,17 @@
     // se cierra solo - asi al terminar el turno no queda ningun equipo
     // abierto sin que el jefe se entere.
     if (estado.rol === 'sub') {
-      escucharCierreDeSesionMaestro(estado.cliente_id, () => {
+      // Tambien va por _negocioEquipoOriginal - maestro/sub es una relacion
+      // entre EQUIPOS del mismo local físico, no depende de que local haya
+      // elegido operar quien esté logueado en cada uno.
+      escucharCierreDeSesionMaestro(estado.cliente_id, _negocioEquipoOriginal, () => {
         cerrarSesionActual();
-        alert('El equipo principal cerró su turno — tu sesión también se cerró.');
+        avisoModal('El equipo principal cerró su turno — tu sesión también se cerró.');
       });
     }
   }
   function cerrarSesionActual() {
-    if (estado.rol === 'maestro') avisarCierreDeSesionMaestro(estado.cliente_id);
+    if (estado.rol === 'maestro') avisarCierreDeSesionMaestro(estado.cliente_id, _negocioEquipoOriginal);
     dejarDeEscucharCierreMaestro();
     sesionActual = null;
     localStorage.removeItem('ih_sesion_usuario_' + estado.cliente_id);
@@ -724,6 +1246,7 @@
     document.getElementById('navApp').style.display = 'none';
     document.getElementById('pantallaLogin').classList.add('activa');
     document.getElementById('loginCrearPrimero').style.display = 'none';
+    document.getElementById('loginElegirLocal').style.display = 'none';
     document.getElementById('loginIngresar').style.display = 'block';
   }
 
@@ -766,14 +1289,19 @@
     // esta sesion) por si la capacidad o el vencimiento cambiaron desde el
     // servidor (ej: Nacho amplio el plan del cliente) - asi se refleja sin
     // necesidad de cerrar y volver a abrir el programa.
-    estado = { ...estado, capacidad: clienteFresco.capacidad, tipo_licencia: clienteFresco.tipo_licencia, vence: clienteFresco.vence };
+    estado = { ...estado, capacidad: clienteFresco.capacidad, tipo_licencia: clienteFresco.tipo_licencia, vence: clienteFresco.vence, logo_data: clienteFresco.logo_data || null };
     guardarEstadoEquipo(estado);
+    pintarLogoNegocio();
   }
 
   async function abrirModalUsuarios() {
-    document.getElementById('infoSesionActual').textContent = `Conectado como ${sesionActual.nombre} (${sesionActual.rol})`;
+    document.getElementById('avatarTarjetaPropia').textContent = sesionActual.nombre.charAt(0).toUpperCase();
+    document.getElementById('nombreTarjetaPropia').textContent = sesionActual.nombre;
+    document.getElementById('rolTarjetaPropia').textContent = sesionActual.rol === 'jefe' ? 'Jefe' : (sesionActual.puede_gestionar_usuarios ? 'Jefe delegado' : 'Empleado');
     const puedeGestionar = sesionActual.rol === 'jefe' || sesionActual.puede_gestionar_usuarios;
     document.getElementById('seccionGestionUsuarios').style.display = puedeGestionar ? 'block' : 'none';
+    document.getElementById('labelSeccionEmpleados').textContent = 'Empleados · ' + estado.nombre_cliente;
+    document.getElementById('formNuevoUsuario').style.display = 'none';
     // Un "jefe delegado" (empleado con permiso, no jefe de verdad) no puede
     // crear otro jefe - esa opcion ni se le muestra.
     document.getElementById('opcionRolJefe').style.display = sesionActual.rol === 'jefe' ? 'block' : 'none';
@@ -788,39 +1316,156 @@
   function cerrarModalUsuarios() {
     document.getElementById('modalUsuarios').classList.remove('activo');
   }
+  function mostrarFormNuevoUsuario() {
+    document.getElementById('formNuevoUsuario').style.display = 'block';
+  }
+  // Los usuarios ahora son del CLIENTE entero (para que el selector de
+  // local al loguearse funcione - ver resolverLocalYCompletarLogin), pero
+  // esta lista tiene que seguir mostrando solo los que trabajan en ESTE
+  // local (un jefe de Centro no necesita ver los empleados de Norte acá).
+  function usuarioPerteneceANegocio(u, negocioId) {
+    if (u.rol === 'jefe') return true; // el jefe opera en cualquier local, se lo ve en todos
+    const permitidos = (u.locales_permitidos && u.locales_permitidos.length) ? u.locales_permitidos : [u.negocio_id];
+    return permitidos.includes(negocioId);
+  }
   function pintarListaUsuarios() {
-    const usuarios = listarUsuariosRemoto();
+    const usuarios = listarUsuariosRemoto().filter((u) => u.id !== sesionActual.id && usuarioPerteneceANegocio(u, estado.negocio_id));
     document.getElementById('listaUsuarios').innerHTML = usuarios.map((u) => {
       const extras = [];
-      if (u.rol === 'empleado' && u.puede_cambiar_precio) extras.push('puede cambiar precios');
+      if (u.rol === 'empleado' && u.puede_cambiar_precio) extras.push('cambia precios');
       if (u.rol === 'empleado' && u.puede_gestionar_usuarios) extras.push('jefe delegado');
+      const rolTexto = u.rol === 'jefe' ? 'Jefe' : 'Empleado' + (extras.length ? ' · ' + extras.join(', ') : '');
       // Nadie se puede quitar a si mismo, y un delegado (no jefe de
       // verdad) no puede quitar a un jefe - solo un jefe real puede tocar
       // la cuenta de otro jefe.
-      const puedeQuitar = u.id !== sesionActual.id && (u.rol !== 'jefe' || sesionActual.rol === 'jefe');
+      const puedeQuitar = u.rol !== 'jefe' || sesionActual.rol === 'jefe';
       return `
-      <div class="fila-carrito">
-        <span>${u.nombre} — ${u.rol}${extras.length ? ' (' + extras.join(', ') + ')' : ''}</span>
-        ${puedeQuitar ? `<button onclick="eliminarUsuarioUI('${u.id}')" style="background:none; border:none; color:#C6B9A3; font-size:11px;">Quitar</button>` : ''}
+      <div class="tarjeta-cuenta">
+        <div class="avatar-usuario empleado">${u.nombre.charAt(0).toUpperCase()}</div>
+        <div class="info-usuario">
+          <div class="nombre-usuario">${u.nombre}</div>
+          <div class="rol-usuario">${rolTexto}</div>
+        </div>
+        ${puedeQuitar ? `<div class="icono-mas" onclick="abrirEditarPermisos('${u.id}')">⋮</div>` : ''}
       </div>
     `;
     }).join('');
+  }
+
+  function abrirCambiarClave() {
+    document.getElementById('inputClaveNuevaPropia').value = '';
+    document.getElementById('errorCambiarClave').textContent = '';
+    document.getElementById('modalCambiarClave').classList.add('activo');
+  }
+  function cerrarCambiarClave() {
+    document.getElementById('modalCambiarClave').classList.remove('activo');
+  }
+  async function confirmarCambiarClavePropia() {
+    const claveNueva = document.getElementById('inputClaveNuevaPropia').value;
+    const errorDiv = document.getElementById('errorCambiarClave');
+    errorDiv.textContent = '';
+    if (claveNueva.length < 4) { errorDiv.textContent = 'La clave debe tener al menos 4 caracteres.'; return; }
+    const claveRespaldoNueva = await restablecerClaveConRespaldo(estado.cliente_id, sesionActual.id, claveNueva);
+    cerrarCambiarClave();
+    mostrarClaveRespaldo(claveRespaldoNueva, () => {
+      avisoModal('Clave actualizada. La próxima vez que inicies sesión, usa la clave nueva.');
+    });
+  }
+  let usuarioEditandoPermisos = null;
+  async function abrirEditarPermisos(id) {
+    const u = listarUsuariosRemoto().find((us) => us.id === id);
+    if (!u) return;
+    usuarioEditandoPermisos = id;
+    document.getElementById('tituloEditarPermisos').textContent = 'Permisos de ' + u.nombre;
+    document.getElementById('inputEditarPuedeCambiarPrecio').checked = !!u.puede_cambiar_precio;
+    document.getElementById('inputEditarModoCarrito').checked = !!u.modo_carrito;
+    document.getElementById('inputEditarModoCaja').checked = !!u.modo_caja;
+    document.getElementById('inputEditarGestionaUsuarios').checked = !!u.puede_gestionar_usuarios;
+    // Solo tiene sentido mostrar esto si el cliente tiene mas de un local -
+    // con uno solo no hay nada entre lo que elegir.
+    if (u.rol !== 'jefe') {
+      if (!_negociosCache) _negociosCache = await listarNegociosRemoto(estado.cliente_id);
+      const filaLocales = document.getElementById('filaLocalesPermitidos');
+      if (_negociosCache.length > 1) {
+        filaLocales.style.display = 'block';
+        const permitidos = (u.locales_permitidos && u.locales_permitidos.length) ? u.locales_permitidos : [u.negocio_id || estado.negocio_id];
+        document.getElementById('listaLocalesPermitidos').innerHTML = _negociosCache.map((n) => `
+          <label style="font-size:13px; display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <input type="checkbox" class="check-local-permitido" value="${n.negocio_id}" style="width:auto;" ${permitidos.includes(n.negocio_id) ? 'checked' : ''}> ${n.nombre}
+          </label>
+        `).join('');
+      } else {
+        filaLocales.style.display = 'none';
+      }
+    } else {
+      document.getElementById('filaLocalesPermitidos').style.display = 'none';
+    }
+    document.getElementById('modalUsuarios').classList.remove('activo');
+    document.getElementById('modalEditarPermisos').classList.add('activo');
+  }
+  function cerrarEditarPermisos() {
+    document.getElementById('modalEditarPermisos').classList.remove('activo');
+    usuarioEditandoPermisos = null;
+  }
+  async function guardarEdicionPermisos() {
+    const u = listarUsuariosRemoto().find((us) => us.id === usuarioEditandoPermisos);
+    if (!u) return;
+    const nuevos = {
+      puede_cambiar_precio: document.getElementById('inputEditarPuedeCambiarPrecio').checked,
+      modo_carrito: document.getElementById('inputEditarModoCarrito').checked,
+      modo_caja: document.getElementById('inputEditarModoCaja').checked,
+      puede_gestionar_usuarios: document.getElementById('inputEditarGestionaUsuarios').checked,
+    };
+    if (u.rol !== 'jefe' && _negociosCache && _negociosCache.length > 1) {
+      const marcados = Array.from(document.querySelectorAll('.check-local-permitido:checked')).map((c) => c.value);
+      // El local de origen siempre queda incluido, lo haya marcado o no -
+      // así nunca se le saca sin querer el acceso a su propio local.
+      nuevos.locales_permitidos = Array.from(new Set([u.negocio_id || estado.negocio_id, ...marcados]));
+    }
+    // Solo se registra en la auditoria lo que realmente cambio, y solo el
+    // campo puntual (no un volcado completo) - asi el reporte queda legible.
+    const etiquetas = {
+      puede_cambiar_precio: 'Cambiar precios', modo_carrito: 'Mandar a caja',
+      modo_caja: 'Recibir en caja', puede_gestionar_usuarios: 'Jefe delegado',
+    };
+    for (const campo of Object.keys(etiquetas)) {
+      if (!!u[campo] !== nuevos[campo]) {
+        await registrarCambioPermiso(estado.cliente_id, estado.negocio_id, {
+          usuarioAfectado: u.nombre, campo: etiquetas[campo],
+          valorAnterior: !!u[campo], valorNuevo: nuevos[campo], hechoPor: sesionActual.nombre,
+        });
+      }
+    }
+    if (nuevos.locales_permitidos) {
+      const antes = (u.locales_permitidos && u.locales_permitidos.length) ? u.locales_permitidos : [u.negocio_id];
+      const cambioLocales = antes.length !== nuevos.locales_permitidos.length ||
+        !antes.every((id) => nuevos.locales_permitidos.includes(id));
+      if (cambioLocales) {
+        await registrarCambioPermiso(estado.cliente_id, estado.negocio_id, {
+          usuarioAfectado: u.nombre, campo: 'Locales permitidos',
+          valorAnterior: antes.join(', '), valorNuevo: nuevos.locales_permitidos.join(', '), hechoPor: sesionActual.nombre,
+        });
+      }
+    }
+    await editarUsuario(estado.cliente_id, usuarioEditandoPermisos, nuevos);
+    cerrarEditarPermisos();
+    document.getElementById('modalUsuarios').classList.add('activo');
+    pintarListaUsuarios();
   }
   async function eliminarUsuarioUI(id) {
     // Chequeo real (no solo ocultar el boton) - un delegado no puede
     // quitar a un jefe, aunque intente llamar esto directo.
     const objetivo = listarUsuariosRemoto().find((u) => u.id === id);
     if (objetivo && objetivo.rol === 'jefe' && sesionActual.rol !== 'jefe') {
-      alert('No tienes permiso para quitar a un jefe.');
+      await avisoModal('No tienes permiso para quitar a un jefe.');
       return;
     }
-    if (!confirm('¿Quitar este usuario? Ya no va a poder iniciar sesión.')) return;
+    if (!(await confirmarModal('¿Quitar este usuario? Ya no va a poder iniciar sesión.'))) return;
     await eliminarUsuario(estado.cliente_id, id);
     pintarListaUsuarios();
   }
   async function confirmarCrearUsuario() {
     const nombre = document.getElementById('inputNuevoUsuarioNombre').value.trim();
-    const clave = document.getElementById('inputNuevoUsuarioClave').value;
     let rol = document.getElementById('inputNuevoUsuarioRol').value;
     const puedeCambiarPrecio = document.getElementById('inputNuevoUsuarioPuedeCambiarPrecio').checked;
     const modoCarrito = document.getElementById('inputNuevoUsuarioModoCarrito').checked;
@@ -832,7 +1477,6 @@
     // este es el chequeo real, no solo ocultar la opcion en la pantalla.
     if (rol === 'jefe' && sesionActual.rol !== 'jefe') rol = 'empleado';
     if (!nombre) { errorDiv.textContent = 'Falta el nombre.'; return; }
-    if (clave.length < 4) { errorDiv.textContent = 'La clave debe tener al menos 4 caracteres.'; return; }
     // La lista ya esta cargada en esta pantalla (Gestionar usuarios la
     // necesita de todas formas) - se revisa ahi mismo, sin gastar una
     // lectura extra a Firestore.
@@ -840,17 +1484,35 @@
       errorDiv.textContent = 'Ya hay un usuario con ese nombre — el nombre se usa para iniciar sesión, tiene que ser único.';
       return;
     }
-    const existente = await verificarClaveUsuario(clave);
-    if (existente) { errorDiv.textContent = 'Esa clave ya está en uso por otro usuario.'; return; }
-    const { claveRespaldo } = await crearUsuario(estado.cliente_id, { nombre, rol, clave, puede_cambiar_precio: puedeCambiarPrecio, modo_carrito: modoCarrito, modo_caja: modoCaja, puede_gestionar_usuarios: gestionaUsuarios });
+    // La clave ya NO la elige el jefe - se genera una temporal al azar, y
+    // la persona elige la suya propia al entrar por primera vez desde su
+    // celular (escaneando el QR).
+    const claveTemp = String(Math.floor(100000 + Math.random() * 900000));
+    const { claveRespaldo } = await crearUsuario(estado.cliente_id, {
+      nombre, rol, clave: claveTemp, puede_cambiar_precio: puedeCambiarPrecio,
+      modo_carrito: modoCarrito, modo_caja: modoCaja, puede_gestionar_usuarios: gestionaUsuarios,
+      clave_temporal: true,
+    });
     document.getElementById('inputNuevoUsuarioNombre').value = '';
-    document.getElementById('inputNuevoUsuarioClave').value = '';
     document.getElementById('inputNuevoUsuarioPuedeCambiarPrecio').checked = false;
     document.getElementById('inputNuevoUsuarioModoCarrito').checked = false;
     document.getElementById('inputNuevoUsuarioModoCaja').checked = false;
     document.getElementById('inputNuevoUsuarioGestionaUsuarios').checked = false;
     pintarListaUsuarios();
-    mostrarClaveRespaldo(claveRespaldo, () => {});
+
+    const urlAcceso = `${location.origin}${location.pathname.replace('panel.html', '')}panel.html?loginUsuario=${encodeURIComponent(nombre)}&loginClave=${claveTemp}`;
+    document.getElementById('textoQrAccesoUsuario').textContent = urlAcceso;
+    QRCodeLib.toCanvas(document.getElementById('canvasQrAccesoUsuario'), urlAcceso, { width: 220, margin: 1 });
+    document.getElementById('modalQrAccesoUsuario').classList.add('activo');
+    // La clave de respaldo se muestra despues, al cerrar el QR - son 2
+    // cosas distintas (una es para entrar ahora, la otra para recuperar
+    // acceso mas adelante si se olvida la clave que elija).
+    accionPendienteTrasQrAcceso = () => mostrarClaveRespaldo(claveRespaldo, () => {});
+  }
+  let accionPendienteTrasQrAcceso = null;
+  function cerrarQrAccesoUsuario() {
+    document.getElementById('modalQrAccesoUsuario').classList.remove('activo');
+    if (accionPendienteTrasQrAcceso) { accionPendienteTrasQrAcceso(); accionPendienteTrasQrAcceso = null; }
   }
 
   async function pintarIndicadorCaja() {
@@ -869,12 +1531,14 @@
     const turno = await turnoActual();
     document.getElementById('cajaContenidoAbrir').style.display = turno ? 'none' : 'block';
     document.getElementById('cajaContenidoCerrar').style.display = turno ? 'block' : 'none';
+    document.getElementById('btnVerHistorialCajas').style.display =
+      (sesionActual.rol === 'jefe' || sesionActual.puede_gestionar_usuarios) ? 'block' : 'none';
     document.getElementById('errorCierreCaja').textContent = '';
     document.getElementById('inputNotaCierre').value = '';
     document.getElementById('inputEfectivoContado').value = '';
     document.getElementById('inputMontoApertura').value = '';
     if (turno) {
-      const esperado = await calcularEfectivoEsperado(turno);
+      const esperado = await calcularEfectivoEsperado(estado.cliente_id, turno);
       document.getElementById('infoCajaAbierta').textContent =
         `Abierta desde las ${new Date(turno.fecha_apertura).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })} · Efectivo esperado ahora: ${formatoMoneda(esperado)}`;
     }
@@ -883,23 +1547,61 @@
   function cerrarModalCaja() {
     document.getElementById('modalCaja').classList.remove('activo');
   }
+  // Cuando "Abrir caja" se disparó porque el cobro lo pidió (carrito ya
+  // armado, esperando solo el turno), al confirmar la apertura hay que
+  // volver directo al cobro en vez de dejar al empleado con el carrito
+  // armado y sin ninguna pista de que falta volver a tocar "Cobrar".
+  let reabrirCobroAlAbrirCaja = false;
   async function confirmarAbrirCaja() {
     const monto = document.getElementById('inputMontoApertura').value || 0;
-    await abrirTurno(monto);
+    await abrirTurno(estado.cliente_id, monto);
     cerrarModalCaja();
     pintarIndicadorCaja();
+    if (reabrirCobroAlAbrirCaja) {
+      reabrirCobroAlAbrirCaja = false;
+      abrirCobrar();
+    }
   }
   async function confirmarCerrarCaja() {
     const contado = document.getElementById('inputEfectivoContado').value;
     const nota = document.getElementById('inputNotaCierre').value;
     if (contado === '') return;
     try {
-      await cerrarTurno(contado, nota);
+      await cerrarTurno(estado.cliente_id, contado, nota);
       cerrarModalCaja();
       pintarIndicadorCaja();
     } catch (e) {
       document.getElementById('errorCierreCaja').textContent = e.message;
     }
+  }
+
+  function abrirModalHistorialCajas() {
+    const cont = document.getElementById('listaHistorialCajas');
+    const cerrados = listarTurnosCerrados();
+    if (cerrados.length === 0) {
+      cont.innerHTML = '<p style="text-align:center; color:#96A2AC; font-size:13px; padding:20px 0;">Todavía no hay cajas cerradas.</p>';
+    } else {
+      cont.innerHTML = cerrados.map((t) => {
+        const apertura = new Date(t.fecha_apertura).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        const diferenciaTexto = t.diferencia === 0 ? 'Sin diferencia' : `Diferencia: ${formatoMoneda(t.diferencia)}`;
+        const colorDif = t.diferencia === 0 ? '#4C9A6A' : '#C5433A';
+        return `
+        <div style="border-bottom:1px solid #EEF0F2; padding:10px 0;">
+          <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600;">
+            <span>${t.nombre_equipo || 'Equipo'}</span>
+            <span style="color:${colorDif};">${diferenciaTexto}</span>
+          </div>
+          <div style="font-size:12px; color:#64707C; margin-top:2px;">
+            Abierta ${apertura} · Inicial ${formatoMoneda(t.monto_apertura)} · Esperado ${formatoMoneda(t.efectivo_esperado)} · Contado ${formatoMoneda(t.efectivo_contado)}
+          </div>
+          ${t.nota ? `<div style="font-size:12px; color:#64707C; margin-top:2px;">Nota: ${t.nota}</div>` : ''}
+        </div>`;
+      }).join('');
+    }
+    document.getElementById('modalHistorialCajas').classList.add('activo');
+  }
+  function cerrarModalHistorialCajas() {
+    document.getElementById('modalHistorialCajas').classList.remove('activo');
   }
 
   // ---- Caja chica ----
@@ -955,15 +1657,15 @@
       const mensaje = !escuchaProductosActiva()
         ? 'Cargando productos…'
         : (productos.length === 0 ? 'Todavía no hay productos — agrégalos en Inventario' : 'Sin resultados');
-      cont.innerHTML = `<p style="text-align:center; color:#C6B9A3; font-size:13px; padding:30px 0;">${mensaje}</p>`;
+      cont.innerHTML = `<p style="text-align:center; color:#96A2AC; font-size:13px; padding:30px 0;">${mensaje}</p>`;
       return;
     }
     cont.innerHTML = filtrados.map((p) => `
       <div class="fila-producto-venta" onclick="agregarAlCarrito('${p.id}')">
-        ${p.imagen_data ? `<img src="${p.imagen_data}">` : `<div class="sin-foto"></div>`}
+        ${p.imagen_data ? `<img src="${p.imagen_data}">` : `<div class="sin-foto">📷</div>`}
         <div class="info">
           <div class="nombre">${p.nombre}</div>
-          <div class="precio-stock">${formatoMoneda(p.precio_venta)} · <span class="${p.stock <= 0 ? 'stock-bajo' : ''}">${p.stock} ${p.unidad_medida}</span></div>
+          <div class="precio-stock">${formatoMoneda(p.precio_venta)} · <span class="${claseStock(p)}">${p.stock} ${p.unidad_medida}</span></div>
         </div>
       </div>
     `).join('');
@@ -1101,6 +1803,24 @@
     document.querySelectorAll('.opcion-pago').forEach((b) => b.classList.remove('elegido'));
     document.getElementById('btnConfirmarCobro').disabled = true;
     document.getElementById('totalCobrar').textContent = formatoMoneda(totalCarrito());
+
+    const productos = listarProductosRemoto(true);
+    document.getElementById('itemsCobrar').innerHTML = carrito.map((it) => {
+      const producto = it.producto_id ? productos.find((p) => p.id === it.producto_id) : null;
+      const foto = producto && producto.imagen_data
+        ? `<img src="${producto.imagen_data}">` : `<div class="sin-foto-chica">📷</div>`;
+      return `
+        <div class="fila-item-cobro">
+          ${foto}
+          <div class="info-item-cobro">
+            <div class="nombre-item-cobro">${it.nombre}</div>
+            <div class="detalle-item-cobro">${it.cantidad} × ${formatoMoneda(it.precio_venta)} c/u</div>
+          </div>
+          <div class="monto-item-cobro">${formatoMoneda(it.precio_venta * it.cantidad)}</div>
+        </div>
+      `;
+    }).join('');
+
     document.getElementById('modalCobrar').classList.add('activo');
   }
   function cerrarCobrar() {
@@ -1118,8 +1838,16 @@
       await registrarVenta(estado.cliente_id, { items: carrito, total, medio_pago: medioPagoElegido });
     } catch (e) {
       cerrarCobrar();
-      alert(e.message);
-      if (e.message.includes('abrir la caja')) abrirModalCaja();
+      // Caja cerrada: no hace falta un alert() feo interrumpiendo - se
+      // abre "Abrir caja" directo, y al confirmarla vuelve solo al cobro
+      // (ver reabrirCobroAlAbrirCaja en confirmarAbrirCaja) para no
+      // obligar al empleado a tocar "Cobrar" nuevamente desde cero.
+      if (e.message.includes('abrir la caja')) {
+        reabrirCobroAlAbrirCaja = true;
+        abrirModalCaja();
+        return;
+      }
+      await avisoModal(e.message);
       return;
     }
     if (idCarritoEntranteEnProceso) {
@@ -1145,7 +1873,7 @@
     carrito = [];
     pintarCarrito();
     cerrarCobrar();
-    alert('Carrito enviado a la caja.');
+    await avisoModal('Carrito enviado a la caja.');
     pintarProductosVenta();
   }
 
@@ -1153,11 +1881,11 @@
   function pintarCarritosEntrantes(carritos) {
     const cont = document.getElementById('listaCarritosEntrantes');
     if (carritos.length === 0) {
-      cont.innerHTML = `<p style="text-align:center; color:#C6B9A3; font-size:13px; padding:30px 0;">Sin carritos pendientes</p>`;
+      cont.innerHTML = `<p style="text-align:center; color:#96A2AC; font-size:13px; padding:30px 0;">Sin carritos pendientes</p>`;
       return;
     }
     cont.innerHTML = carritos.map((c) => `
-      <div class="fila-historial" style="border-left:3px solid #E0632A;">
+      <div class="fila-historial" style="border-left:3px solid #2E4374;">
         <div class="top"><span>${c.enviado_por}</span><span>${formatoMoneda(c.total)}</span></div>
         <div class="fecha">${c.items.map((it) => it.nombre + ' x' + it.cantidad).join(', ')}</div>
         <button class="btn-reporte" style="margin-top:8px; width:100%;" onclick="procesarCarritoEntrante('${c.id}', ${JSON.stringify(c.items).replace(/"/g, '&quot;')}, ${c.total})">Procesar esta venta</button>
@@ -1190,7 +1918,7 @@
         const p = productos.find((x) => x.codigo === codigoLeido);
         cerrarEscanerVenta();
         if (p) agregarAlCarrito(p.id);
-        else alert('No se encontró ningún producto con ese código.');
+        else await avisoModal('No se encontró ningún producto con ese código.');
       }
     ).catch(() => {
       document.getElementById('readerVenta').innerHTML = '<p style="color:white; text-align:center; padding:30px;">No se pudo abrir la cámara.</p>';
@@ -1221,17 +1949,33 @@
     const porEstado = todos.filter((p) => verPausadosInventario ? p.activo === false : p.activo !== false);
     const filtrados = texto ? porEstado.filter((p) => p.nombre.toLowerCase().includes(texto)) : porEstado;
     const cont = document.getElementById('listaInventario');
+
+    // Alerta de stock bajo - solo mira productos activos, sin importar el
+    // buscador (para que no se pierda de vista con un filtro puesto).
+    const avisoDiv = document.getElementById('avisoStockBajo');
+    const activos = todos.filter((p) => p.activo !== false);
+    const agotados = activos.filter((p) => Number(p.stock) <= 0).length;
+    const bajos = activos.filter((p) => Number(p.stock) > 0 && Number(p.stock) <= (p.stock_minimo ?? 5)).length;
+    if (agotados + bajos > 0) {
+      const partes = [];
+      if (agotados > 0) partes.push(`${agotados} sin stock`);
+      if (bajos > 0) partes.push(`${bajos} con stock bajo`);
+      avisoDiv.innerHTML = `<div class="banner-stock-bajo">⚠️ ${partes.join(' · ')}</div>`;
+      avisoDiv.style.display = 'block';
+    } else {
+      avisoDiv.style.display = 'none';
+    }
     if (filtrados.length === 0) {
-      cont.innerHTML = `<p style="text-align:center; color:#C6B9A3; font-size:13px; padding:30px 0;">${verPausadosInventario ? 'Sin productos pausados' : 'Sin productos todavía'}</p>`;
+      cont.innerHTML = `<p style="text-align:center; color:#96A2AC; font-size:13px; padding:30px 0;">${verPausadosInventario ? 'Sin productos pausados' : 'Sin productos todavía'}</p>`;
       return;
     }
     cont.innerHTML = filtrados.map((p) => `
       <div class="fila-producto-venta ${p.activo === false ? 'pausado' : ''}">
         <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;" onclick="abrirFormProducto('${p.id}')">
-          ${p.imagen_data ? `<img src="${p.imagen_data}">` : `<div class="sin-foto"></div>`}
+          ${p.imagen_data ? `<img src="${p.imagen_data}">` : `<div class="sin-foto">📷</div>`}
           <div class="info">
-            <div class="nombre">${p.nombre}${p.categoria ? ` <span style="color:#C6B9A3; font-weight:400;">· ${p.categoria}</span>` : ''}</div>
-            <div class="precio-stock">${formatoMoneda(p.precio_venta)} · costo ${formatoMoneda(p.precio_costo)} · <span class="${p.stock <= 0 ? 'stock-bajo' : ''}">${p.stock} ${p.unidad_medida}</span></div>
+            <div class="nombre">${p.nombre}${p.categoria ? ` <span style="color:#96A2AC; font-weight:400;">· ${p.categoria}</span>` : ''}</div>
+            <div class="precio-stock">${formatoMoneda(p.precio_venta)} · costo ${formatoMoneda(p.precio_costo)} · <span class="${claseStock(p)}">${p.stock} ${p.unidad_medida}</span></div>
           </div>
         </div>
         <button class="btn-pausar" onclick="event.stopPropagation(); ${p.activo === false ? `reactivarProductoUI('${p.id}')` : `pausarProductoUI('${p.id}')`}">${p.activo === false ? '▶️' : '⏸️'}</button>
@@ -1240,7 +1984,7 @@
   }
 
   async function pausarProductoUI(id) {
-    if (!confirm('¿Pausar este producto? Deja de aparecer en Venta, pero no se pierde su historial.')) return;
+    if (!(await confirmarModal('¿Pausar este producto? Deja de aparecer en Venta, pero no se pierde su historial.'))) return;
     await pausarProducto(estado.cliente_id, id);
     pintarInventario();
   }
@@ -1250,24 +1994,34 @@
   }
 
   let productoEditandoId = null;
-  let _codigoEncontradoEnBiblioteca = false;
+  let _fotoProductoTemp = null; // base64 ya comprimido, o null si no hay foto
 
-  async function revisarBibliotecaAlCambiarCodigo() {
-    const codigo = document.getElementById('inputPCodigo').value.trim();
-    const avisoDiv = document.getElementById('avisoBiblioteca');
-    _codigoEncontradoEnBiblioteca = false;
-    avisoDiv.style.display = 'none';
-    if (!codigo) return;
-    const encontrado = await buscarEnBiblioteca(codigo);
-    if (encontrado) {
-      _codigoEncontradoEnBiblioteca = true;
-      avisoDiv.style.display = 'block';
-      // Solo autocompleta el nombre si la persona todavia no escribio uno -
-      // no le pisa algo que ya puso a mano.
-      const inputNombre = document.getElementById('inputPNombre');
-      if (!inputNombre.value.trim()) inputNombre.value = encontrado.nombre;
-    }
+  function alElegirFotoProducto(evento) {
+    const archivo = evento.target.files[0];
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // Comprimir a maximo 400px de lado y calidad 0.7 - una foto de
+        // celular sin comprimir puede pesar varios MB, y Firestore tiene un
+        // limite de 1MB por documento (compartido con el resto de los
+        // campos del producto).
+        const canvas = document.createElement('canvas');
+        const maxLado = 400;
+        let { width, height } = img;
+        if (width > height && width > maxLado) { height = height * (maxLado / width); width = maxLado; }
+        else if (height > maxLado) { width = width * (maxLado / height); height = maxLado; }
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        _fotoProductoTemp = canvas.toDataURL('image/jpeg', 0.7);
+        document.getElementById('previewFotoProducto').innerHTML = `<img src="${_fotoProductoTemp}">`;
+      };
+      img.src = e.target.result;
+    };
+    lector.readAsDataURL(archivo);
   }
+
   async function abrirFormProducto(id) {
     productoEditandoId = id;
     document.getElementById('tituloFormProducto').textContent = id ? 'Editar producto' : 'Nuevo producto';
@@ -1296,43 +2050,95 @@
       document.getElementById('inputPPrecioCosto').value = p.precio_costo;
       document.getElementById('inputPPrecioLista').value = p.precio_lista || '';
       document.getElementById('inputPStock').value = p.stock;
+      // El stock de un producto YA EXISTENTE no se edita libremente aca -
+      // solo por "Ajustar stock", que exige motivo (igual que el exe).
+      document.getElementById('inputPStock').disabled = true;
+      document.getElementById('btnAbrirAjusteStock').style.display = 'block';
+      document.getElementById('inputPStockMinimo').value = p.stock_minimo ?? 5;
       document.getElementById('inputPUnidad').value = p.unidad_medida;
       document.getElementById('inputPVencimiento').value = p.fecha_vencimiento || '';
       document.getElementById('inputPAplicaIva').checked = p.aplica_iva !== false;
+      _fotoProductoTemp = p.imagen_data || null;
+      document.getElementById('previewFotoProducto').innerHTML = _fotoProductoTemp
+        ? `<img src="${_fotoProductoTemp}">` : '<span>📷</span>';
 
       const presentaciones = await listarPresentacionesDeProducto(id);
       if (presentaciones.length > 0) {
         document.getElementById('presentacionesExistentes').innerHTML =
-          '<div style="font-size:11.5px; color:#9A8B76; margin-bottom:6px;">Ya tiene:</div>' +
+          '<div style="font-size:11.5px; color:#64707C; margin-bottom:6px;">Ya tiene:</div>' +
           presentaciones.map((pr) => `<div style="font-size:12.5px; padding:4px 0;">${pr.nombre} — ${formatoMoneda(pr.precio_venta)}</div>`).join('');
       }
 
       const historial = await historialDePrecios(id);
       if (historial.length > 0) {
         document.getElementById('historialPreciosProducto').innerHTML =
-          '<div style="font-size:11.5px; color:#9A8B76; margin:10px 0 6px 0;">Historial de precio:</div>' +
-          historial.slice(0, 5).map((h) => `<div style="font-size:12px; padding:3px 0; color:#6B5C48;">${new Date(h.fecha).toLocaleDateString('es-CL')} — ${formatoMoneda(h.precio_anterior)} → ${formatoMoneda(h.precio_nuevo)}${h.modificado_por ? ` <span style="color:#C6B9A3;">(${h.modificado_por})</span>` : ''}</div>`).join('');
+          '<div style="font-size:11.5px; color:#64707C; margin:10px 0 6px 0;">Historial de precio:</div>' +
+          historial.slice(0, 5).map((h) => `<div style="font-size:12px; padding:3px 0; color:#64707C;">${new Date(h.fecha).toLocaleDateString('es-CL')} — ${h.tipo === 'costo' ? 'Costo' : 'Venta'}: ${formatoMoneda(h.precio_anterior)} → ${formatoMoneda(h.precio_nuevo)}${h.modificado_por ? ` <span style="color:#96A2AC;">(${h.modificado_por})</span>` : ''}</div>`).join('');
       } else {
         document.getElementById('historialPreciosProducto').innerHTML = '';
+      }
+
+      const ajustes = await historialDeAjustesStock(estado.cliente_id, id);
+      if (ajustes.length > 0) {
+        const etiquetasAjuste = { merma: 'Merma', rotura: 'Rotura', consumo_interno: 'Consumo interno', diferencia_conteo: 'Diferencia de conteo', otro: 'Otro' };
+        document.getElementById('historialAjustesProducto').innerHTML =
+          '<div style="font-size:11.5px; color:#64707C; margin:10px 0 6px 0;">Ajustes de stock:</div>' +
+          ajustes.slice(0, 5).map((m) => `<div style="font-size:12px; padding:3px 0; color:#64707C;">${new Date(m.fecha).toLocaleDateString('es-CL')} — ${m.cantidad > 0 ? '+' : ''}${m.cantidad} (${etiquetasAjuste[m.motivo_tipo] || m.motivo_tipo}): ${m.motivo}${m.hecho_por ? ` <span style="color:#96A2AC;">(${m.hecho_por})</span>` : ''}</div>`).join('');
+      } else {
+        document.getElementById('historialAjustesProducto').innerHTML = '';
       }
     } else {
       document.getElementById('inputPNombre').value = '';
       document.getElementById('inputPCodigo').value = '';
-      _codigoEncontradoEnBiblioteca = false;
-      document.getElementById('avisoBiblioteca').style.display = 'none';
       document.getElementById('inputPCategoria').value = '';
       document.getElementById('inputPPrecioVenta').value = '';
       document.getElementById('inputPPrecioCosto').value = '';
       document.getElementById('inputPPrecioLista').value = '';
       document.getElementById('inputPStock').value = '';
+      document.getElementById('inputPStock').disabled = false;
+      document.getElementById('btnAbrirAjusteStock').style.display = 'none';
+      document.getElementById('historialAjustesProducto').innerHTML = '';
+      document.getElementById('inputPStockMinimo').value = 5;
       document.getElementById('inputPUnidad').value = 'unidad';
       document.getElementById('inputPVencimiento').value = '';
       document.getElementById('inputPAplicaIva').checked = true;
+      _fotoProductoTemp = null;
+      document.getElementById('previewFotoProducto').innerHTML = '<span>📷</span>';
+      document.getElementById('inputPFotoArchivo').value = '';
     }
     document.getElementById('modalProducto').classList.add('activo');
   }
   function cerrarFormProducto() {
     document.getElementById('modalProducto').classList.remove('activo');
+  }
+
+  function abrirModalAjusteStock() {
+    if (!productoEditandoId) return;
+    const p = listarProductosRemoto(true).find((x) => x.id === productoEditandoId);
+    if (!p) return;
+    document.getElementById('infoAjusteStock').textContent = `Stock actual: ${p.stock} ${p.unidad_medida}`;
+    document.getElementById('inputAjusteDiferencia').value = '';
+    document.getElementById('inputAjusteTipo').value = 'merma';
+    document.getElementById('inputAjusteMotivo').value = '';
+    document.getElementById('errorAjusteStock').textContent = '';
+    document.getElementById('modalAjusteStock').classList.add('activo');
+  }
+  function cerrarModalAjusteStock() {
+    document.getElementById('modalAjusteStock').classList.remove('activo');
+  }
+  async function confirmarAjusteStock() {
+    const diferencia = document.getElementById('inputAjusteDiferencia').value;
+    const motivoTipo = document.getElementById('inputAjusteTipo').value;
+    const motivo = document.getElementById('inputAjusteMotivo').value;
+    try {
+      await ajustarStockProducto(estado.cliente_id, productoEditandoId, {
+        diferencia, motivo, motivoTipo, hechoPor: sesionActual.nombre,
+      });
+      cerrarModalAjusteStock();
+      await abrirFormProducto(productoEditandoId);
+    } catch (e) {
+      document.getElementById('errorAjusteStock').textContent = e.message;
+    }
   }
   let contadorFilaFactura = 0;
   async function abrirFormFactura() {
@@ -1378,7 +2184,7 @@
         items.push({ producto_id: Number(sel.value), cantidad: Number(cantidad), precio_costo_unitario: Number(costo) });
       }
     }
-    if (items.length === 0) { alert('Agrega al menos un producto con cantidad y costo.'); return; }
+    if (items.length === 0) { await avisoModal('Agrega al menos un producto con cantidad y costo.'); return; }
     await crearFactura({ proveedor, numero_factura: numero, items });
     cerrarFormFactura();
     pintarInventario();
@@ -1402,7 +2208,7 @@
     const nombre = document.getElementById('inputComboNombre').value.trim();
     const precio = document.getElementById('inputComboPrecio').value;
     const seleccionados = Array.from(document.querySelectorAll('.check-producto-combo:checked')).map((c) => Number(c.value));
-    if (!nombre || !precio || seleccionados.length < 2) { alert('Elige al menos 2 productos y pon nombre + precio.'); return; }
+    if (!nombre || !precio || seleccionados.length < 2) { await avisoModal('Elige al menos 2 productos y pon nombre + precio.'); return; }
     await crearCombo(estado.cliente_id, { nombre, productos_ids: seleccionados, precio_combo: precio });
     cerrarFormCombo();
   }
@@ -1412,13 +2218,20 @@
       nombre: document.getElementById('inputPNombre').value.trim(),
       codigo: document.getElementById('inputPCodigo').value.trim() || null,
       categoria: document.getElementById('inputPCategoria').value.trim() || null,
-      precio_venta: document.getElementById('inputPPrecioVenta').value,
-      precio_costo: document.getElementById('inputPPrecioCosto').value,
-      precio_lista: document.getElementById('inputPPrecioLista').value || null,
+      // Numeros SIEMPRE como Number, nunca el string crudo del input - si un
+      // precio se guarda como string, FirebaseSync.increment() (que usan la
+      // venta y el ajuste de stock) deja de sumar/restar y en vez de eso
+      // SOBREESCRIBE el campo con el delta solo, corrompiendo el stock real
+      // silenciosamente la proxima vez que alguien vende o ajusta.
+      precio_venta: Number(document.getElementById('inputPPrecioVenta').value) || 0,
+      precio_costo: Number(document.getElementById('inputPPrecioCosto').value) || 0,
+      precio_lista: document.getElementById('inputPPrecioLista').value ? Number(document.getElementById('inputPPrecioLista').value) : null,
       stock: document.getElementById('inputPStock').value,
+      stock_minimo: document.getElementById('inputPStockMinimo').value ? Number(document.getElementById('inputPStockMinimo').value) : 5,
       unidad_medida: document.getElementById('inputPUnidad').value,
       fecha_vencimiento: document.getElementById('inputPVencimiento').value || null,
       aplica_iva: document.getElementById('inputPAplicaIva').checked,
+      imagen_data: _fotoProductoTemp,
     };
     if (!datos.nombre) return;
 
@@ -1427,20 +2240,26 @@
       const cambioPrecio = productoOriginal && Number(productoOriginal.precio_venta) !== Number(datos.precio_venta);
       const puedeCambiarPrecio = sesionActual && (sesionActual.rol === 'jefe' || sesionActual.puede_cambiar_precio);
       if (cambioPrecio && !puedeCambiarPrecio) {
-        alert('No tienes permiso para cambiar precios — pídele a un jefe que lo haga.');
+        await avisoModal('No tienes permiso para cambiar precios — pídele a un jefe que lo haga.');
         return;
       }
     }
 
     let idProducto = productoEditandoId;
     if (idProducto) {
-      await editarProducto(estado.cliente_id, idProducto, datos, sesionActual.nombre);
+      // El stock de un producto existente NO se toca desde aca (ver
+      // "Ajustar stock") - se excluye del payload para no reescribirlo con
+      // el mismo valor de todos modos.
+      const { stock, ...cambiosSinStock } = datos;
+      await editarProducto(estado.cliente_id, idProducto, cambiosSinStock, sesionActual.nombre);
     } else {
       idProducto = await crearProducto(estado.cliente_id, datos);
-      // Si el codigo no estaba en la biblioteca compartida, se propone como
-      // nuevo - queda pendiente de que Nacho lo revise, no se sube directo.
-      if (datos.codigo && !_codigoEncontradoEnBiblioteca) {
-        proponerProductoNuevo(estado.cliente_id, { codigoBarra: datos.codigo, nombre: datos.nombre, imagenData: null }).catch(() => {});
+      // Todo producto nuevo con codigo se propone a la biblioteca compartida
+      // - el cliente no puede consultarla, asi que no hay forma de saber
+      // desde aca si el codigo ya estaba. Nacho descarta los duplicados al
+      // revisar desde Manager IH.
+      if (datos.codigo) {
+        proponerProductoNuevo(estado.cliente_id, { codigoBarra: datos.codigo, nombre: datos.nombre, imagenData: datos.imagen_data }).catch(() => {});
       }
     }
 
@@ -1474,13 +2293,13 @@
     const ventas = (await listarVentas(estado.cliente_id, fechaISO(hace30dias), fechaISO(hoy))).slice(0, 30);
     const cont = document.getElementById('listaVentasDevolucion');
     if (ventas.length === 0) {
-      cont.innerHTML = `<p style="text-align:center; color:#C6B9A3; font-size:13px; padding:30px 0;">Sin ventas todavía</p>`;
+      cont.innerHTML = `<p style="text-align:center; color:#96A2AC; font-size:13px; padding:30px 0;">Sin ventas todavía</p>`;
       return;
     }
     cont.innerHTML = ventas.map((v) => `
       <div class="fila-historial" onclick="abrirDevolucionDeVenta('${v.id}')">
-        <div class="top"><span>${v.items.map((i) => i.nombre).join(', ').slice(0, 40)}</span><span>${formatoMoneda(v.total)}</span></div>
-        <div class="fecha">${new Date(v.fecha).toLocaleString('es-CL')}</div>
+        <div class="top"><span>${v.anulado ? '❌ ' : ''}${v.items.map((i) => i.nombre).join(', ').slice(0, 40)}</span><span>${formatoMoneda(v.total)}</span></div>
+        <div class="fecha">${new Date(v.fecha).toLocaleString('es-CL')}${v.anulado ? ' — ANULADA' : ''}</div>
       </div>
     `).join('');
   }
@@ -1490,6 +2309,21 @@
     const venta = await obtenerVenta(estado.cliente_id, ventaId);
     if (!venta) return;
     ventaDevolviendo = venta;
+
+    const puedeAnular = sesionActual && (sesionActual.rol === 'jefe' || sesionActual.puede_gestionar_usuarios);
+    document.getElementById('inputMotivoDevolucion').value = '';
+    document.getElementById('errorDevolucion').textContent = '';
+
+    if (venta.anulado) {
+      document.getElementById('itemsDevolucion').innerHTML =
+        `<p style="text-align:center; color:#C5433A; font-size:13px; padding:10px 0;">Esta venta fue anulada${venta.anulado_por ? ` por ${venta.anulado_por}` : ''}.<br>Motivo: ${venta.motivo_anulacion || '(sin motivo)'}</p>`;
+      document.getElementById('inputMotivoDevolucion').style.display = 'none';
+      document.getElementById('btnAnularVentaCompleta').style.display = 'none';
+      document.getElementById('modalDevolucion').classList.add('activo');
+      return;
+    }
+    document.getElementById('inputMotivoDevolucion').style.display = 'block';
+    document.getElementById('btnAnularVentaCompleta').style.display = puedeAnular ? 'block' : 'none';
 
     // Cuanto de cada item ya se devolvio antes (puede haber varias devoluciones parciales)
     const yaDevuelto = {};
@@ -1502,12 +2336,12 @@
     document.getElementById('itemsDevolucion').innerHTML = venta.items.map((it, idx) => {
       const clave = it.clave || it.producto_id;
       const disponible = it.cantidad - (yaDevuelto[clave] || 0);
-      if (disponible <= 0) return `<div class="fila-carrito"><span style="color:#C6B9A3;">${it.nombre} — ya devuelto completo</span></div>`;
+      if (disponible <= 0) return `<div class="fila-carrito"><span style="color:#96A2AC;">${it.nombre} — ya devuelto completo</span></div>`;
       return `
         <div class="fila-carrito">
-          <span>${it.nombre} <span style="color:#9A8B76;">(máx ${disponible})</span></span>
+          <span>${it.nombre} <span style="color:#64707C;">(máx ${disponible})</span></span>
           <input type="number" id="devCantidad${idx}" min="0" max="${disponible}" value="0" data-idx="${idx}"
-                 style="width:60px; padding:6px; border-radius:6px; border:1.5px solid #E4E1EC; text-align:center;">
+                 style="width:60px; padding:6px; border-radius:6px; border:1.5px solid #DCE2E7; text-align:center;">
         </div>`;
     }).join('');
     document.getElementById('modalDevolucion').classList.add('activo');
@@ -1518,6 +2352,11 @@
   }
   async function confirmarDevolucionParcial() {
     if (!ventaDevolviendo) return;
+    const motivo = document.getElementById('inputMotivoDevolucion').value;
+    if (!(motivo || '').trim()) {
+      document.getElementById('errorDevolucion').textContent = 'El motivo es obligatorio.';
+      return;
+    }
     const itemsADevolver = [];
     ventaDevolviendo.items.forEach((it, idx) => {
       const input = document.getElementById('devCantidad' + idx);
@@ -1525,11 +2364,35 @@
       const cant = Number(input.value) || 0;
       if (cant > 0) itemsADevolver.push({ ...it, cantidad: cant });
     });
-    if (itemsADevolver.length === 0) { alert('Elige al menos una cantidad a devolver.'); return; }
-    await registrarDevolucion(estado.cliente_id, ventaDevolviendo.id, itemsADevolver);
+    if (itemsADevolver.length === 0) { await avisoModal('Elige al menos una cantidad a devolver.'); return; }
+    await registrarDevolucion(estado.cliente_id, ventaDevolviendo.id, itemsADevolver, motivo, sesionActual.nombre);
     cerrarModalDevolucion();
-    alert('Devolución registrada — el stock ya se actualizó.');
+    document.getElementById('modalDevolucionOk').classList.add('activo');
     pintarVentasDevolucion();
+  }
+
+  function abrirModalAnularVenta() {
+    document.getElementById('inputMotivoAnulacion').value = '';
+    document.getElementById('errorAnularVenta').textContent = '';
+    document.getElementById('modalAnularVenta').classList.add('activo');
+  }
+  function cerrarModalAnularVenta() {
+    document.getElementById('modalAnularVenta').classList.remove('activo');
+  }
+  async function confirmarAnularVenta() {
+    if (!ventaDevolviendo) return;
+    const motivo = document.getElementById('inputMotivoAnulacion').value;
+    const ok = await confirmarModal('¿Anular esta venta completa? Se restaura el stock y no se puede deshacer.');
+    if (!ok) return;
+    try {
+      await anularVentaCompleta(estado.cliente_id, ventaDevolviendo.id, motivo, sesionActual.nombre);
+      cerrarModalAnularVenta();
+      cerrarModalDevolucion();
+      await avisoModal('Venta anulada.');
+      pintarVentasDevolucion();
+    } catch (e) {
+      document.getElementById('errorAnularVenta').textContent = e.message;
+    }
   }
 
   // ============================================================
@@ -1541,6 +2404,15 @@
   let periodoActual = calcularRangoHoy();
 
   function fechaISO(d) { return d.toISOString().slice(0, 10); }
+  function iniciales(nombre) {
+    if (!nombre) return '?';
+    const palabras = nombre.trim().split(/\s+/).slice(0, 2);
+    return palabras.map((p) => p.charAt(0).toUpperCase()).join('');
+  }
+  function pintarLogoNegocio() {
+    const el = document.getElementById('logoNegocio');
+    el.innerHTML = estado.logo_data ? `<img src="${estado.logo_data}">` : iniciales(estado.nombre_cliente);
+  }
   function calcularRangoHoy() {
     const hoy = fechaISO(new Date());
     return { desde: hoy, hasta: hoy };
@@ -1640,7 +2512,7 @@
     const ventas = await listarVentas(estado.cliente_id, periodoActual.desde, periodoActual.hasta);
     const cont = document.getElementById('listaHistorial');
     if (ventas.length === 0) {
-      cont.innerHTML = `<p style="text-align:center; color:#C6B9A3; font-size:13px; padding:30px 0;">Sin ventas en este período</p>`;
+      cont.innerHTML = `<p style="text-align:center; color:#96A2AC; font-size:13px; padding:30px 0;">Sin ventas en este período</p>`;
       return;
     }
     cont.innerHTML = ventas.map((v) => `
@@ -1672,7 +2544,7 @@
   async function restaurarRespaldoUI(evento) {
     const archivo = evento.target.files[0];
     if (!archivo) return;
-    if (!confirm('Esto va a REEMPLAZAR todos los productos, ventas e historial que hay ahora en este celular por lo que traiga el archivo. ¿Seguro que quieres continuar?')) {
+    if (!(await confirmarModal('Esto va a REEMPLAZAR todos los productos, ventas e historial que hay ahora en este celular por lo que traiga el archivo. ¿Seguro que quieres continuar?'))) {
       evento.target.value = '';
       return;
     }
@@ -1680,17 +2552,17 @@
       const texto = await archivo.text();
       const respaldo = JSON.parse(texto);
       await restaurarRespaldoCompleto(respaldo);
-      alert('Respaldo restaurado correctamente. La app se va a recargar.');
+      await avisoModal('Respaldo restaurado correctamente. La app se va a recargar.');
       location.reload();
     } catch (e) {
-      alert('No se pudo restaurar el respaldo: ' + e.message);
+      await avisoModal('No se pudo restaurar el respaldo: ' + e.message);
     }
     evento.target.value = '';
   }
 
   async function generarPDFVentas() {
     const ventas = await listarVentas(estado.cliente_id, periodoActual.desde, periodoActual.hasta);
-    if (ventas.length === 0) { alert('No hay ventas en este período para generar el reporte.'); return; }
+    if (ventas.length === 0) { await avisoModal('No hay ventas en este período para generar el reporte.'); return; }
 
     const totalVendido = ventas.reduce((s, v) => s + totalNetoVenta(v), 0);
     const porMedioPago = {};
@@ -1785,7 +2657,7 @@
   async function generarExcelVentas() {
     const ventas = await listarVentas(estado.cliente_id, periodoActual.desde, periodoActual.hasta);
     const productos = await listarProductos();
-    if (ventas.length === 0 && productos.length === 0) { alert('Todavía no hay datos para exportar.'); return; }
+    if (ventas.length === 0 && productos.length === 0) { await avisoModal('Todavía no hay datos para exportar.'); return; }
 
     const filasVentas = [['Fecha', 'Productos', 'Medio de pago', 'Total', 'Con devolución']];
     for (const v of ventas) {

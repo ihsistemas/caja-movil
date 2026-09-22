@@ -5,26 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Activar equipo</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#E0632A">
+<meta name="theme-color" content="#2E4374">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: -apple-system, system-ui, sans-serif; }
-  body { background: #FBF7F0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: 'IBM Plex Sans', -apple-system, system-ui, sans-serif; }
+  body { background: #F3F5F7; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .tarjeta { background: white; border-radius: 20px; padding: 28px 24px; max-width: 380px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
-  .icono { width: 56px; height: 56px; border-radius: 16px; background: #FDF1E9; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px auto; }
-  h1 { font-size: 19px; text-align: center; color: #2A2118; margin-bottom: 4px; }
-  .sub { font-size: 13px; text-align: center; color: #9A8B76; margin-bottom: 22px; }
+  .icono { width: 56px; height: 56px; border-radius: 16px; background: #E7EBF3; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px auto; }
+  h1 { font-size: 19px; text-align: center; color: #1A2530; margin-bottom: 4px; }
+  .sub { font-size: 13px; text-align: center; color: #64707C; margin-bottom: 22px; }
 
-  .caja-id { background: #FBF7F0; border: 1.5px dashed #DCCFBB; border-radius: 12px; padding: 14px; margin-bottom: 18px; }
-  .caja-id .etiqueta { font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: #9A8B76; margin-bottom: 5px; }
-  .caja-id .id-valor { font-family: monospace; font-size: 14px; font-weight: 700; color: #2A2118; word-break: break-all; }
+  .caja-id { background: #F3F5F7; border: 1.5px dashed #DCE2E7; border-radius: 12px; padding: 14px; margin-bottom: 18px; }
+  .caja-id .etiqueta { font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: #64707C; margin-bottom: 5px; }
+  .caja-id .id-valor { font-family: monospace; font-size: 14px; font-weight: 700; color: #1A2530; word-break: break-all; }
 
-  label { font-size: 12.5px; color: #6B5C48; font-weight: 600; display: block; margin-bottom: 6px; }
-  textarea, input[type=text] { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #E4E1EC; font-size: 13px; margin-bottom: 12px; }
+  label { font-size: 12.5px; color: #64707C; font-weight: 600; display: block; margin-bottom: 6px; }
+  textarea, input[type=text] { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #DCE2E7; font-size: 13px; margin-bottom: 12px; }
   textarea { font-family: monospace; resize: none; height: 70px; }
-  .btn-activar { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #E0632A; color: white; font-weight: 700; font-size: 14.5px; }
+  .btn-activar { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #2E4374; color: white; font-weight: 700; font-size: 14.5px; }
   .btn-activar:disabled { opacity: .4; }
-  .error { background: #FEF2F2; color: #B91C1C; border-radius: 10px; padding: 10px 12px; font-size: 12.5px; margin-bottom: 12px; }
+  .error { background: #F7E5E3; color: #C5433A; border-radius: 10px; padding: 10px 12px; font-size: 12.5px; margin-bottom: 12px; }
 
   .paso2 { display: none; }
 </style>
@@ -45,7 +47,7 @@
 
   <div id="pasoCodigo">
     <label>Código</label>
-    <textarea id="inputCodigo" placeholder="IHCLI-... o IHINV-..."></textarea>
+    <textarea id="inputCodigo" placeholder="CLI-...#N1 o IHINV-..."></textarea>
     <button class="btn-activar" id="btnValidar" onclick="validarCodigo()">Continuar</button>
   </div>
 
@@ -64,10 +66,20 @@
   inicializarFirebase();
 
   window.addEventListener('DOMContentLoaded', () => {
+    // Si este equipo ya esta activado y la licencia sigue vigente, no tiene
+    // sentido mostrar el formulario de activacion de nuevo - eso confundia
+    // (por ejemplo, al tocar "atras" en el navegador). Se manda derecho al
+    // panel, que ahi sí pide iniciar sesion con el usuario de cada persona.
+    const { vigente } = estadoEquipoVigente();
+    if (vigente && new URLSearchParams(location.search).get('vencida') !== '1') {
+      window.location.href = 'panel.html';
+      return;
+    }
+
     document.getElementById('deviceIdMostrado').textContent = getDeviceId();
     if (new URLSearchParams(location.search).get('vencida') === '1') {
       document.getElementById('subActivar').textContent = 'Tu período de prueba venció — pide una clave nueva para seguir usando el programa.';
-      document.getElementById('subActivar').style.color = '#B91C1C';
+      document.getElementById('subActivar').style.color = '#C5433A';
     }
   });
 
@@ -84,17 +96,30 @@
 
     const limpio = texto.toUpperCase();
     if (limpio.startsWith('CLI-')) {
-      // Codigo de cliente directo - se consulta al servidor de verdad, no
-      // se calcula nada localmente (asi no se puede falsificar).
-      const [cliente, msg] = await obtenerClienteRemoto(texto);
+      // Codigo de cliente+local ("CLI-XXXXXXXXXX#N1") - se consulta al
+      // servidor de verdad, no se calcula nada localmente (asi no se puede
+      // falsificar). Mismo esquema que Parking (cliente+sede).
+      const partes = parsearCodigoNegocio(texto);
+      if (!partes) {
+        cajaError.innerHTML = `<div class="error">Este código de cliente está incompleto — le falta la parte del local (después del #). Pídele el código completo a Nacho o a tu jefe.</div>`;
+        btn.disabled = false;
+        return;
+      }
+      const [cliente, msg] = await obtenerClienteRemoto(partes.clienteId);
       if (!cliente) {
         cajaError.innerHTML = `<div class="error">${msg}</div>`;
         btn.disabled = false;
         return;
       }
-      codigoValidado = { tipo: 'cliente', data: cliente };
+      const [negocio, msgNegocio] = await obtenerNegocioParaActivarRemoto(partes.clienteId, partes.negocioId);
+      if (!negocio) {
+        cajaError.innerHTML = `<div class="error">${msgNegocio}</div>`;
+        btn.disabled = false;
+        return;
+      }
+      codigoValidado = { tipo: 'cliente', cliente, negocio };
       document.getElementById('infoCliente').textContent =
-        `Vas a activar "${cliente.nombre}" — serás el equipo PRINCIPAL (maestro) de este cliente.`;
+        `Vas a activar "${cliente.nombre} · ${negocio.nombre}" — serás el equipo PRINCIPAL (maestro) de este local.`;
     } else if (limpio.startsWith('IHINV-')) {
       const [inv, msg] = await validarInvitacionRemota(texto);
       if (!inv) {
@@ -102,17 +127,23 @@
         btn.disabled = false;
         return;
       }
-      // La invitacion solo dice A QUE cliente unirse - los datos reales
-      // (capacidad, vencimiento) se consultan frescos al servidor aca.
+      // La invitacion solo dice A QUE cliente/local unirse - los datos
+      // reales (capacidad, vencimiento) se consultan frescos al servidor aca.
       const [cliente, msgCliente] = await obtenerClienteRemoto(inv.cliente_id);
       if (!cliente) {
         cajaError.innerHTML = `<div class="error">${msgCliente}</div>`;
         btn.disabled = false;
         return;
       }
-      codigoValidado = { tipo: 'invitacion', data: cliente, codigoInvitacion: inv.codigo_invitacion };
+      const [negocio, msgNegocio] = await obtenerNegocioParaActivarRemoto(inv.cliente_id, inv.negocio_id);
+      if (!negocio) {
+        cajaError.innerHTML = `<div class="error">${msgNegocio}</div>`;
+        btn.disabled = false;
+        return;
+      }
+      codigoValidado = { tipo: 'invitacion', cliente, negocio, codigoInvitacion: inv.codigo_invitacion };
       document.getElementById('infoCliente').textContent =
-        `Te vas a sumar a "${cliente.nombre}" como equipo adicional.`;
+        `Te vas a sumar a "${cliente.nombre} · ${negocio.nombre}" como equipo adicional.`;
     } else {
       cajaError.innerHTML = `<div class="error">No reconozco este código — revisa que esté completo y sin espacios de más.</div>`;
       btn.disabled = false;
@@ -129,29 +160,30 @@
     if (!nombreEquipo || !codigoValidado) return;
 
     const deviceId = getDeviceId();
-    const cliente = codigoValidado.data;
+    const { cliente, negocio } = codigoValidado;
     const rol = codigoValidado.tipo === 'cliente' ? 'maestro' : 'sub';
 
     if (rol === 'sub') {
       // Antes este chequeo lo hacia el maestro al escanear la confirmacion
       // de vuelta - ahora que el equipo se confirma solo, el chequeo de
       // cupo se hace aca mismo, contra la lista real en Firestore.
-      const equiposActuales = await listarEquiposRemoto(cliente.cliente_id);
-      if (!hayCupoDisponibleRemoto(cliente, equiposActuales)) {
-        errorDiv.innerHTML = `<div class="error">Ya no hay cupo disponible para este cliente — pide al equipo principal que suelte uno primero.</div>`;
+      const equiposActuales = await listarEquiposRemoto(cliente.cliente_id, negocio.negocio_id);
+      if (!hayCupoDisponibleRemoto(negocio, equiposActuales)) {
+        errorDiv.innerHTML = `<div class="error">Ya no hay cupo disponible para este local — pide al equipo principal que suelte uno primero.</div>`;
         return;
       }
     }
 
     guardarEstadoEquipo({
-      cliente_id: cliente.cliente_id, nombre_cliente: cliente.nombre, capacidad: cliente.capacidad,
-      rol, nombre_equipo: nombreEquipo,
+      cliente_id: cliente.cliente_id, nombre_cliente: cliente.nombre,
+      negocio_id: negocio.negocio_id, nombre_negocio: negocio.nombre, capacidad_equipos: negocio.capacidad_equipos,
+      rol, nombre_equipo: nombreEquipo, logo_data: cliente.logo_data || null,
       tipo_licencia: cliente.tipo_licencia, vence: cliente.vence,
     });
     if (rol === 'maestro') {
-      await registrarEsteEquipo(cliente.cliente_id, deviceId, nombreEquipo);
+      await registrarEsteEquipo(cliente.cliente_id, negocio.negocio_id, deviceId, nombreEquipo);
     } else {
-      await confirmarEquipoRemoto(cliente.cliente_id, deviceId, nombreEquipo, codigoValidado.codigoInvitacion);
+      await confirmarEquipoRemoto(cliente.cliente_id, negocio.negocio_id, deviceId, nombreEquipo, codigoValidado.codigoInvitacion);
     }
 
     window.location.href = 'panel.html';
