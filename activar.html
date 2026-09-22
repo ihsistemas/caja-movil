@@ -26,9 +26,15 @@
   textarea { font-family: monospace; resize: none; height: 70px; }
   .btn-activar { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #2E4374; color: white; font-weight: 700; font-size: 14.5px; }
   .btn-activar:disabled { opacity: .4; }
+  .btn-secundario { width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid #DCE2E7; background: white; color: #1A2530; font-weight: 600; font-size: 13px; margin-bottom: 10px; }
   .error { background: #F7E5E3; color: #C5433A; border-radius: 10px; padding: 10px 12px; font-size: 12.5px; margin-bottom: 12px; }
 
   .paso2 { display: none; }
+
+  .modal-full { position: fixed; inset: 0; background: black; z-index: 60; display: none; flex-direction: column; }
+  .modal-full.activo { display: flex; }
+  .header-escaner { color: white; padding: 16px; display: flex; justify-content: space-between; font-size: 14px; }
+  #readerActivacion { flex: 1; }
 </style>
 </head>
 <body>
@@ -48,6 +54,7 @@
   <div id="pasoCodigo">
     <label>Código</label>
     <textarea id="inputCodigo" placeholder="CLI-...#N1 o IHINV-..."></textarea>
+    <button class="btn-secundario" onclick="abrirEscanerActivacion()">📷 Escanear código QR</button>
     <button class="btn-activar" id="btnValidar" onclick="validarCodigo()">Continuar</button>
   </div>
 
@@ -59,9 +66,19 @@
   </div>
 </div>
 
+<!-- ===== ESCANER DE CAMARA (activacion) ===== -->
+<div class="modal-full" id="modalEscanerActivacion">
+  <div class="header-escaner">
+    <span onclick="cerrarEscanerActivacion()">✕</span>
+    <span>Escanea el código</span>
+  </div>
+  <div id="readerActivacion"></div>
+</div>
+
 <script src="firebase-sync.bundle.js"></script>
 <script src="carrito_compartido.js"></script>
 <script src="motor.js"></script>
+<script src="html5-qrcode.min.js"></script>
 <script>
   inicializarFirebase();
 
@@ -84,6 +101,33 @@
   });
 
   let codigoValidado = null;
+
+  let _html5QrCodeActivacion = null;
+  function abrirEscanerActivacion() {
+    document.getElementById('modalEscanerActivacion').classList.add('activo');
+    _html5QrCodeActivacion = new Html5Qrcode('readerActivacion', { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] });
+    _html5QrCodeActivacion.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 240, height: 240 } },
+      (codigoLeido) => {
+        cerrarEscanerActivacion();
+        document.getElementById('inputCodigo').value = codigoLeido;
+        validarCodigo();
+      }
+    ).catch(() => {
+      document.getElementById('readerActivacion').innerHTML = '<p style="color:white; text-align:center; padding:30px;">No se pudo abrir la cámara — revisa que le hayas dado permiso al navegador.</p>';
+    });
+  }
+  function cerrarEscanerActivacion() {
+    // stop() puede tirar error de una (no solo rechazar la promesa) si la
+    // camara nunca llego a arrancar - el try/catch evita que eso deje la
+    // pantalla negra trabada sin poder volver atras.
+    if (_html5QrCodeActivacion) {
+      try { _html5QrCodeActivacion.stop().catch(() => {}); } catch (e) {}
+      _html5QrCodeActivacion = null;
+    }
+    document.getElementById('modalEscanerActivacion').classList.remove('activo');
+  }
 
   async function validarCodigo() {
     const texto = document.getElementById('inputCodigo').value.trim();

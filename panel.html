@@ -298,6 +298,7 @@
       Te va a servir si algún día olvidas tu clave normal. <b>Solo se muestra esta vez</b> — guárdala en un lugar seguro (una foto, un papel, donde no se te pierda).
     </p>
     <div style="font-size:22px; font-weight:800; text-align:center; background:#F3F5F7; border-radius:10px; padding:16px; margin-bottom:16px; letter-spacing:1px;" id="textoClaveRespaldo"></div>
+    <button class="btn-secundario" id="btnCopiarClaveRespaldo" style="margin-bottom:8px;" onclick="copiarClaveRespaldo()">📋 Copiar clave</button>
     <button class="btn-cerrar-modal" onclick="cerrarModalClaveRespaldo()">Ya la guardé</button>
   </div>
 </div>
@@ -1081,6 +1082,19 @@
   function cerrarModalClaveRespaldo() {
     document.getElementById('modalClaveRespaldo').classList.remove('activo');
     if (accionPendienteTrasClaveRespaldo) { accionPendienteTrasClaveRespaldo(); accionPendienteTrasClaveRespaldo = null; }
+  }
+  async function copiarClaveRespaldo() {
+    const clave = document.getElementById('textoClaveRespaldo').textContent;
+    const btn = document.getElementById('btnCopiarClaveRespaldo');
+    try {
+      await navigator.clipboard.writeText(clave);
+      const textoOriginal = btn.textContent;
+      btn.textContent = '✓ Copiada';
+      setTimeout(() => { btn.textContent = textoOriginal; }, 1500);
+    } catch (e) {
+      // Si el navegador bloquea el portapapeles, el código sigue visible
+      // en pantalla para anotarlo a mano - no hace falta avisar de nada.
+    }
   }
   function mostrarPantallaRecuperar() {
     document.getElementById('loginIngresar').style.display = 'none';
@@ -1925,8 +1939,11 @@
     });
   }
   function cerrarEscanerVenta() {
+    // stop() puede tirar error de una (no solo rechazar la promesa) si la
+    // camara nunca llego a arrancar - el try/catch evita que eso deje la
+    // pantalla negra trabada sin poder volver atras.
     if (html5QrCodeVenta) {
-      html5QrCodeVenta.stop().catch(() => {});
+      try { html5QrCodeVenta.stop().catch(() => {}); } catch (e) {}
       html5QrCodeVenta = null;
     }
     document.getElementById('modalEscanerVenta').classList.remove('activo');
