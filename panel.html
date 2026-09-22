@@ -236,10 +236,17 @@
 </div>
 
 <div class="tarjeta" id="tarjetaEquipos" style="display:none;">
-  <h2>Equipos vinculados</h2>
-  <div id="listaEquipos"></div>
-  <div class="cupo-info" id="cupoInfo"></div>
-  <button class="btn-invitar" id="btnInvitar" onclick="abrirInvitacion()">+ Sumar equipo</button>
+  <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="alternarTarjetaEquipos()">
+    <div style="min-width:0;">
+      <h2 style="margin-bottom:2px;">Equipos vinculados</h2>
+      <div class="cupo-info" id="cupoInfo" style="font-size:12px; color:#64707C;"></div>
+    </div>
+    <span id="flechaTarjetaEquipos" style="font-size:14px; color:#96A2AC; flex-shrink:0; margin-left:10px;">▾</span>
+  </div>
+  <div id="detalleTarjetaEquipos" style="display:none; margin-top:12px;">
+    <div id="listaEquipos"></div>
+    <button class="btn-invitar" id="btnInvitar" onclick="abrirInvitacion()">+ Sumar equipo</button>
+  </div>
 </div>
 
 <div class="tarjeta" id="tarjetaSub" style="display:none;">
@@ -583,57 +590,63 @@
     </div>
 
     <input type="text" id="inputPNombre" placeholder="Nombre del producto">
-    <input type="text" id="inputPCodigo" placeholder="Código de barra (opcional)">
-    <input type="text" id="inputPCategoria" placeholder="Categoría (opcional)" list="listaCategoriasDatalist">
-    <datalist id="listaCategoriasDatalist"></datalist>
     <div class="fila-2">
       <input type="number" id="inputPPrecioVenta" placeholder="Precio venta">
-      <input type="number" id="inputPPrecioCosto" placeholder="Precio costo">
-    </div>
-    <input type="number" id="inputPPrecioLista" placeholder="Precio de lista (opcional, para mostrar tachado)">
-    <div class="fila-2">
       <input type="number" id="inputPStock" placeholder="Stock">
-      <select id="inputPUnidad">
-        <option value="unidad">Unidad</option>
-        <option value="kg">Kilo</option>
-        <option value="gramo">Gramo</option>
-      </select>
     </div>
     <button type="button" class="btn-secundario" id="btnAbrirAjusteStock" style="display:none; margin:-6px 0 10px 0;" onclick="abrirModalAjusteStock()">📦 Ajustar stock (con motivo)</button>
-    <label style="font-size:12px; color:#64707C; font-weight:600; display:block; margin-bottom:4px;">Avisar cuando el stock llegue a (opcional)</label>
-    <input type="number" id="inputPStockMinimo" placeholder="Ej: 5">
-    <label style="font-size:12px; color:#64707C; font-weight:600; display:block; margin-bottom:4px;">Vence (opcional)</label>
-    <input type="date" id="inputPVencimiento">
-    <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin-bottom:12px;">
-      <input type="checkbox" id="inputPAplicaIva" checked style="width:auto; margin:0;"> Aplica IVA
-    </label>
 
-    <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin-bottom:10px;">
-      <input type="checkbox" id="inputPVendePorCaja" onchange="document.getElementById('camposPresentacion').style.display = this.checked ? 'block' : 'none'" style="width:auto; margin:0;">
-      También se vende por caja o paquete
-    </label>
-    <div id="camposPresentacion" style="display:none; background:#F3F5F7; border-radius:9px; padding:10px; margin-bottom:10px;">
-      <input type="text" id="inputPresNombre" placeholder="Ej: Caja x6">
+    <button type="button" class="btn-secundario" id="btnMasOpcionesProducto" onclick="alternarMasOpcionesProducto()" style="margin-bottom:12px; text-align:left;">
+      <span id="flechaMasOpcionesProducto">▾</span> Más opciones (código de barra, costo, categoría...)
+    </button>
+    <div id="masOpcionesProducto" style="display:none;">
+      <input type="text" id="inputPCodigo" placeholder="Código de barra (opcional)">
+      <input type="text" id="inputPCategoria" placeholder="Categoría (opcional)" list="listaCategoriasDatalist">
+      <datalist id="listaCategoriasDatalist"></datalist>
       <div class="fila-2">
-        <input type="number" id="inputPresCantidad" placeholder="Unidades por caja">
-        <input type="number" id="inputPresPrecio" placeholder="Precio de la caja">
+        <input type="number" id="inputPPrecioCosto" placeholder="Precio costo">
+        <select id="inputPUnidad">
+          <option value="unidad">Unidad</option>
+          <option value="kg">Kilo</option>
+          <option value="gramo">Gramo</option>
+        </select>
       </div>
-    </div>
-    <div id="presentacionesExistentes"></div>
-    <div id="historialPreciosProducto"></div>
-    <div id="historialAjustesProducto"></div>
+      <input type="number" id="inputPPrecioLista" placeholder="Precio de lista (opcional, para mostrar tachado)">
+      <label style="font-size:12px; color:#64707C; font-weight:600; display:block; margin-bottom:4px;">Avisar cuando el stock llegue a (opcional)</label>
+      <input type="number" id="inputPStockMinimo" placeholder="Ej: 5">
+      <label style="font-size:12px; color:#64707C; font-weight:600; display:block; margin-bottom:4px;">Vence (opcional)</label>
+      <input type="date" id="inputPVencimiento">
+      <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin-bottom:12px;">
+        <input type="checkbox" id="inputPAplicaIva" checked style="width:auto; margin:0;"> Aplica IVA
+      </label>
 
-    <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin:10px 0;">
-      <input type="checkbox" id="inputPTienePromo" onchange="document.getElementById('camposPromo').style.display = this.checked ? 'block' : 'none'" style="width:auto; margin:0;">
-      Tiene promoción activa
-    </label>
-    <div id="camposPromo" style="display:none; background:#E7EBF3; border-radius:9px; padding:10px; margin-bottom:10px;">
-      <select id="inputPromoTipo" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid #DCE2E7; margin-bottom:8px;">
-        <option value="porcentaje">% de descuento</option>
-        <option value="monto_fijo">Monto fijo de descuento</option>
-        <option value="precio_fijo">Precio final fijo</option>
-      </select>
-      <input type="number" id="inputPromoValor" placeholder="Valor">
+      <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+        <input type="checkbox" id="inputPVendePorCaja" onchange="document.getElementById('camposPresentacion').style.display = this.checked ? 'block' : 'none'" style="width:auto; margin:0;">
+        También se vende por caja o paquete
+      </label>
+      <div id="camposPresentacion" style="display:none; background:#F3F5F7; border-radius:9px; padding:10px; margin-bottom:10px;">
+        <input type="text" id="inputPresNombre" placeholder="Ej: Caja x6">
+        <div class="fila-2">
+          <input type="number" id="inputPresCantidad" placeholder="Unidades por caja">
+          <input type="number" id="inputPresPrecio" placeholder="Precio de la caja">
+        </div>
+      </div>
+      <div id="presentacionesExistentes"></div>
+      <div id="historialPreciosProducto"></div>
+      <div id="historialAjustesProducto"></div>
+
+      <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin:10px 0;">
+        <input type="checkbox" id="inputPTienePromo" onchange="document.getElementById('camposPromo').style.display = this.checked ? 'block' : 'none'" style="width:auto; margin:0;">
+        Tiene promoción activa
+      </label>
+      <div id="camposPromo" style="display:none; background:#E7EBF3; border-radius:9px; padding:10px; margin-bottom:10px;">
+        <select id="inputPromoTipo" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid #DCE2E7; margin-bottom:8px;">
+          <option value="porcentaje">% de descuento</option>
+          <option value="monto_fijo">Monto fijo de descuento</option>
+          <option value="precio_fijo">Precio final fijo</option>
+        </select>
+        <input type="number" id="inputPromoValor" placeholder="Valor">
+      </div>
     </div>
 
     <button class="btn-cerrar-modal" onclick="guardarProducto()">Guardar</button>
@@ -925,6 +938,18 @@
     } else {
       document.getElementById('tarjetaSub').style.display = 'block';
     }
+  }
+
+  // Plegada por defecto - esta tarjeta vive arriba de TODAS las pantallas
+  // (Inventario, Venta, Devolución, Historial), no solo una, asi que si
+  // queda siempre abierta le come pantalla en algo que casi nunca hace
+  // falta mirar en el dia a dia. Un toque la despliega igual.
+  function alternarTarjetaEquipos() {
+    const detalle = document.getElementById('detalleTarjetaEquipos');
+    const flecha = document.getElementById('flechaTarjetaEquipos');
+    const abierto = detalle.style.display === 'block';
+    detalle.style.display = abierto ? 'none' : 'block';
+    flecha.textContent = abierto ? '▾' : '▴';
   }
 
   function pintarEquipos() {
@@ -2039,9 +2064,22 @@
     lector.readAsDataURL(archivo);
   }
 
+  // Colapsada por defecto para no espantar con un formulario larguisimo al
+  // cargar el primer producto - al editar uno ya existente se abre sola
+  // (mostrarMasOpcionesProducto en abrirFormProducto), porque ahi es mas
+  // probable que haga falta tocar algo de eso.
+  function alternarMasOpcionesProducto() {
+    const abierto = document.getElementById('masOpcionesProducto').style.display === 'block';
+    mostrarMasOpcionesProducto(!abierto);
+  }
+  function mostrarMasOpcionesProducto(mostrar) {
+    document.getElementById('masOpcionesProducto').style.display = mostrar ? 'block' : 'none';
+    document.getElementById('flechaMasOpcionesProducto').textContent = mostrar ? '▴' : '▾';
+  }
   async function abrirFormProducto(id) {
     productoEditandoId = id;
     document.getElementById('tituloFormProducto').textContent = id ? 'Editar producto' : 'Nuevo producto';
+    mostrarMasOpcionesProducto(!!id);
 
     const categorias = await listarCategorias();
     document.getElementById('listaCategoriasDatalist').innerHTML = categorias.map((c) => `<option value="${c}">`).join('');
