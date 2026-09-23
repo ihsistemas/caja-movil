@@ -406,22 +406,30 @@ function costoPromedioPonderado(stockActual, costoActual, cantidadQueEntra, cost
   }
   return costoQueEntra;
 }
+// Bug real encontrado en QA: esto usaba idbCajaGet/idbCajaPut (IndexedDB
+// local, capa vieja de antes de que la app migrara a Firestore) mientras
+// el producto real vive en Firestore - el id de producto (string de
+// Firestore) ni siquiera es una clave valida para IndexedDB, asi que
+// "Guardar factura" tiraba un error silencioso y no guardaba nada, nunca.
+// Ahora usa las mismas funciones Remoto que el resto de la app (mismo
+// patron que ajustarStockProducto).
 async function crearFactura({ proveedor, numero_factura, nota, items }) {
   let totalCosto = 0;
   for (const it of items) {
-    const p = await idbCajaGet('productos', it.producto_id);
+    const p = listarProductosRemoto(true).find((prod) => prod.id === it.producto_id);
     if (!p) continue;
     const costoNuevo = costoPromedioPonderado(p.stock, p.precio_costo, it.cantidad, it.precio_costo_unitario);
-    await idbCajaPut('productos', { ...p, stock: (Number(p.stock) || 0) + Number(it.cantidad), precio_costo: costoNuevo });
+    const nuevoStock = (Number(p.stock) || 0) + Number(it.cantidad);
+    await editarProductoRemoto(estado.cliente_id, estado.negocio_id, it.producto_id, { stock: nuevoStock, precio_costo: costoNuevo });
     totalCosto += it.cantidad * it.precio_costo_unitario;
   }
-  return await idbCajaAdd('facturas', {
+  return await crearFacturaRemota(estado.cliente_id, estado.negocio_id, {
     proveedor: proveedor || '(Sin nombre)', numero_factura: numero_factura || null, nota: nota || null,
     fecha: new Date().toISOString(), items, total_costo: totalCosto,
   });
 }
 async function listarFacturas() {
-  const facturas = await idbCajaGetAll('facturas');
+  const facturas = await listarFacturasRemoto(estado.cliente_id, estado.negocio_id);
   return facturas.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 }
 async function listarProveedores() {

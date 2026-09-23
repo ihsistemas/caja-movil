@@ -627,6 +627,25 @@ async function listarMovimientosInventarioRemoto(clienteId, negocioId, desde, ha
   return items.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 }
 
+// Facturas de proveedor (mercadería que llega) - mismo patrón que
+// movimientos_inventario. Antes vivían solo en IndexedDB del celular (bug
+// real encontrado en QA: ni siquiera guardaba nada, tiraba error apenas se
+// tocaba "Guardar factura" - ver crearFactura en datos.js), sin sincronizar
+// entre equipos ni quedar con historial real. Ahora en Firestore como todo
+// lo demás.
+async function crearFacturaRemota(clienteId, negocioId, datos) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'facturas');
+  const ref = await FirebaseSync.addDoc(col, datos);
+  return ref.id;
+}
+async function listarFacturasRemoto(clienteId, negocioId) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'facturas');
+  const snap = await FirebaseSync.getDocs(col);
+  const items = [];
+  snap.forEach((doc) => items.push({ id: doc.id, ...doc.data() }));
+  return items.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+}
+
 // ============================================================================
 // EQUIPOS VINCULADOS - reemplaza el viejo sistema de invitaciones/
 // confirmaciones firmadas con HMAC (que se diseño antes de tener Firestore

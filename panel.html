@@ -2236,7 +2236,12 @@
       const cantidad = document.getElementById(`facCantidad${i}`).value;
       const costo = document.getElementById(`facCosto${i}`).value;
       if (cantidad && costo) {
-        items.push({ producto_id: Number(sel.value), cantidad: Number(cantidad), precio_costo_unitario: Number(costo) });
+        // sel.value es el id de Firestore del producto (string alfanumerico,
+        // no numero) - convertirlo con Number() daba NaN, y IndexedDB
+        // directamente tira error con una clave NaN (a diferencia de
+        // Firestore, que la guardaba como null sin avisar) - "Guardar
+        // factura" quedaba trabado sin ningun mensaje, sin guardar nada.
+        items.push({ producto_id: sel.value, cantidad: Number(cantidad), precio_costo_unitario: Number(costo) });
       }
     }
     if (items.length === 0) { await avisoModal('Agrega al menos un producto con cantidad y costo.'); return; }
