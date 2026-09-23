@@ -572,35 +572,33 @@ async function eliminarUsuario(clienteId, id) {
 }
 
 // ---- Respaldo completo (exportar/restaurar) ----
-// Todo lo que vive SOLO en este celular - los usuarios, carritos a caja y
-// turnos NO se incluyen aca porque esos ya viven en el servidor (Firestore),
-// Google se encarga de que esos no se pierdan.
+// Todo esto ya vive en Firestore (compartido entre todos los equipos del
+// local) - los usuarios y turnos NO se incluyen aca porque no son "datos del
+// negocio" en el mismo sentido (usuarios es acceso/permisos, turnos es
+// historial operativo de caja que no tiene sentido reemplazar por archivo).
 const ALMACENES_RESPALDO = [
   'productos', 'ventas', 'presentaciones',
   'historial_precios', 'caja_chica', 'promociones', 'combos', 'facturas',
 ];
 
 async function exportarRespaldoCompleto() {
-  const respaldo = { version: 1, fecha_respaldo: new Date().toISOString(), datos: {} };
+  const respaldo = { version: 2, fecha_respaldo: new Date().toISOString(), datos: {} };
   for (const almacen of ALMACENES_RESPALDO) {
-    respaldo.datos[almacen] = await idbCajaGetAll(almacen);
+    respaldo.datos[almacen] = await listarColeccionCompletaRemoto(estado.cliente_id, estado.negocio_id, almacen);
   }
   return respaldo;
 }
 
-// Restaura un respaldo COMPLETO - borra lo que hay en cada almacen y pone lo
-// del archivo en su lugar (no mezcla con lo que ya hubiera, para evitar
-// duplicados o inconsistencias raras). Pensado para el caso de "se me perdio
-// el celular, tengo uno nuevo, quiero seguir donde estaba".
+// Restaura un respaldo COMPLETO - borra lo que hay HOY en Firestore para este
+// local en cada coleccion y pone lo del archivo en su lugar (no mezcla con lo
+// que ya hubiera, para evitar duplicados o inconsistencias raras). Afecta a
+// TODOS los equipos conectados a este local, no solo a este celular, porque
+// los datos viven en el servidor compartido.
 async function restaurarRespaldoCompleto(respaldo) {
   if (!respaldo || !respaldo.datos) throw new Error('Archivo de respaldo invalido.');
   for (const almacen of ALMACENES_RESPALDO) {
     const filas = respaldo.datos[almacen];
     if (!Array.isArray(filas)) continue;
-    // Vaciar el almacen actual
-    const existentes = await idbCajaGetAll(almacen);
-    for (const fila of existentes) await idbCajaDelete(almacen, fila.id);
-    // Poner las filas del respaldo, respetando sus ids originales
-    for (const fila of filas) await idbCajaPut(almacen, fila);
+    await restaurarColeccionCompletaRemoto(estado.cliente_id, estado.negocio_id, almacen, filas);
   }
 }

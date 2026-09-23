@@ -547,6 +547,35 @@ function iniciarEscuchaHistorialPrecios(clienteId, negocioId, alActualizar) { re
 function listarHistorialPreciosRemoto() { return _historialPrecios.listar(); }
 async function crearHistorialPrecioRemoto(clienteId, negocioId, datos) { return await _historialPrecios.crear(clienteId, negocioId, datos); }
 
+// ============================================================================
+// Respaldo completo (exportar/restaurar) - lectura/escritura directa de
+// TODOS los documentos de una coleccion, sin pasar por el cache de las
+// escuchas en vivo de arriba (para no depender de que ya esten activas).
+// Se usa desde exportarRespaldoCompleto/restaurarRespaldoCompleto en datos.js.
+// ============================================================================
+
+async function listarColeccionCompletaRemoto(clienteId, negocioId, nombreColeccion) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, nombreColeccion);
+  const snap = await FirebaseSync.getDocs(col);
+  const items = [];
+  snap.forEach((doc) => items.push({ id: doc.id, ...doc.data() }));
+  return items;
+}
+
+// Borra todo lo que haya HOY en la coleccion y lo reemplaza por "filas",
+// respetando el id original de cada fila (para no romper referencias
+// cruzadas entre colecciones, ej: historial_precios -> producto_id).
+async function restaurarColeccionCompletaRemoto(clienteId, negocioId, nombreColeccion, filas) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, nombreColeccion);
+  const existentes = await FirebaseSync.getDocs(col);
+  for (const doc of existentes.docs) await FirebaseSync.deleteDoc(doc.ref);
+  for (const fila of filas) {
+    const { id, ...campos } = fila;
+    const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, nombreColeccion, id);
+    await FirebaseSync.setDoc(ref, campos);
+  }
+}
+
 // Turnos de caja (apertura/cierre) - antes vivian SOLO en el IndexedDB de
 // cada celular (sin historial, sin verse entre equipos ni desde Manager
 // IH). Mismo patron de coleccion en vivo que productos/promociones/etc.

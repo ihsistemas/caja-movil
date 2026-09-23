@@ -2612,7 +2612,7 @@
   async function restaurarRespaldoUI(evento) {
     const archivo = evento.target.files[0];
     if (!archivo) return;
-    if (!(await confirmarModal('Esto va a REEMPLAZAR todos los productos, ventas e historial que hay ahora en este celular por lo que traiga el archivo. ¿Seguro que quieres continuar?'))) {
+    if (!(await confirmarModal('Esto va a REEMPLAZAR todos los productos, ventas e historial de este local (en TODOS los equipos conectados, no solo este celular) por lo que traiga el archivo. ¿Seguro que quieres continuar?'))) {
       evento.target.value = '';
       return;
     }
