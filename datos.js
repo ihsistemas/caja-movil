@@ -256,15 +256,19 @@ async function cerrarTurno(clienteId, efectivoContado, nota) {
 }
 
 // ---- Caja chica: ingresos, gastos y prestamos, aparte de las ventas ----
+// Bug real encontrado en QA: esto vivia en IndexedDB local del celular
+// (idbCajaGetAll/idbCajaAdd) - un ingreso registrado en una caja no lo veia
+// la otra caja del mismo local (cada equipo tiene su propio IndexedDB,
+// aislado), y se perdia para siempre si se reinstalaba la app o se
+// limpiaba el cache. Ahora en Firestore, como todo lo demas.
 async function listarMovimientosCajaChica() {
-  const movs = await idbCajaGetAll('caja_chica');
-  return movs.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  return await listarMovimientosCajaChicaRemoto(estado.cliente_id, estado.negocio_id);
 }
 async function registrarIngresoCaja(monto, descripcion) {
   const turno = await turnoActual();
   if (!turno) throw new Error('No hay una caja abierta.');
   if (!descripcion || !descripcion.trim()) throw new Error('El motivo es obligatorio.');
-  await idbCajaAdd('caja_chica', {
+  await crearMovimientoCajaChicaRemoto(estado.cliente_id, estado.negocio_id, {
     tipo: 'ingreso', monto: Math.abs(Number(monto)), descripcion: descripcion.trim(),
     fecha: new Date().toISOString(), turno_id: turno.id,
     usuario_nombre: (sesionActual && sesionActual.nombre) || null,
@@ -276,7 +280,7 @@ async function registrarGastoCaja(monto, descripcion) {
   if (!descripcion || !descripcion.trim()) throw new Error('El motivo es obligatorio.');
   const saldo = await saldoCajaChica();
   if (Number(monto) > saldo) throw new Error(`Saldo insuficiente en caja chica (disponible: ${saldo}).`);
-  await idbCajaAdd('caja_chica', {
+  await crearMovimientoCajaChicaRemoto(estado.cliente_id, estado.negocio_id, {
     tipo: 'gasto', monto: -Math.abs(Number(monto)), descripcion: descripcion.trim(),
     fecha: new Date().toISOString(), turno_id: turno.id,
     usuario_nombre: (sesionActual && sesionActual.nombre) || null,

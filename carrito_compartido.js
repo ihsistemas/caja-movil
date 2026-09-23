@@ -646,6 +646,24 @@ async function listarFacturasRemoto(clienteId, negocioId) {
   return items.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 }
 
+// Caja chica (ingresos/gastos) - mismo bug real que las facturas, mismo
+// arreglo: vivía solo en IndexedDB del celular, así que un ingreso
+// registrado en una caja nunca lo veía la otra caja del mismo local (cada
+// equipo tiene su propio IndexedDB, aislado), y se perdía para siempre si
+// se reinstalaba la app o se limpiaba el caché del navegador.
+async function crearMovimientoCajaChicaRemoto(clienteId, negocioId, datos) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'caja_chica');
+  const ref = await FirebaseSync.addDoc(col, datos);
+  return ref.id;
+}
+async function listarMovimientosCajaChicaRemoto(clienteId, negocioId) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'caja_chica');
+  const snap = await FirebaseSync.getDocs(col);
+  const items = [];
+  snap.forEach((doc) => items.push({ id: doc.id, ...doc.data() }));
+  return items.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+}
+
 // ============================================================================
 // EQUIPOS VINCULADOS - reemplaza el viejo sistema de invitaciones/
 // confirmaciones firmadas con HMAC (que se diseño antes de tener Firestore

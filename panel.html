@@ -1672,6 +1672,10 @@
       if (tipoMovCaja === 'ingreso') await registrarIngresoCaja(monto, descripcion);
       else await registrarGastoCaja(monto, descripcion);
       cerrarModalCajaChica();
+      // El modal de "Cerrar caja" (atras) muestra el efectivo esperado, que
+      // acaba de cambiar con este movimiento - sin esto quedaba con el
+      // numero viejo hasta cerrar y volver a abrir todo el modal.
+      await abrirModalCaja();
     } catch (e) {
       document.getElementById('errorCajaChica').textContent = e.message;
     }
