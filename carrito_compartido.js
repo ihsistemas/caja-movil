@@ -428,11 +428,37 @@ async function editarProductoRemoto(clienteId, negocioId, productoId, cambios) {
 // TODA la venta se cancela junta, no se descuenta ninguno a medias. Firestore
 // reintenta esta funcion sola si otro dispositivo escribio el mismo producto
 // justo al mismo tiempo (eso es lo que hace que sea "atomico" de verdad).
+// Un item de combo no tiene producto_id propio (representa varios productos
+// a la vez - ver aplicarCombo en panel.html, que guarda producto_id:null y
+// productos_combo:[...]) - hay que "abrirlo" a los productos reales que lo
+// componen antes de tocar el stock, o una venta de combo nunca descontaba
+// nada (bug real encontrado en QA, ninguna venta de combo movio el stock).
+function _aplanarItemsParaStock(items) {
+  const porProducto = new Map();
+  for (const it of items) {
+    if (it.es_combo && it.productos_combo) {
+      for (const productoId of it.productos_combo) {
+        if (!productoId) continue;
+        const actual = porProducto.get(productoId) || { nombre: it.nombre, cantidad: 0 };
+        actual.cantidad += it.cantidad;
+        porProducto.set(productoId, actual);
+      }
+    } else if (it.producto_id) {
+      const cantidadReal = it.cantidad * (it.cantidad_base_presentacion || 1);
+      const actual = porProducto.get(it.producto_id) || { nombre: it.nombre, cantidad: 0 };
+      actual.cantidad += cantidadReal;
+      porProducto.set(it.producto_id, actual);
+    }
+  }
+  return porProducto;
+}
+
 async function venderConTransaccionSegura(clienteId, negocioId, itemsVendidos) {
+  const porProducto = _aplanarItemsParaStock(itemsVendidos);
   await FirebaseSync.runTransaction(db, async (transaccion) => {
-    const refs = itemsVendidos
-      .filter((it) => it.producto_id)
-      .map((it) => ({ item: it, ref: FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'productos', it.producto_id) }));
+    const refs = Array.from(porProducto.entries()).map(([productoId, datos]) => ({
+      productoId, ...datos, ref: FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'productos', productoId),
+    }));
 
     // TODAS las lecturas de una transaccion tienen que pasar antes que
     // cualquier escritura - regla de Firestore, no se pueden mezclar.
@@ -440,18 +466,15 @@ async function venderConTransaccionSegura(clienteId, negocioId, itemsVendidos) {
 
     for (let i = 0; i < refs.length; i++) {
       const snap = snapshots[i];
-      const it = refs[i].item;
-      const cantidadReal = it.cantidad * (it.cantidad_base_presentacion || 1);
-      if (!snap.exists()) throw new Error(`El producto "${it.nombre}" ya no existe.`);
+      const r = refs[i];
+      if (!snap.exists()) throw new Error(`El producto "${r.nombre}" ya no existe.`);
       const stockActual = Number(snap.data().stock) || 0;
-      if (stockActual < cantidadReal) {
-        throw new Error(`No hay suficiente stock de "${it.nombre}" — quedan ${stockActual}, se intentaron vender ${cantidadReal}.`);
+      if (stockActual < r.cantidad) {
+        throw new Error(`No hay suficiente stock de "${r.nombre}" — quedan ${stockActual}, se intentaron vender ${r.cantidad}.`);
       }
     }
     for (let i = 0; i < refs.length; i++) {
-      const it = refs[i].item;
-      const cantidadReal = it.cantidad * (it.cantidad_base_presentacion || 1);
-      transaccion.update(refs[i].ref, { stock: FirebaseSync.increment(-cantidadReal) });
+      transaccion.update(refs[i].ref, { stock: FirebaseSync.increment(-refs[i].cantidad) });
     }
   });
 }
@@ -460,11 +483,10 @@ async function venderConTransaccionSegura(clienteId, negocioId, itemsVendidos) {
 // que no hace falta la misma verificacion, pero se usa increment() igual
 // para que sea seguro si 2 devoluciones del mismo producto pasan a la vez.
 async function devolverStockSeguro(clienteId, negocioId, itemsDevueltos) {
-  for (const it of itemsDevueltos) {
-    if (!it.producto_id) continue;
-    const cantidadReal = it.cantidad * (it.cantidad_base_presentacion || 1);
-    const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'productos', it.producto_id);
-    await FirebaseSync.updateDoc(ref, { stock: FirebaseSync.increment(cantidadReal) });
+  const porProducto = _aplanarItemsParaStock(itemsDevueltos);
+  for (const [productoId, datos] of porProducto.entries()) {
+    const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'productos', productoId);
+    await FirebaseSync.updateDoc(ref, { stock: FirebaseSync.increment(datos.cantidad) });
   }
 }
 

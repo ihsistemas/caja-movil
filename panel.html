@@ -2262,7 +2262,11 @@
   async function guardarCombo() {
     const nombre = document.getElementById('inputComboNombre').value.trim();
     const precio = document.getElementById('inputComboPrecio').value;
-    const seleccionados = Array.from(document.querySelectorAll('.check-producto-combo:checked')).map((c) => Number(c.value));
+    // Los ids de producto de Firestore son strings alfanumericos (ej:
+    // "9yM8ZxPF..."), no numeros - convertirlos con Number() los volvia NaN
+    // y Firestore los guardaba como null, dejando el combo sin productos
+    // reales adentro (nunca se sugeria solo ni descontaba stock bien).
+    const seleccionados = Array.from(document.querySelectorAll('.check-producto-combo:checked')).map((c) => c.value);
     if (!nombre || !precio || seleccionados.length < 2) { await avisoModal('Elige al menos 2 productos y pon nombre + precio.'); return; }
     await crearCombo(estado.cliente_id, { nombre, productos_ids: seleccionados, precio_combo: precio });
     cerrarFormCombo();
