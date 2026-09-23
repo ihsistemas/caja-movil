@@ -861,6 +861,7 @@
     verificarLicenciaConServidorEnSegundoPlano();
     iniciarEscuchaProductos(estado.cliente_id, estado.negocio_id, () => {
       if (sesionActual) pintarProductosVenta();
+      if (document.getElementById('pantallaInventario').classList.contains('activa')) pintarInventario();
       if (document.getElementById('subPanelHistorial') && document.getElementById('subPanelHistorial').style.display !== 'none') {
         pintarPanelRentabilidad();
       }
@@ -1201,6 +1202,7 @@
     document.getElementById('nombreCliente').textContent = estado.nombre_cliente + (estado.nombre_negocio ? ' · ' + estado.nombre_negocio : '');
     iniciarEscuchaProductos(estado.cliente_id, estado.negocio_id, () => {
       if (sesionActual) pintarProductosVenta();
+      if (document.getElementById('pantallaInventario').classList.contains('activa')) pintarInventario();
       if (document.getElementById('subPanelHistorial') && document.getElementById('subPanelHistorial').style.display !== 'none') {
         pintarPanelRentabilidad();
       }
