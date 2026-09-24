@@ -4292,7 +4292,7 @@
     }
     cont.innerHTML = `<div class="lista-ventas-historial">${ventas.map((v) => {
       const resumen = v.items.map((it) => it.nombre + (it.cantidad > 1 ? ` ×${it.cantidad}` : '')).join(', ');
-      const hora = new Date(v.fecha).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+      const hora = cuandoVenta(v.fecha);
       return `
         <button type="button" class="fila-venta-historial ${v.anulado ? 'anulada' : ''}" onclick="abrirDevolucionDeVenta('${v.id}')">
           ${iconoMedioPago(v.medio_pago)}
@@ -4324,9 +4324,10 @@
 
     document.getElementById('iconoMedioDevolucion').innerHTML = svgMedioPago(venta.medio_pago);
     document.getElementById('montoVentaDevolucion').textContent = `Venta · ${formatoMoneda(venta.total)}`;
-    const hora = new Date(venta.fecha).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+    const esHoy = new Date(venta.fecha).toDateString() === new Date().toDateString();
+    const cuando = (esHoy ? 'Hoy ' : '') + cuandoVenta(venta.fecha);
     document.getElementById('detalleVentaDevolucion').textContent =
-      `Hoy ${hora} · ${venta.nombre_equipo || 'Equipo'} · ${etiquetaMedioPago(venta.medio_pago)}`;
+      `${cuando} · ${venta.nombre_equipo || 'Equipo'} · ${etiquetaMedioPago(venta.medio_pago)}${venta.usuario_nombre ? ` · ${venta.usuario_nombre}` : ''}`;
 
     const btnAnular = document.getElementById('btnAnularVentaCompleta');
     const pillSoloJefe = document.getElementById('pillSoloJefeAnular');
@@ -4531,6 +4532,14 @@
   function iconoMedioPago(medio) {
     return `<div class="icono-medio-pago-historial">${svgMedioPago(medio)}</div>`;
   }
+  // Solo la hora si la venta es de hoy; si no, "3 sept. 12:41" - con los
+  // periodos Semana/Mes/Todo, la hora sola no decia de que dia era.
+  function cuandoVenta(fechaIso) {
+    const f = new Date(fechaIso);
+    const hora = f.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+    if (f.toDateString() === new Date().toDateString()) return hora;
+    return `${f.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })} ${hora}`;
+  }
   function etiquetaMedioPago(medio) {
     return { efectivo: 'Efectivo', debito: 'Débito', credito: 'Crédito', transferencia: 'Transferencia' }[medio] || medio;
   }
@@ -4633,14 +4642,14 @@
       const anulada = !!v.anulado;
       const parcial = !anulada && montoDevueltoDeVenta(v) > 0;
       const resumen = v.items.map((it) => it.nombre + (it.cantidad > 1 ? ` ×${it.cantidad}` : '')).join(', ');
-      const hora = new Date(v.fecha).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+      const hora = cuandoVenta(v.fecha);
       return `
         <button type="button" class="fila-venta-historial ${anulada ? 'anulada' : ''}" onclick="abrirDevolucionDeVenta('${v.id}')">
           ${iconoMedioPago(v.medio_pago)}
           <div class="info-venta-historial">
             <div class="nombre-venta-historial">${resumen}</div>
             <div class="detalle-venta-historial">
-              <span>${hora} · ${etiquetaMedioPago(v.medio_pago)}</span>
+              <span>${hora} · ${etiquetaMedioPago(v.medio_pago)}${v.usuario_nombre ? ` · ${v.usuario_nombre}` : ''}</span>
               ${parcial ? '<span class="pill-estado-venta parcial">Devolución parcial</span>' : ''}
               ${anulada ? '<span class="pill-estado-venta anulada">Anulada</span>' : ''}
             </div>
@@ -4700,7 +4709,9 @@
     let tituloComparacion = null;
     if (periodoActual.desde) {
       const anterior = periodoAnterior(periodoActual.desde, periodoActual.hasta);
-      const ventasAnterior = ventasDelPeriodo(todas, anterior);
+      // Antes filtraba una variable "todas" que ya no existia (quedo de cuando
+      // se traian todas las ventas de una) - el PDF fallaba con Hoy/Semana/Mes.
+      const ventasAnterior = await listarVentas(estado.cliente_id, anterior.desde, anterior.hasta);
       const totalAnterior = ventasAnterior.reduce((s, v) => s + totalNetoVenta(v), 0);
       const etiqueta = etiquetaComparacion(periodoActual.desde, periodoActual.hasta);
       if (totalAnterior > 0) {
@@ -4787,12 +4798,13 @@
     const productos = await listarProductos();
     if (ventas.length === 0 && productos.length === 0) { await avisoModal('Todavía no hay datos para exportar.'); return; }
 
-    const filasVentas = [['Fecha', 'Productos', 'Medio de pago', 'Total', 'Con devolución']];
+    const filasVentas = [['Fecha', 'Productos', 'Medio de pago', 'Total', 'Con devolución', 'Vendedor', 'Equipo']];
     for (const v of ventas) {
       filasVentas.push([
         new Date(v.fecha).toLocaleString('es-CL'),
         v.items.map((i) => `${i.nombre} x${i.cantidad}`).join(', '),
         v.medio_pago, v.total, v.devoluciones ? 'Sí' : 'No',
+        v.usuario_nombre || '', v.nombre_equipo || '',
       ]);
     }
     const wsVentas = XLSX.utils.aoa_to_sheet(filasVentas);

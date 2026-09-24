@@ -321,6 +321,10 @@ async function registrarVenta(clienteId, { items, total, medio_pago }) {
   const venta = {
     fecha: new Date().toISOString(), items, total, medio_pago,
     turno_id: turno.id, nombre_equipo: estado.nombre_equipo,
+    // Quien cobro (no solo desde que equipo) - base para filtrar/evaluar por
+    // vendedor mas adelante. Ventas anteriores a este cambio no lo tienen.
+    usuario_id: (sesionActual && sesionActual.id) || null,
+    usuario_nombre: (sesionActual && sesionActual.nombre) || null,
   };
   return await crearVentaRemota(clienteId, estado.negocio_id, venta);
 }
