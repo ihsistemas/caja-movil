@@ -8,7 +8,7 @@
 // es "cache primero", asi que sin un nombre nuevo los equipos que ya tienen
 // la app siguen mostrando la version vieja para siempre (el navegador solo
 // instala un service worker nuevo si este archivo cambia).
-const VERSION_CACHE = 'caja-movil-v5';
+const VERSION_CACHE = 'caja-movil-v6';
 const ARCHIVOS_CASCARA = [
   './panel.html',
   './activar.html',

@@ -241,9 +241,16 @@ async function desgloseEfectivoEsperado(clienteId, turno) {
   // se suman/restan igual que las ventas, solo se cuentan los de ESTE turno.
   const movimientos = await listarMovimientosCajaChica();
   const cajaChica = movimientos.filter((m) => m.turno_id === turno.id).reduce((s, m) => s + m.monto, 0);
+  // Abonos de fiado cobrados en efectivo en ESTE turno - es plata que entra
+  // al cajon igual que una venta. (Las ventas fiadas en si no suman: no
+  // entro plata; medio_pago 'fiado' ya queda afuera del filtro de arriba.)
+  const movsFiado = await listarMovimientosFiadoRemoto(estado.cliente_id, estado.negocio_id, 'turno_id', turno.id);
+  const abonosFiado = movsFiado
+    .filter((m) => m.tipo === 'abono' && m.medio_pago === 'efectivo')
+    .reduce((s, m) => s + m.monto, 0);
   const apertura = Number(turno.monto_apertura) || 0;
-  const total = apertura + ventasEfectivo - devoluciones + cajaChica;
-  return { apertura, ventasEfectivo, devoluciones, cajaChica, total };
+  const total = apertura + ventasEfectivo - devoluciones + cajaChica + abonosFiado;
+  return { apertura, ventasEfectivo, devoluciones, cajaChica, abonosFiado, total };
 }
 async function calcularEfectivoEsperado(clienteId, turno) {
   return (await desgloseEfectivoEsperado(clienteId, turno)).total;
@@ -309,10 +316,95 @@ async function crearPresentacion(clienteId, productoId, datos) {
   });
 }
 
+// ---- Fiado (cuenta corriente de clientes del negocio) ----
+function listarCuentasFiado() {
+  return listarCuentasFiadoRemoto()
+    .filter((c) => c.activa !== false)
+    .sort((a, b) => (Number(b.saldo) || 0) - (Number(a.saldo) || 0) || a.nombre.localeCompare(b.nombre));
+}
+function obtenerCuentaFiado(id) {
+  return listarCuentasFiadoRemoto().find((c) => c.id === id) || null;
+}
+function nombreCuentaFiadoRepetido(nombre, idExcluido) {
+  const n = nombre.trim().toLowerCase();
+  return listarCuentasFiado().some((c) => c.id !== idExcluido && c.nombre.trim().toLowerCase() === n);
+}
+async function crearCuentaFiado({ nombre, telefono, limite, nota }) {
+  if (!(nombre || '').trim()) throw new Error('El nombre es obligatorio.');
+  if (nombreCuentaFiadoRepetido(nombre)) throw new Error('Ya hay una cuenta con ese nombre — agrégale el apellido o un apodo para distinguirla.');
+  return await crearCuentaFiadoRemota(estado.cliente_id, estado.negocio_id, {
+    nombre: nombre.trim(), telefono: (telefono || '').trim() || null,
+    limite: Number(limite) > 0 ? Number(limite) : null, nota: (nota || '').trim() || null,
+    saldo: 0, activa: true, fecha_creada: new Date().toISOString(),
+    creada_por: (sesionActual && sesionActual.nombre) || null,
+  });
+}
+async function editarCuentaFiado(id, { nombre, telefono, limite, nota }) {
+  if (!(nombre || '').trim()) throw new Error('El nombre es obligatorio.');
+  if (nombreCuentaFiadoRepetido(nombre, id)) throw new Error('Ya hay otra cuenta con ese nombre.');
+  await editarCuentaFiadoRemota(estado.cliente_id, estado.negocio_id, id, {
+    nombre: nombre.trim(), telefono: (telefono || '').trim() || null,
+    limite: Number(limite) > 0 ? Number(limite) : null, nota: (nota || '').trim() || null,
+  });
+}
+// Se "archiva" (activa:false), no se borra - la cuenta tiene movimientos que
+// no conviene perder. Solo se permite con la deuda en cero.
+async function archivarCuentaFiado(id) {
+  const cuenta = obtenerCuentaFiado(id);
+  if (!cuenta) throw new Error('Esa cuenta ya no existe.');
+  if ((Number(cuenta.saldo) || 0) !== 0) throw new Error('Solo se puede archivar una cuenta con saldo en cero.');
+  await editarCuentaFiadoRemota(estado.cliente_id, estado.negocio_id, id, { activa: false });
+}
+// Chequeo ANTES de descontar stock (si fallara despues, la venta ya estaria
+// hecha). No se repite dentro de la transaccion del cargo: el margen de 2
+// equipos fiandole a la misma persona en el mismo segundo no justifica
+// complicarlo.
+function validarCargoFiado(cuentaId, monto) {
+  const cuenta = obtenerCuentaFiado(cuentaId);
+  if (!cuenta || cuenta.activa === false) throw new Error('Elige a quién se le fía.');
+  const saldo = Number(cuenta.saldo) || 0;
+  if (cuenta.limite && saldo + monto > cuenta.limite) {
+    throw new Error(`${cuenta.nombre} tiene un límite de ${formatoPesos(cuenta.limite)} y ya debe ${formatoPesos(saldo)} — con esta compra lo pasaría.`);
+  }
+  return cuenta;
+}
+function formatoPesos(n) {
+  return '$' + Math.round(n).toLocaleString('es-CL');
+}
+async function registrarAbonoFiado(cuentaId, monto, medioPago, nota) {
+  const turno = await turnoActual();
+  if (!turno) throw new Error('No se puede registrar un abono sin abrir la caja primero.');
+  const cuenta = obtenerCuentaFiado(cuentaId);
+  if (!cuenta) throw new Error('Esa cuenta ya no existe.');
+  monto = Number(monto) || 0;
+  if (monto <= 0) throw new Error('El monto debe ser mayor a 0.');
+  const saldo = Number(cuenta.saldo) || 0;
+  if (monto > saldo) throw new Error(`${cuenta.nombre} debe ${formatoPesos(saldo)} — el abono no puede ser mayor.`);
+  return await registrarMovimientoFiadoRemoto(estado.cliente_id, estado.negocio_id, cuentaId, {
+    tipo: 'abono', monto, medio_pago: medioPago, nota: (nota || '').trim() || null,
+    fecha: new Date().toISOString(), turno_id: turno.id, nombre_equipo: estado.nombre_equipo,
+    usuario_nombre: (sesionActual && sesionActual.nombre) || null,
+  });
+}
+// Devolucion o anulacion de una venta que se habia fiado: se le descuenta a
+// la cuenta lo que ya no se lleva (en vez de devolverle plata en efectivo).
+async function ajustarFiadoPorVenta(venta, monto, motivo) {
+  if (venta.medio_pago !== 'fiado' || !venta.cuenta_fiado_id || !(monto > 0)) return;
+  await registrarMovimientoFiadoRemoto(estado.cliente_id, estado.negocio_id, venta.cuenta_fiado_id, {
+    tipo: 'ajuste', monto, motivo, venta_id: venta.id,
+    fecha: new Date().toISOString(), turno_id: null, nombre_equipo: estado.nombre_equipo,
+    usuario_nombre: (sesionActual && sesionActual.nombre) || null,
+  });
+}
+async function listarMovimientosDeCuentaFiado(cuentaId) {
+  return await listarMovimientosFiadoRemoto(estado.cliente_id, estado.negocio_id, 'cuenta_id', cuentaId);
+}
+
 // ---- Ventas ----
-async function registrarVenta(clienteId, { items, total, medio_pago }) {
+async function registrarVenta(clienteId, { items, total, medio_pago, cuenta_fiado_id }) {
   const turno = await turnoActual();
   if (!turno) throw new Error('No se puede vender sin abrir la caja primero.');
+  const cuentaFiado = medio_pago === 'fiado' ? validarCargoFiado(cuenta_fiado_id, total) : null;
   // Primero se verifica y descuenta el stock de forma segura (todo o nada) -
   // si falla (alguien mas se llevo el stock justo antes), la venta ni
   // siquiera se crea, para no quedar con un registro de una venta que en
@@ -325,8 +417,18 @@ async function registrarVenta(clienteId, { items, total, medio_pago }) {
     // vendedor mas adelante. Ventas anteriores a este cambio no lo tienen.
     usuario_id: (sesionActual && sesionActual.id) || null,
     usuario_nombre: (sesionActual && sesionActual.nombre) || null,
+    ...(cuentaFiado ? { cuenta_fiado_id: cuentaFiado.id, cuenta_fiado_nombre: cuentaFiado.nombre } : {}),
   };
-  return await crearVentaRemota(clienteId, estado.negocio_id, venta);
+  const ventaId = await crearVentaRemota(clienteId, estado.negocio_id, venta);
+  if (cuentaFiado) {
+    await registrarMovimientoFiadoRemoto(clienteId, estado.negocio_id, cuentaFiado.id, {
+      tipo: 'cargo', monto: total, venta_id: ventaId,
+      detalle: items.map((it) => it.nombre + (it.cantidad > 1 ? ` ×${it.cantidad}` : '')).join(', '),
+      fecha: venta.fecha, turno_id: turno.id, nombre_equipo: estado.nombre_equipo,
+      usuario_nombre: venta.usuario_nombre,
+    });
+  }
+  return ventaId;
 }
 async function listarVentas(clienteId, desde, hasta) {
   return await listarVentasRemoto(clienteId, estado.negocio_id, desde, hasta);
@@ -343,6 +445,8 @@ async function registrarDevolucion(clienteId, ventaId, itemsDevueltos, motivo, h
     fecha: new Date().toISOString(), items: itemsDevueltos,
     motivo: motivo.trim(), hecho_por: hechoPor || null,
   });
+  const montoDevuelto = itemsDevueltos.reduce((s, it) => s + it.precio_venta * it.cantidad, 0);
+  await ajustarFiadoPorVenta({ ...venta, id: ventaId }, montoDevuelto, `Devolución: ${motivo.trim()}`);
 }
 
 // Anula una venta COMPLETA (no solo algunos items) - igual concepto que
@@ -370,6 +474,9 @@ async function anularVentaCompleta(clienteId, ventaId, motivo, hechoPor) {
     anulado: true, motivo_anulacion: motivo.trim(), anulado_por: hechoPor || null,
     fecha_anulacion: new Date().toISOString(),
   });
+  // Solo lo que todavia no se habia descontado por devoluciones parciales.
+  const montoPendiente = itemsARestaurar.reduce((s, it) => s + it.precio_venta * it.cantidad, 0);
+  await ajustarFiadoPorVenta({ ...venta, id: ventaId }, montoPendiente, `Anulación: ${motivo.trim()}`);
 }
 
 // ---- Promociones (descuento sobre un producto especifico) ----

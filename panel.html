@@ -32,7 +32,8 @@
   }
   .avatar-mini { width: 32px; height: 32px; border-radius: 50%; background: #E8A23D; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: white; flex-shrink: 0; }
   .flecha-mini { display: flex; color: #64707C; flex-shrink: 0; }
-  .fila-estado-app { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .fila-estado-app { display: flex; gap: 8px; }
+  .fila-estado-app .indicador-caja { flex: 1; min-width: 0; }
   .indicador-caja {
     height: 44px; box-sizing: border-box; padding: 0 12px 0 14px; border: none; border-radius: 12px;
     font-size: 13px; font-weight: 600; background: #F7E5E3; color: #C5433A;
@@ -263,6 +264,38 @@
   .caption-tipo-caja-chica { font-size: 12.5px; color: #64707C; margin-top: -6px; }
   .info-caja-chica { display: flex; align-items: flex-start; gap: 10px; background: white; border: 1.5px solid #EDEFF2; border-radius: 14px; padding: 12px 14px; font-size: 12.5px; color: #64707C; }
   .monto-caja-chica-oscuro { color: #1A2530; font-size: 34px; text-align: left; margin-bottom: 14px; }
+
+  /* ---- Fiado ---- */
+  #modalFiado, #modalCuentaFiado { align-items: stretch; justify-content: stretch; padding: 0; background: #F3F5F7; }
+  #modalFiado .caja, #modalCuentaFiado .caja { max-width: none; width: 100%; height: 100%; max-height: none; border-radius: 0; padding: 0; text-align: left; display: flex; flex-direction: column; overflow-y: auto; }
+  #modalAbonoFiado, #modalFormCuentaFiado, #modalElegirCuentaFiado { align-items: flex-end; padding: 0; }
+  #modalAbonoFiado .caja, #modalFormCuentaFiado .caja, #modalElegirCuentaFiado .caja { max-width: 460px; border-radius: 24px 24px 0 0; padding: 10px 20px calc(24px + env(safe-area-inset-bottom, 0px)); text-align: left; max-height: 90vh; overflow-y: auto; }
+  .tarjeta-total-fiado { background: #2E4374; color: white; border-radius: 20px; padding: 16px 18px; display: flex; flex-direction: column; gap: 2px; }
+  .eyebrow-fiado { font-size: 12.5px; color: #C3CCE0; }
+  .monto-fiado { font-family: 'IBM Plex Mono', monospace; font-size: 30px; font-weight: 700; }
+  .sub-fiado { font-size: 12.5px; color: #C3CCE0; }
+  .saldo-cuenta-fiado { font-family: 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 700; flex-shrink: 0; }
+  .saldo-cuenta-fiado.debe { color: #C5433A; }
+  .saldo-cuenta-fiado.al-dia { font-family: inherit; font-size: 11.5px; background: #E3F0EA; color: #2F7A5C; padding: 4px 9px; border-radius: 8px; }
+  .saldo-cuenta-fiado.a-favor { font-family: inherit; font-size: 11.5px; background: #E4EAF6; color: #2E4374; padding: 4px 9px; border-radius: 8px; }
+  .fila-botones-cuenta-fiado { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+  .fila-botones-cuenta-fiado .btn-secundario { height: 56px; margin: 0; }
+  .icono-mov-fiado { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .icono-mov-fiado.cargo { background: #F7E5E3; color: #C5433A; }
+  .icono-mov-fiado.abono { background: #E3F0EA; color: #2F7A5C; }
+  .icono-mov-fiado.ajuste { background: #EDEFF2; color: #64707C; }
+  .monto-mov-fiado { text-align: right; flex-shrink: 0; }
+  .monto-mov-fiado .monto { font-family: 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 700; }
+  .monto-mov-fiado .monto.cargo { color: #C5433A; }
+  .monto-mov-fiado .monto.abono { color: #2F7A5C; }
+  .monto-mov-fiado .monto.ajuste { color: #64707C; }
+  .monto-mov-fiado .saldo { font-size: 11px; color: #96A2AC; margin-top: 2px; }
+  .fila-debe-abono { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 13.5px; color: #64707C; font-weight: 600; }
+  .fila-debe-abono button { border: none; background: #E3F0EA; color: #2F7A5C; font-weight: 700; font-size: 12.5px; padding: 7px 12px; border-radius: 10px; }
+  .ayuda-form-fiado { font-size: 11.5px; color: #96A2AC; margin: 0 0 12px; }
+  .opcion-medio-pago.opcion-fiado { grid-column: 1 / -1; }
+  .fila-fiado-elegido { margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #FBEBD3; color: #8A5A1E; border-radius: 12px; padding: 9px 12px; font-size: 13px; font-weight: 600; }
+  .fila-fiado-elegido button { border: none; background: white; color: #8A5A1E; font-weight: 700; font-size: 12px; padding: 6px 10px; border-radius: 8px; flex-shrink: 0; }
 
   /* ---- Devolución: pantalla completa, mismo patron que Agregar mercaderia ---- */
   #modalDevolucion { align-items: stretch; justify-content: stretch; padding: 0; background: #F3F5F7; }
@@ -758,6 +791,9 @@
 
     #pantallaVenta.activa { display: flex; align-items: flex-start; gap: 20px; }
     .columna-productos-venta { flex: 1; min-width: 0; margin-right: 400px; }
+    /* El panel "Venta actual" (fijo a la derecha) tapaba el lado derecho del
+       encabezado - los accesos a Fiado y a equipos quedaban debajo. */
+    body:has(#pantallaVenta.activa) .encabezado-app { margin-right: 400px; }
     #pantallaVenta #listaProductosVenta { grid-template-columns: repeat(4, 1fr); align-content: start; }
     .tarjeta-producto-venta.en-carrito { box-shadow: 0 0 0 2.5px #1A2530; }
     .badge-cantidad-carrito {
@@ -901,6 +937,10 @@
       <span class="punto"></span>
       <span class="texto-caja" id="textoIndicadorCaja">Caja cerrada — abrir</span>
       <span class="flecha-caja"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
+    </button>
+    <button class="pill-equipos" id="pillFiado" onclick="abrirModalFiado()" style="display:none;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11a3 3 0 0 1 3 3v15H8a3 3 0 0 1-3-3z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+      <span>Fiado</span>
     </button>
     <button class="pill-equipos" id="pillEquipos" onclick="abrirModalEquiposVinculados()" style="display:none;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg>
@@ -1234,6 +1274,9 @@
     <button type="button" class="pill-filtro-medio" id="btnMedioTransferencia" onclick="elegirFiltroMedioPago('transferencia')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg> Transferencia
     </button>
+    <button type="button" class="pill-filtro-medio" id="btnMedioFiado" onclick="elegirFiltroMedioPago('fiado')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11a3 3 0 0 1 3 3v15H8a3 3 0 0 1-3-3z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg> Fiado
+    </button>
   </div>
   <div class="fila-filtro-medio-historial" id="chipsVendedorHistorial" style="display:none;"></div>
   <div class="fila-acciones-historial">
@@ -1344,6 +1387,13 @@
           <button class="opcion-medio-pago" data-medio="transferencia" onclick="elegirMedioPago('transferencia')">
             <span class="icono-medio-pago"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg></span>Transferencia
           </button>
+          <button class="opcion-medio-pago opcion-fiado" data-medio="fiado" onclick="elegirMedioPago('fiado')">
+            <span class="icono-medio-pago"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11a3 3 0 0 1 3 3v15H8a3 3 0 0 1-3-3z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span>Fiado
+          </button>
+        </div>
+        <div class="fila-fiado-elegido" id="filaFiadoElegido" style="display:none;">
+          <span id="textoFiadoElegido"></span>
+          <button type="button" onclick="abrirElegirCuentaFiado()">Cambiar</button>
         </div>
       </div>
       <button class="btn-cerrar-modal" id="btnConfirmarCobro" onclick="confirmarCobro()" disabled>
@@ -1959,6 +2009,157 @@
   </div>
 </div>
 
+<!-- ===== FIADO: lista de cuentas (pantalla completa) ===== -->
+<div class="modal" id="modalFiado">
+  <div class="caja">
+    <div class="encabezado-mercaderia">
+      <button type="button" class="btn-volver-mercaderia" onclick="cerrarModalFiado()" aria-label="Volver">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+      </button>
+      <div>
+        <h1>Fiado</h1>
+        <div class="sub-mercaderia">Cuentas de clientes del local</div>
+      </div>
+    </div>
+    <div class="cuerpo-mercaderia">
+      <div class="tarjeta-total-fiado">
+        <span class="eyebrow-fiado">Total por cobrar</span>
+        <span class="monto-fiado" id="totalPorCobrarFiado">$0</span>
+        <span class="sub-fiado" id="cuentasConDeudaFiado">—</span>
+      </div>
+      <div class="buscador-mercaderia">
+        <label>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="text" id="inputBuscarCuentaFiado" placeholder="Buscar cliente..." oninput="pintarListaCuentasFiado()">
+        </label>
+        <button type="button" class="btn-escanear-mercaderia" onclick="abrirFormCuentaFiado(null, 'lista')" aria-label="Nueva cuenta">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+      <div id="listaCuentasFiado"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FIADO: detalle de una cuenta (pantalla completa) ===== -->
+<div class="modal" id="modalCuentaFiado">
+  <div class="caja">
+    <div class="encabezado-mercaderia">
+      <button type="button" class="btn-volver-mercaderia" onclick="cerrarCuentaFiado()" aria-label="Volver">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+      </button>
+      <div style="min-width:0;">
+        <h1 id="tituloCuentaFiado">—</h1>
+        <div class="sub-mercaderia" id="subCuentaFiado"></div>
+      </div>
+    </div>
+    <div class="cuerpo-mercaderia">
+      <div class="tarjeta-total-fiado">
+        <span class="eyebrow-fiado" id="etiquetaSaldoCuentaFiado">Debe</span>
+        <span class="monto-fiado" id="saldoCuentaFiado">$0</span>
+        <span class="sub-fiado" id="limiteCuentaFiado"></span>
+      </div>
+      <div class="fila-botones-cuenta-fiado">
+        <button type="button" class="btn-confirmar-caja abrir" id="btnAbonoCuentaFiado" onclick="abrirAbonoFiado()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Registrar abono
+        </button>
+        <button type="button" class="btn-secundario" onclick="abrirFormCuentaFiado(cuentaFiadoAbiertaId, 'detalle')">Editar</button>
+      </div>
+      <div class="fila-encabezado-lista-historial"><span>MOVIMIENTOS</span></div>
+      <div id="listaMovimientosFiado"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FIADO: registrar abono (hoja con teclado) ===== -->
+<div class="modal" id="modalAbonoFiado">
+  <div class="caja">
+    <div class="manija-hoja"></div>
+    <div class="encabezado-caja-chica">
+      <span class="icono-caja-chica" style="background:#E3F0EA; color:#2F7A5C;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      </span>
+      <span class="titulo-caja-chica" id="tituloAbonoFiado">Abono</span>
+    </div>
+    <div class="fila-debe-abono">
+      <span id="textoDebeAbonoFiado">Debe $0</span>
+      <button type="button" onclick="pagarTodoFiado()">Paga todo</button>
+    </div>
+    <div class="monto-grande-caja monto-caja-chica-oscuro" id="montoAbonoFiado">$0</div>
+    <div class="fila-filtro-medio-historial" id="mediosAbonoFiado">
+      <button type="button" class="pill-filtro-medio activo" data-medio="efectivo" onclick="elegirMedioAbonoFiado('efectivo')">Efectivo</button>
+      <button type="button" class="pill-filtro-medio" data-medio="debito" onclick="elegirMedioAbonoFiado('debito')">Débito</button>
+      <button type="button" class="pill-filtro-medio" data-medio="credito" onclick="elegirMedioAbonoFiado('credito')">Crédito</button>
+      <button type="button" class="pill-filtro-medio" data-medio="transferencia" onclick="elegirMedioAbonoFiado('transferencia')">Transferencia</button>
+    </div>
+    <div id="errorAbonoFiado" class="error-ajuste"></div>
+    <div class="teclado-numerico-caja">
+      <button type="button" onclick="tecleoCaja('abono','1')">1</button>
+      <button type="button" onclick="tecleoCaja('abono','2')">2</button>
+      <button type="button" onclick="tecleoCaja('abono','3')">3</button>
+      <button type="button" onclick="tecleoCaja('abono','4')">4</button>
+      <button type="button" onclick="tecleoCaja('abono','5')">5</button>
+      <button type="button" onclick="tecleoCaja('abono','6')">6</button>
+      <button type="button" onclick="tecleoCaja('abono','7')">7</button>
+      <button type="button" onclick="tecleoCaja('abono','8')">8</button>
+      <button type="button" onclick="tecleoCaja('abono','9')">9</button>
+      <button type="button" onclick="tecleoCaja('abono','000')">000</button>
+      <button type="button" onclick="tecleoCaja('abono','0')">0</button>
+      <button type="button" class="tecla-borrar-caja" onclick="tecleoCaja('abono','borrar')" aria-label="Borrar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"/><path d="m14 9-4 6M10 9l4 6"/></svg>
+      </button>
+    </div>
+    <button type="button" class="btn-confirmar-caja abrir" id="btnConfirmarAbonoFiado" onclick="confirmarAbonoFiado()">Registrar abono</button>
+    <button type="button" class="btn-secundario" onclick="cerrarAbonoFiado()" style="margin-top:10px;">Cancelar</button>
+  </div>
+</div>
+
+<!-- ===== FIADO: crear / editar cuenta (hoja) ===== -->
+<div class="modal" id="modalFormCuentaFiado">
+  <div class="caja">
+    <div class="manija-hoja"></div>
+    <div class="encabezado-caja-chica">
+      <span class="titulo-caja-chica" id="tituloFormCuentaFiado">Nueva cuenta</span>
+    </div>
+    <label class="label-campo-mercaderia">Nombre <span class="oblig-ajuste">*</span></label>
+    <input type="text" id="inputNombreCuentaFiado" class="input-simple-mercaderia" style="margin:0 0 12px;" placeholder="Ej: Juan Pérez (vecino del 12)">
+    <label class="label-campo-mercaderia">Teléfono <span class="opcional-mercaderia">(opcional)</span></label>
+    <input type="tel" id="inputTelefonoCuentaFiado" class="input-simple-mercaderia" style="margin:0 0 12px;" placeholder="+56 9 ...">
+    <div id="bloqueLimiteCuentaFiado">
+      <label class="label-campo-mercaderia">Límite de deuda <span class="opcional-mercaderia">(opcional)</span></label>
+      <input type="number" id="inputLimiteCuentaFiado" class="input-simple-mercaderia" style="margin:0 0 4px;" placeholder="Sin límite">
+      <p class="ayuda-form-fiado">Si lo pones, no se le puede fiar más allá de ese monto.</p>
+    </div>
+    <label class="label-campo-mercaderia">Nota <span class="opcional-mercaderia">(opcional)</span></label>
+    <input type="text" id="inputNotaCuentaFiado" class="input-simple-mercaderia" style="margin:0 0 8px;" placeholder="Ej: paga los viernes">
+    <div id="errorFormCuentaFiado" class="error-ajuste"></div>
+    <button type="button" class="btn-cerrar-modal" onclick="guardarFormCuentaFiado()">Guardar</button>
+    <button type="button" class="btn-secundario" id="btnArchivarCuentaFiado" onclick="archivarCuentaFiadoUI()" style="margin-top:10px; color:#C5433A;">Archivar cuenta</button>
+    <button type="button" class="btn-secundario" onclick="cerrarFormCuentaFiado()" style="margin-top:10px;">Cancelar</button>
+  </div>
+</div>
+
+<!-- ===== FIADO: elegir a quién se le fía (desde Cobro) ===== -->
+<div class="modal" id="modalElegirCuentaFiado">
+  <div class="caja">
+    <div class="manija-hoja"></div>
+    <div class="encabezado-caja-chica">
+      <span class="titulo-caja-chica">¿A quién se le fía?</span>
+    </div>
+    <div class="buscador-mercaderia" style="margin-bottom:10px;">
+      <label>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="text" id="inputBuscarElegirCuentaFiado" placeholder="Buscar cliente..." oninput="pintarListaElegirCuentaFiado()">
+      </label>
+    </div>
+    <div id="listaElegirCuentaFiado" style="margin-bottom:10px;"></div>
+    <button type="button" class="btn-agregar-producto-combo" style="width:100%;" onclick="abrirFormCuentaFiado(null, 'cobro')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nueva cuenta
+    </button>
+    <button type="button" class="btn-secundario" onclick="cerrarElegirCuentaFiado()" style="margin-top:10px;">Cancelar</button>
+  </div>
+</div>
+
 <!-- ===== MODAL: Elegir presentacion al vender ===== -->
 <div class="modal" id="modalSelectorPresentacion">
   <div class="caja">
@@ -1990,6 +2191,7 @@
     <div style="font-size:40px; margin-bottom:10px;">✓</div>
     <h3>Venta registrada</h3>
     <p class="total-cobrar" id="totalVentaOk">$0</p>
+    <p id="detalleFiadoVentaOk" style="display:none; font-size:13px; color:#64707C; margin:-4px 0 14px;"></p>
     <button class="btn-cerrar-modal" onclick="cerrarVentaOk()">Listo</button>
   </div>
 </div>
@@ -2105,6 +2307,8 @@
     iniciarEscuchaCombos(estado.cliente_id, estado.negocio_id);
     iniciarEscuchaHistorialPrecios(estado.cliente_id, estado.negocio_id);
     iniciarEscuchaTurnos(estado.cliente_id, estado.negocio_id, () => { if (sesionActual) pintarIndicadorCaja(); });
+    iniciarEscuchaCuentasFiado(estado.cliente_id, estado.negocio_id, alActualizarCuentasFiado);
+    document.getElementById('pillFiado').style.display = 'flex';
     abrirDBCaja().then(async () => {
       // Si viene de un QR de "primer ingreso" (usuario + clave temporal en
       // la URL), se intenta entrar con eso primero, antes que la sesion
@@ -2221,7 +2425,7 @@
     const ordenados = [...equipos].sort((a, b) => (a.fecha_confirmado?.toMillis?.() || 0) - (b.fecha_confirmado?.toMillis?.() || 0));
     const idPrincipal = ordenados[0]?.device_id;
 
-    document.getElementById('cupoInfo').textContent = `${equipos.length} de ${cupo} equipos en uso`;
+    document.getElementById('cupoInfo').textContent = `${equipos.length} de ${cupo}`;
     document.getElementById('fraccionCupoEquipos').textContent = `${equipos.length}/${cupo}`;
     const offset = CIRCUNFERENCIA_ANILLO_CUPO * (1 - Math.min(1, equipos.length / cupo));
     document.getElementById('circuloProgresoCupo').style.strokeDashoffset = offset;
@@ -2607,6 +2811,7 @@
     iniciarEscuchaCombos(estado.cliente_id, estado.negocio_id);
     iniciarEscuchaHistorialPrecios(estado.cliente_id, estado.negocio_id);
     iniciarEscuchaTurnos(estado.cliente_id, estado.negocio_id, () => { if (sesionActual) pintarIndicadorCaja(); });
+    iniciarEscuchaCuentasFiado(estado.cliente_id, estado.negocio_id, alActualizarCuentasFiado);
   }
   async function confirmarRecuperarClave() {
     const claveRespaldo = document.getElementById('inputClaveRespaldo').value.trim();
@@ -2975,14 +3180,16 @@
   let bufferMontoAbrir = '';
   let bufferMontoCerrar = '';
   let bufferMontoCajaChica = '';
+  let bufferMontoAbono = '';
   function tecleoCaja(cual, tecla) {
-    const buffers = { abrir: bufferMontoAbrir, cerrar: bufferMontoCerrar, cajachica: bufferMontoCajaChica };
+    const buffers = { abrir: bufferMontoAbrir, cerrar: bufferMontoCerrar, cajachica: bufferMontoCajaChica, abono: bufferMontoAbono };
     let buffer = buffers[cual];
     if (tecla === 'borrar') buffer = buffer.slice(0, -1);
     else if (buffer.length < 9) buffer += tecla;
     buffer = buffer.replace(/^0+(?=\d)/, '');
     if (cual === 'abrir') { bufferMontoAbrir = buffer; pintarMontoAbrir(); }
     else if (cual === 'cerrar') { bufferMontoCerrar = buffer; pintarMontoCerrar(); }
+    else if (cual === 'abono') { bufferMontoAbono = buffer; pintarMontoAbono(); }
     else { bufferMontoCajaChica = buffer; pintarMontoCajaChica(); }
   }
   function pintarMontoCajaChica() {
@@ -3033,6 +3240,7 @@
         <div class="fila-dg-caja"><span class="etiqueta-dg">Ventas efect.</span><span class="valor-dg positivo">+${formatoMoneda(d.ventasEfectivo)}</span></div>
         <div class="fila-dg-caja"><span class="etiqueta-dg">Devoluciones</span><span class="valor-dg negativo">-${formatoMoneda(d.devoluciones)}</span></div>
         <div class="fila-dg-caja"><span class="etiqueta-dg">Caja chica</span><span class="valor-dg ${d.cajaChica < 0 ? 'negativo' : 'positivo'}">${d.cajaChica < 0 ? '-' : '+'}${formatoMoneda(Math.abs(d.cajaChica))}</span></div>
+        ${d.abonosFiado > 0 ? `<div class="fila-dg-caja"><span class="etiqueta-dg">Abonos fiado</span><span class="valor-dg positivo">+${formatoMoneda(d.abonosFiado)}</span></div>` : ''}
       `;
       pintarMontoCerrar();
     }
@@ -3396,9 +3604,12 @@
   }
 
   let medioPagoElegido = null;
+  let cuentaFiadoElegidaId = null;
   function abrirCobrar() {
     if (carrito.length === 0) return;
     medioPagoElegido = null;
+    cuentaFiadoElegidaId = null;
+    document.getElementById('filaFiadoElegido').style.display = 'none';
     document.querySelectorAll('.opcion-medio-pago').forEach((b) => b.classList.remove('elegido'));
     document.getElementById('btnConfirmarCobro').disabled = true;
     document.getElementById('textoBtnConfirmarCobro').textContent = 'Confirmar venta';
@@ -3467,30 +3678,58 @@
     pintarCarrito();
   }
   function elegirMedioPago(medio) {
+    // Fiado necesita saber a quien antes de poder confirmar - si todavia no
+    // se eligio cuenta, se abre el selector (y al elegir, vuelve aca solo).
+    if (medio === 'fiado' && !obtenerCuentaFiado(cuentaFiadoElegidaId)) { abrirElegirCuentaFiado(); return; }
     medioPagoElegido = medio;
     const etiquetas = { efectivo: 'Efectivo', debito: 'Débito', credito: 'Crédito', transferencia: 'Transferencia' };
     document.querySelectorAll('.opcion-medio-pago').forEach((b) => b.classList.toggle('elegido', b.dataset.medio === medio));
     document.getElementById('btnConfirmarCobro').disabled = false;
-    document.getElementById('textoBtnConfirmarCobro').textContent = `Confirmar · ${etiquetas[medio]}`;
+    const fila = document.getElementById('filaFiadoElegido');
+    if (medio === 'fiado') {
+      const cuenta = obtenerCuentaFiado(cuentaFiadoElegidaId);
+      const saldo = Number(cuenta.saldo) || 0;
+      document.getElementById('textoFiadoElegido').textContent =
+        `A ${cuenta.nombre}${saldo > 0 ? ` · ya debe ${formatoMoneda(saldo)}` : ''}`;
+      fila.style.display = 'flex';
+      document.getElementById('textoBtnConfirmarCobro').textContent = `Confirmar · Fiado a ${cuenta.nombre}`;
+    } else {
+      fila.style.display = 'none';
+      document.getElementById('textoBtnConfirmarCobro').textContent = `Confirmar · ${etiquetas[medio]}`;
+    }
   }
   async function confirmarCobro() {
     if (!medioPagoElegido || carrito.length === 0) return;
     const total = totalCarrito();
+    const esFiado = medioPagoElegido === 'fiado';
     try {
-      await registrarVenta(estado.cliente_id, { items: carrito, total, medio_pago: medioPagoElegido });
+      await registrarVenta(estado.cliente_id, {
+        items: carrito, total, medio_pago: medioPagoElegido,
+        cuenta_fiado_id: esFiado ? cuentaFiadoElegidaId : null,
+      });
     } catch (e) {
-      cerrarCobrar();
       // Caja cerrada: no hace falta un alert() feo interrumpiendo - se
       // abre "Abrir caja" directo, y al confirmarla vuelve solo al cobro
       // (ver reabrirCobroAlAbrirCaja en confirmarAbrirCaja) para no
       // obligar al empleado a tocar "Cobrar" nuevamente desde cero.
       if (e.message.includes('abrir la caja')) {
+        cerrarCobrar();
         reabrirCobroAlAbrirCaja = true;
         abrirModalCaja();
         return;
       }
+      // Cualquier otro problema (limite de fiado, stock que se acabo justo
+      // antes) deja el cobro abierto, para poder corregir sin rearmar todo.
       await avisoModal(e.message);
       return;
+    }
+    const detalleFiado = document.getElementById('detalleFiadoVentaOk');
+    if (esFiado) {
+      const cuenta = obtenerCuentaFiado(cuentaFiadoElegidaId);
+      detalleFiado.textContent = `Fiado a ${cuenta ? cuenta.nombre : 'la cuenta elegida'}`;
+      detalleFiado.style.display = 'block';
+    } else {
+      detalleFiado.style.display = 'none';
     }
     if (idCarritoEntranteEnProceso) {
       await marcarCarritoProcesado(estado.cliente_id, idCarritoEntranteEnProceso);
@@ -3505,6 +3744,280 @@
   }
   function cerrarVentaOk() {
     document.getElementById('modalVentaOk').classList.remove('activo');
+  }
+
+  // ============================================================
+  // FIADO - cuentas de clientes (logica de datos en datos.js)
+  // ============================================================
+  const puedeAdministrarFiado = () => sesionActual && (sesionActual.rol === 'jefe' || sesionActual.puede_gestionar_usuarios);
+  function textoSaldoFiado(saldo) {
+    if (saldo > 0) return `<span class="saldo-cuenta-fiado debe">${formatoMoneda(saldo)}</span>`;
+    if (saldo < 0) return `<span class="saldo-cuenta-fiado a-favor">A favor ${formatoMoneda(-saldo)}</span>`;
+    return `<span class="saldo-cuenta-fiado al-dia">Al día</span>`;
+  }
+  function htmlFilaCuentaFiado(c, onclick) {
+    const saldo = Number(c.saldo) || 0;
+    const detalle = [
+      c.telefono,
+      c.limite ? `límite ${formatoMoneda(c.limite)}` : null,
+      c.fecha_ultimo_movimiento ? `último mov. ${cuandoVenta(c.fecha_ultimo_movimiento)}` : 'sin movimientos',
+    ].filter(Boolean).join(' · ');
+    return `
+      <button type="button" class="fila-venta-historial" onclick="${onclick}">
+        <div class="avatar-usuario-lista" style="background:${colorSinFoto(c.id)};">${c.nombre.charAt(0).toUpperCase()}</div>
+        <div class="info-venta-historial">
+          <div class="nombre-venta-historial">${c.nombre}</div>
+          <div class="detalle-venta-historial"><span>${detalle}</span></div>
+        </div>
+        ${textoSaldoFiado(saldo)}
+      </button>
+    `;
+  }
+  function filtrarCuentasFiado(texto) {
+    const t = (texto || '').trim().toLowerCase();
+    return listarCuentasFiado().filter((c) => !t || c.nombre.toLowerCase().includes(t) || (c.telefono || '').includes(t));
+  }
+  // La escucha en vivo llama esto cada vez que cambia una cuenta (desde este
+  // equipo o cualquier otro) - repinta lo que este abierto.
+  function alActualizarCuentasFiado() {
+    if (document.getElementById('modalFiado').classList.contains('activo')) pintarListaCuentasFiado();
+    if (document.getElementById('modalCuentaFiado').classList.contains('activo')) pintarCabeceraCuentaFiado();
+    if (document.getElementById('modalElegirCuentaFiado').classList.contains('activo')) pintarListaElegirCuentaFiado();
+  }
+
+  // ---- Lista de cuentas ----
+  function abrirModalFiado() {
+    document.getElementById('inputBuscarCuentaFiado').value = '';
+    pintarListaCuentasFiado();
+    document.getElementById('modalFiado').classList.add('activo');
+  }
+  function cerrarModalFiado() {
+    document.getElementById('modalFiado').classList.remove('activo');
+  }
+  function pintarListaCuentasFiado() {
+    const todas = listarCuentasFiado();
+    const conDeuda = todas.filter((c) => (Number(c.saldo) || 0) > 0);
+    document.getElementById('totalPorCobrarFiado').textContent = formatoMoneda(conDeuda.reduce((s, c) => s + Number(c.saldo), 0));
+    document.getElementById('cuentasConDeudaFiado').textContent = todas.length === 0
+      ? 'Todavía no hay cuentas'
+      : `${conDeuda.length} de ${todas.length} cuenta${todas.length === 1 ? '' : 's'} con deuda`;
+    const cuentas = filtrarCuentasFiado(document.getElementById('inputBuscarCuentaFiado').value);
+    const cont = document.getElementById('listaCuentasFiado');
+    if (!escuchaCuentasFiadoActiva()) { cont.innerHTML = `<p class="placeholder-venta">Cargando cuentas…</p>`; return; }
+    if (cuentas.length === 0) {
+      cont.innerHTML = `<p class="placeholder-venta">${todas.length === 0 ? 'Crea la primera cuenta con el botón +' : 'Sin resultados'}</p>`;
+      return;
+    }
+    cont.innerHTML = `<div class="lista-ventas-historial">${cuentas.map((c) => htmlFilaCuentaFiado(c, `abrirCuentaFiado('${c.id}')`)).join('')}</div>`;
+  }
+
+  // ---- Detalle de una cuenta ----
+  let cuentaFiadoAbiertaId = null;
+  async function abrirCuentaFiado(id) {
+    cuentaFiadoAbiertaId = id;
+    pintarCabeceraCuentaFiado();
+    document.getElementById('listaMovimientosFiado').innerHTML = `<p class="placeholder-venta">Cargando movimientos…</p>`;
+    document.getElementById('modalCuentaFiado').classList.add('activo');
+    await pintarMovimientosCuentaFiado();
+  }
+  function cerrarCuentaFiado() {
+    document.getElementById('modalCuentaFiado').classList.remove('activo');
+    cuentaFiadoAbiertaId = null;
+  }
+  function pintarCabeceraCuentaFiado() {
+    const c = obtenerCuentaFiado(cuentaFiadoAbiertaId);
+    if (!c || c.activa === false) { cerrarCuentaFiado(); return; }
+    const saldo = Number(c.saldo) || 0;
+    document.getElementById('tituloCuentaFiado').textContent = c.nombre;
+    document.getElementById('subCuentaFiado').textContent = [c.telefono, c.nota].filter(Boolean).join(' · ');
+    document.getElementById('etiquetaSaldoCuentaFiado').textContent = saldo > 0 ? 'Debe' : (saldo < 0 ? 'Saldo a favor' : 'Al día');
+    document.getElementById('saldoCuentaFiado').textContent = formatoMoneda(Math.abs(saldo));
+    document.getElementById('limiteCuentaFiado').textContent = c.limite
+      ? `Límite ${formatoMoneda(c.limite)} · le quedan ${formatoMoneda(Math.max(0, c.limite - saldo))} para fiar`
+      : 'Sin límite de deuda';
+    document.getElementById('btnAbonoCuentaFiado').disabled = saldo <= 0;
+  }
+  async function pintarMovimientosCuentaFiado() {
+    const id = cuentaFiadoAbiertaId;
+    let movimientos;
+    try {
+      movimientos = await listarMovimientosDeCuentaFiado(id);
+    } catch (e) {
+      document.getElementById('listaMovimientosFiado').innerHTML = `<p class="placeholder-venta">No se pudieron cargar los movimientos.</p>`;
+      return;
+    }
+    if (id !== cuentaFiadoAbiertaId) return; // se cambio de cuenta mientras cargaba
+    const cont = document.getElementById('listaMovimientosFiado');
+    if (movimientos.length === 0) { cont.innerHTML = `<p class="placeholder-venta">Todavía no hay movimientos</p>`; return; }
+    const iconos = {
+      cargo: '<path d="M3 4h2l2.4 11h11L21 7H7"/><circle cx="10" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>',
+      abono: '<path d="M12 19V5M5 12l7-7 7 7"/>',
+      ajuste: '<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
+    };
+    cont.innerHTML = `<div class="lista-ventas-historial">${movimientos.map((m) => {
+      const titulo = m.tipo === 'cargo' ? 'Compra fiada'
+        : m.tipo === 'abono' ? `Abono · ${etiquetaMedioPago(m.medio_pago)}`
+        : (m.motivo || 'Ajuste');
+      const detalle = m.tipo === 'cargo' ? m.detalle : m.nota;
+      const signo = m.tipo === 'cargo' ? '+' : '−';
+      return `
+        <div class="fila-venta-historial" style="cursor:default;">
+          <div class="icono-mov-fiado ${m.tipo}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${iconos[m.tipo] || iconos.ajuste}</svg></div>
+          <div class="info-venta-historial">
+            <div class="nombre-venta-historial">${titulo}</div>
+            <div class="detalle-venta-historial"><span>${[detalle, cuandoVenta(m.fecha), m.usuario_nombre].filter(Boolean).join(' · ')}</span></div>
+          </div>
+          <div class="monto-mov-fiado">
+            <div class="monto ${m.tipo}">${signo}${formatoMoneda(m.monto)}</div>
+            <div class="saldo">saldo ${formatoMoneda(m.saldo_despues)}</div>
+          </div>
+        </div>
+      `;
+    }).join('')}</div>`;
+  }
+
+  // ---- Abono ----
+  let medioAbonoFiado = 'efectivo';
+  function abrirAbonoFiado() {
+    const c = obtenerCuentaFiado(cuentaFiadoAbiertaId);
+    if (!c) return;
+    bufferMontoAbono = '';
+    pintarMontoAbono();
+    elegirMedioAbonoFiado('efectivo');
+    document.getElementById('errorAbonoFiado').textContent = '';
+    document.getElementById('tituloAbonoFiado').textContent = `Abono de ${c.nombre}`;
+    document.getElementById('textoDebeAbonoFiado').textContent = `Debe ${formatoMoneda(Number(c.saldo) || 0)}`;
+    document.getElementById('modalAbonoFiado').classList.add('activo');
+  }
+  function cerrarAbonoFiado() {
+    document.getElementById('modalAbonoFiado').classList.remove('activo');
+  }
+  function elegirMedioAbonoFiado(medio) {
+    medioAbonoFiado = medio;
+    document.querySelectorAll('#mediosAbonoFiado .pill-filtro-medio').forEach((b) => b.classList.toggle('activo', b.dataset.medio === medio));
+  }
+  function pagarTodoFiado() {
+    const c = obtenerCuentaFiado(cuentaFiadoAbiertaId);
+    if (!c) return;
+    bufferMontoAbono = String(Math.max(0, Math.round(Number(c.saldo) || 0)));
+    pintarMontoAbono();
+  }
+  function pintarMontoAbono() {
+    const monto = Number(bufferMontoAbono || 0);
+    document.getElementById('montoAbonoFiado').textContent = formatoMoneda(monto);
+    document.getElementById('btnConfirmarAbonoFiado').textContent = monto > 0 ? `Registrar abono de ${formatoMoneda(monto)}` : 'Registrar abono';
+  }
+  async function confirmarAbonoFiado() {
+    const errorDiv = document.getElementById('errorAbonoFiado');
+    errorDiv.textContent = '';
+    const btn = document.getElementById('btnConfirmarAbonoFiado');
+    btn.disabled = true;
+    try {
+      await registrarAbonoFiado(cuentaFiadoAbiertaId, Number(bufferMontoAbono || 0), medioAbonoFiado);
+    } catch (e) {
+      btn.disabled = false;
+      errorDiv.textContent = e.message;
+      return;
+    }
+    btn.disabled = false;
+    cerrarAbonoFiado();
+    await pintarMovimientosCuentaFiado();
+  }
+
+  // ---- Crear / editar cuenta ----
+  // origen: 'lista' (desde Fiado), 'detalle' (editar la abierta) o 'cobro'
+  // (se creo al fiar - queda elegida de una para esta venta).
+  let formCuentaFiado = { id: null, origen: 'lista' };
+  function abrirFormCuentaFiado(id, origen) {
+    formCuentaFiado = { id, origen };
+    const c = id ? obtenerCuentaFiado(id) : null;
+    document.getElementById('tituloFormCuentaFiado').textContent = c ? 'Editar cuenta' : 'Nueva cuenta';
+    document.getElementById('inputNombreCuentaFiado').value = c ? c.nombre : (document.getElementById(origen === 'cobro' ? 'inputBuscarElegirCuentaFiado' : 'inputBuscarCuentaFiado').value.trim());
+    document.getElementById('inputTelefonoCuentaFiado').value = c ? (c.telefono || '') : '';
+    document.getElementById('inputLimiteCuentaFiado').value = c && c.limite ? c.limite : '';
+    document.getElementById('inputNotaCuentaFiado').value = c ? (c.nota || '') : '';
+    document.getElementById('errorFormCuentaFiado').textContent = '';
+    // El limite lo decide el jefe (o un delegado), no cualquier empleado.
+    document.getElementById('bloqueLimiteCuentaFiado').style.display = puedeAdministrarFiado() ? 'block' : 'none';
+    document.getElementById('btnArchivarCuentaFiado').style.display = c && puedeAdministrarFiado() ? 'block' : 'none';
+    // El selector de Cobro esta mas abajo en el DOM (quedaria encima de este
+    // formulario) - se oculta mientras tanto y vuelve si se cancela.
+    if (origen === 'cobro') document.getElementById('modalElegirCuentaFiado').classList.remove('activo');
+    document.getElementById('modalFormCuentaFiado').classList.add('activo');
+    document.getElementById('inputNombreCuentaFiado').focus();
+  }
+  function cerrarFormCuentaFiado() {
+    document.getElementById('modalFormCuentaFiado').classList.remove('activo');
+    if (formCuentaFiado.origen === 'cobro') document.getElementById('modalElegirCuentaFiado').classList.add('activo');
+  }
+  async function guardarFormCuentaFiado() {
+    const errorDiv = document.getElementById('errorFormCuentaFiado');
+    errorDiv.textContent = '';
+    const cuentaAnterior = formCuentaFiado.id ? obtenerCuentaFiado(formCuentaFiado.id) : null;
+    const datos = {
+      nombre: document.getElementById('inputNombreCuentaFiado').value,
+      telefono: document.getElementById('inputTelefonoCuentaFiado').value,
+      nota: document.getElementById('inputNotaCuentaFiado').value,
+      // Quien no puede administrar no ve el campo - se conserva el limite que ya tenia.
+      limite: puedeAdministrarFiado() ? document.getElementById('inputLimiteCuentaFiado').value : (cuentaAnterior ? cuentaAnterior.limite : null),
+    };
+    let id = formCuentaFiado.id;
+    try {
+      if (id) await editarCuentaFiado(id, datos);
+      else id = await crearCuentaFiado(datos);
+    } catch (e) {
+      errorDiv.textContent = e.message;
+      return;
+    }
+    document.getElementById('modalFormCuentaFiado').classList.remove('activo');
+    if (formCuentaFiado.origen === 'cobro') {
+      cuentaFiadoElegidaId = id;
+      await esperarCuentaFiadoEnCache(id);
+      elegirMedioPago('fiado');
+    }
+  }
+  // La cuenta recien creada llega a la cache por la escucha en vivo un
+  // instante despues del addDoc - se espera un poco para poder usarla.
+  async function esperarCuentaFiadoEnCache(id) {
+    for (let i = 0; i < 20 && !obtenerCuentaFiado(id); i++) await new Promise((r) => setTimeout(r, 100));
+  }
+  async function archivarCuentaFiadoUI() {
+    const c = obtenerCuentaFiado(formCuentaFiado.id);
+    if (!c) return;
+    if (!(await confirmarModal(`¿Archivar la cuenta de ${c.nombre}? Deja de aparecer en la lista; sus movimientos se conservan.`))) return;
+    try {
+      await archivarCuentaFiado(c.id);
+    } catch (e) {
+      document.getElementById('errorFormCuentaFiado').textContent = e.message;
+      return;
+    }
+    document.getElementById('modalFormCuentaFiado').classList.remove('activo');
+    cerrarCuentaFiado();
+  }
+
+  // ---- Elegir cuenta desde Cobro ----
+  function abrirElegirCuentaFiado() {
+    document.getElementById('inputBuscarElegirCuentaFiado').value = '';
+    pintarListaElegirCuentaFiado();
+    document.getElementById('modalElegirCuentaFiado').classList.add('activo');
+  }
+  function cerrarElegirCuentaFiado() {
+    document.getElementById('modalElegirCuentaFiado').classList.remove('activo');
+  }
+  function pintarListaElegirCuentaFiado() {
+    const texto = document.getElementById('inputBuscarElegirCuentaFiado').value;
+    const cuentas = filtrarCuentasFiado(texto);
+    const cont = document.getElementById('listaElegirCuentaFiado');
+    if (cuentas.length === 0) {
+      cont.innerHTML = `<p class="placeholder-venta" style="padding:16px;">${listarCuentasFiado().length === 0 ? 'Todavía no hay cuentas — créala abajo.' : 'Sin resultados — puedes crearla abajo.'}</p>`;
+      return;
+    }
+    cont.innerHTML = `<div class="lista-ventas-historial">${cuentas.map((c) => htmlFilaCuentaFiado(c, `elegirCuentaParaFiar('${c.id}')`)).join('')}</div>`;
+  }
+  function elegirCuentaParaFiar(id) {
+    cuentaFiadoElegidaId = id;
+    cerrarElegirCuentaFiado();
+    elegirMedioPago('fiado');
   }
 
   // ---- Enviar el carrito local a la caja del negocio (no cobra aqui) ----
@@ -4536,6 +5049,7 @@
       debito: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
       credito: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
       transferencia: '<path d="M4 8h14l-4-4M20 16H6l4 4"/>',
+      fiado: '<path d="M5 3h11a3 3 0 0 1 3 3v15H8a3 3 0 0 1-3-3z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
     };
     return `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${paths[medio] || paths.efectivo}</svg>`;
   }
@@ -4551,7 +5065,7 @@
     return `${f.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })} ${hora}`;
   }
   function etiquetaMedioPago(medio) {
-    return { efectivo: 'Efectivo', debito: 'Débito', credito: 'Crédito', transferencia: 'Transferencia' }[medio] || medio;
+    return { efectivo: 'Efectivo', debito: 'Débito', credito: 'Crédito', transferencia: 'Transferencia', fiado: 'Fiado' }[medio] || medio;
   }
   function ventasDelPeriodo(ventas, periodo) {
     if (!periodo.desde) return ventas;
@@ -4632,7 +5146,7 @@
   function elegirFiltroMedioPago(medio) {
     filtroMedioPagoActual = medio;
     document.querySelectorAll('.pill-filtro-medio').forEach((b) => b.classList.remove('activo'));
-    const ids = { null: 'btnMedioTodos', efectivo: 'btnMedioEfectivo', debito: 'btnMedioDebito', credito: 'btnMedioCredito', transferencia: 'btnMedioTransferencia' };
+    const ids = { null: 'btnMedioTodos', efectivo: 'btnMedioEfectivo', debito: 'btnMedioDebito', credito: 'btnMedioCredito', transferencia: 'btnMedioTransferencia', fiado: 'btnMedioFiado' };
     document.getElementById(ids[medio]).classList.add('activo');
     pintarHistorial();
   }
@@ -4717,7 +5231,7 @@
           <div class="info-venta-historial">
             <div class="nombre-venta-historial">${resumen}</div>
             <div class="detalle-venta-historial">
-              <span>${hora} · ${etiquetaMedioPago(v.medio_pago)}${v.usuario_nombre ? ` · ${v.usuario_nombre}` : ''}</span>
+              <span>${hora} · ${etiquetaMedioPago(v.medio_pago)}${v.cuenta_fiado_nombre ? ` a ${v.cuenta_fiado_nombre}` : ''}${v.usuario_nombre ? ` · ${v.usuario_nombre}` : ''}</span>
               ${parcial ? '<span class="pill-estado-venta parcial">Devolución parcial</span>' : ''}
               ${anulada ? '<span class="pill-estado-venta anulada">Anulada</span>' : ''}
             </div>

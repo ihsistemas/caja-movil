@@ -628,6 +628,52 @@ async function crearTurnoRemoto(clienteId, negocioId, datos) { return await _tur
 async function editarTurnoRemoto(clienteId, negocioId, id, cambios) { return await _turnos.editar(clienteId, negocioId, id, cambios); }
 
 // ============================================================================
+// FIADO (cuenta corriente de clientes del negocio) - por local, igual que el
+// resto. Las cuentas son pocas y se escuchan en vivo (el saldo tiene que
+// verse al dia en todos los equipos). Los movimientos (cargos por ventas
+// fiadas, abonos, ajustes por devolucion/anulacion) crecen sin parar, asi
+// que se consultan a pedido, por cuenta o por turno de caja - van en una
+// coleccion plana (no una subcoleccion por cuenta) justamente para poder
+// consultarlos por turno, que es lo que necesita el cierre de caja para
+// sumar los abonos pagados en efectivo.
+// ============================================================================
+const _cuentasFiado = _crearColeccionEnVivo('cuentas_fiado');
+function iniciarEscuchaCuentasFiado(clienteId, negocioId, alActualizar) { return _cuentasFiado.iniciar(clienteId, negocioId, alActualizar); }
+function listarCuentasFiadoRemoto() { return _cuentasFiado.listar(); }
+function escuchaCuentasFiadoActiva() { return _cuentasFiado.activa(); }
+async function crearCuentaFiadoRemota(clienteId, negocioId, datos) { return await _cuentasFiado.crear(clienteId, negocioId, datos); }
+async function editarCuentaFiadoRemota(clienteId, negocioId, id, cambios) { return await _cuentasFiado.editar(clienteId, negocioId, id, cambios); }
+
+// Movimiento + nuevo saldo en la MISMA transaccion: si 2 equipos le cargan o
+// abonan a la misma cuenta al mismo tiempo, Firestore reintenta y ninguno
+// pisa al otro, y nunca queda un movimiento sin su efecto en el saldo (ni al
+// reves). tipo 'cargo' suma deuda; 'abono' y 'ajuste' la restan. El saldo
+// puede quedar negativo (= saldo a favor del cliente, ej. devolvio algo que
+// ya habia pagado).
+async function registrarMovimientoFiadoRemoto(clienteId, negocioId, cuentaId, movimiento) {
+  const refCuenta = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'cuentas_fiado', cuentaId);
+  const refMov = FirebaseSync.doc(FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'movimientos_fiado'));
+  const delta = movimiento.tipo === 'cargo' ? movimiento.monto : -movimiento.monto;
+  await FirebaseSync.runTransaction(db, async (transaccion) => {
+    const snap = await transaccion.get(refCuenta);
+    if (!snap.exists()) throw new Error('Esa cuenta de fiado ya no existe.');
+    const saldoNuevo = (Number(snap.data().saldo) || 0) + delta;
+    transaccion.set(refMov, { ...movimiento, cuenta_id: cuentaId, saldo_despues: saldoNuevo });
+    transaccion.update(refCuenta, { saldo: saldoNuevo, fecha_ultimo_movimiento: movimiento.fecha });
+  });
+  incrementarUsoDiario(clienteId, 'movimiento_fiado');
+  return refMov.id;
+}
+// campo: 'cuenta_id' (detalle de una cuenta) o 'turno_id' (cierre de caja).
+async function listarMovimientosFiadoRemoto(clienteId, negocioId, campo, valor) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'movimientos_fiado');
+  const snap = await FirebaseSync.getDocs(FirebaseSync.query(col, FirebaseSync.where(campo, '==', valor)));
+  const items = [];
+  snap.forEach((doc) => items.push({ id: doc.id, ...doc.data() }));
+  return items.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+}
+
+// ============================================================================
 // FASE 3 - Ventas centralizadas. A diferencia de productos, NO usa una
 // escucha en vivo permanente - las ventas crecen sin parar con el tiempo,
 // asi que "escuchar todas para siempre" saldria caro con el tiempo. En vez
