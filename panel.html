@@ -602,6 +602,14 @@
   .fila-filtro-medio-historial { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; }
   .pill-filtro-medio { flex-shrink: 0; display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 10px; border: 1.5px solid #DCE2E7; background: white; color: #64707C; font-weight: 600; font-size: 12px; }
   .pill-filtro-medio.activo { background: #EEF1F6; border-color: #2E4374; color: #2E4374; }
+  .tarjeta-resumen-vendedores { background: white; border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; }
+  .titulo-resumen-vendedores { font-size: 11.5px; font-weight: 700; color: #64707C; letter-spacing: .03em; margin-bottom: 8px; }
+  .fila-resumen-vendedor { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline; padding: 6px 0; }
+  .fila-resumen-vendedor .nombre { font-size: 13.5px; font-weight: 700; color: #1A2530; }
+  .fila-resumen-vendedor .total { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 700; color: #1A2530; }
+  .fila-resumen-vendedor .barra { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: #EEF1F6; overflow: hidden; }
+  .fila-resumen-vendedor .barra span { display: block; height: 100%; background: #2E4374; border-radius: 3px; }
+  .fila-resumen-vendedor .detalle { grid-column: 1 / -1; font-size: 11.5px; color: #64707C; }
   .btn-mas-opciones-historial { flex: 0 0 auto !important; width: 44px; padding: 0 !important; display: flex; align-items: center; justify-content: center; }
   .fila-encabezado-lista-historial { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; font-size: 11.5px; }
   .fila-encabezado-lista-historial span:first-child { font-weight: 700; color: #64707C; letter-spacing: .03em; }
@@ -1255,6 +1263,7 @@
     </div>
   </div>
   <input type="file" id="inputArchivoRespaldo" accept=".json" style="display:none;" onchange="restaurarRespaldoUI(event)">
+  <div class="tarjeta-resumen-vendedores" id="resumenVendedoresHistorial" style="display:none;"></div>
   <div class="fila-encabezado-lista-historial">
     <span id="etiquetaResumenHistorial">HOY · 0 VENTAS</span>
     <span id="pistaDevolverHistorial" style="display:none;">toca una para devolver</span>
@@ -4646,6 +4655,36 @@
       + vendedoresChips.map((u, i) => `<button type="button" class="pill-filtro-medio ${filtroVendedorActual === u.id ? 'activo' : ''}" onclick="elegirFiltroVendedor(${i})">${u.nombre}</button>`).join('');
     return filtroVendedorActual;
   }
+  // Total neto y cantidad de ventas por vendedor, de mayor a menor. Se usa en
+  // la pantalla y en el PDF. Las anuladas no cuentan (una anulada solo queda
+  // marcada, no se le descuenta nada), y las ventas viejas sin usuario_id
+  // tampoco (no hay a quien atribuirlas).
+  function resumenPorVendedor(ventas) {
+    const porId = new Map();
+    for (const v of ventas) {
+      if (v.anulado || !v.usuario_id) continue;
+      const r = porId.get(v.usuario_id) || { nombre: v.usuario_nombre || 'Sin nombre', n: 0, total: 0 };
+      r.n += 1;
+      r.total += totalNetoVenta(v);
+      porId.set(v.usuario_id, r);
+    }
+    return Array.from(porId.values()).sort((a, b) => b.total - a.total);
+  }
+  function pintarResumenVendedores(ventas) {
+    const cont = document.getElementById('resumenVendedoresHistorial');
+    const resumen = resumenPorVendedor(ventas);
+    if (resumen.length < 2) { cont.style.display = 'none'; cont.innerHTML = ''; return; }
+    const maximo = resumen[0].total || 1;
+    cont.style.display = 'block';
+    cont.innerHTML = `<div class="titulo-resumen-vendedores">POR VENDEDOR</div>` + resumen.map((r) => `
+      <div class="fila-resumen-vendedor">
+        <span class="nombre">${r.nombre}</span>
+        <span class="total">${formatoMoneda(r.total)}</span>
+        <div class="barra"><span style="width:${Math.max(2, Math.round((r.total / maximo) * 100))}%;"></span></div>
+        <span class="detalle">${r.n} venta${r.n === 1 ? '' : 's'} · promedio ${formatoMoneda(r.total / r.n)}</span>
+      </div>
+    `).join('');
+  }
   function elegirFiltroVendedor(idx) {
     filtroVendedorActual = idx < 0 ? null : vendedoresChips[idx].id;
     pintarHistorial();
@@ -4653,6 +4692,9 @@
   async function pintarHistorial() {
     const todasDelPeriodo = await listarVentas(estado.cliente_id, periodoActual.desde, periodoActual.hasta);
     const vendedor = pintarChipsVendedor(todasDelPeriodo);
+    // El resumen respeta el medio de pago elegido, pero no el filtro de
+    // vendedor (con uno solo elegido no habria nada que comparar).
+    pintarResumenVendedores(todasDelPeriodo.filter((v) => !filtroMedioPagoActual || v.medio_pago === filtroMedioPagoActual));
     const ventas = todasDelPeriodo.filter((v) =>
       (!filtroMedioPagoActual || v.medio_pago === filtroMedioPagoActual) && (!vendedor || v.usuario_id === vendedor));
     const cont = document.getElementById('listaHistorial');
@@ -4727,9 +4769,14 @@
     const ventas = await listarVentas(estado.cliente_id, periodoActual.desde, periodoActual.hasta);
     if (ventas.length === 0) { await avisoModal('No hay ventas en este período para generar el reporte.'); return; }
 
-    const totalVendido = ventas.reduce((s, v) => s + totalNetoVenta(v), 0);
+    // Una venta anulada solo queda marcada (no se le descuenta nada), asi que
+    // hay que sacarla a mano de los totales - antes el PDF la sumaba como
+    // vendida (la caja, en cambio, ya la excluia). En la tabla de abajo si
+    // aparece, marcada como anulada.
+    const vigentes = ventas.filter((v) => !v.anulado);
+    const totalVendido = vigentes.reduce((s, v) => s + totalNetoVenta(v), 0);
     const porMedioPago = {};
-    for (const v of ventas) porMedioPago[v.medio_pago] = (porMedioPago[v.medio_pago] || 0) + totalNetoVenta(v);
+    for (const v of vigentes) porMedioPago[v.medio_pago] = (porMedioPago[v.medio_pago] || 0) + totalNetoVenta(v);
 
     // Comparacion con el periodo anterior - misma logica que Minimarket Pro
     let tituloComparacion = null;
@@ -4737,7 +4784,7 @@
       const anterior = periodoAnterior(periodoActual.desde, periodoActual.hasta);
       // Antes filtraba una variable "todas" que ya no existia (quedo de cuando
       // se traian todas las ventas de una) - el PDF fallaba con Hoy/Semana/Mes.
-      const ventasAnterior = await listarVentas(estado.cliente_id, anterior.desde, anterior.hasta);
+      const ventasAnterior = (await listarVentas(estado.cliente_id, anterior.desde, anterior.hasta)).filter((v) => !v.anulado);
       const totalAnterior = ventasAnterior.reduce((s, v) => s + totalNetoVenta(v), 0);
       const etiqueta = etiquetaComparacion(periodoActual.desde, periodoActual.hasta);
       if (totalAnterior > 0) {
@@ -4749,7 +4796,7 @@
 
     // Lo mas vendido - resta lo devuelto por item, igual que el ranking de Python
     const cantidadPorProducto = {};
-    for (const v of ventas) {
+    for (const v of vigentes) {
       for (const it of v.items) {
         const clave = it.clave || it.producto_id;
         const cantidadNeta = it.cantidad - cantidadDevueltaDeItem(v, clave);
@@ -4780,7 +4827,8 @@
 
     doc.setFontSize(12);
     doc.setTextColor(0);
-    doc.text(`Total vendido: ${formatoMoneda(totalVendido)} — ${ventas.length} venta(s)`, 14, y);
+    const anuladas = ventas.length - vigentes.length;
+    doc.text(`Total vendido: ${formatoMoneda(totalVendido)} — ${vigentes.length} venta(s)${anuladas ? ` (${anuladas} anulada(s) no se cuentan)` : ''}`, 14, y);
     y += 8;
 
     doc.setFontSize(10);
@@ -4802,13 +4850,28 @@
       }
     }
 
+    const porVendedor = resumenPorVendedor(ventas);
+    if (porVendedor.length > 0) {
+      y += 4;
+      doc.setFontSize(11);
+      doc.setTextColor(0);
+      doc.text('Por vendedor:', 14, y);
+      y += 6;
+      doc.setFontSize(9);
+      for (const r of porVendedor) {
+        doc.text(`${r.nombre} — ${r.n} venta(s), ${formatoMoneda(r.total)} (promedio ${formatoMoneda(r.total / r.n)})`, 16, y);
+        y += 5;
+      }
+    }
+
     jspdfAutoTable(doc, {
       startY: y + 6,
-      head: [['Fecha', 'Productos', 'Medio de pago', 'Total']],
+      head: [['Fecha', 'Productos', 'Medio de pago', 'Vendedor', 'Total']],
       body: ventas.map((v) => [
         new Date(v.fecha).toLocaleString('es-CL'),
         v.items.map((i) => `${i.nombre} x${i.cantidad}`).join(', '),
-        v.medio_pago + (v.devoluciones ? ' (con devolución)' : ''),
+        v.medio_pago + (v.anulado ? ' (anulada)' : (v.devoluciones ? ' (con devolución)' : '')),
+        v.usuario_nombre || '',
         formatoMoneda(v.total),
       ]),
       styles: { fontSize: 8 },
