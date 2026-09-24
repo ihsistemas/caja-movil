@@ -669,6 +669,16 @@
   .banner-combo button { padding: 7px 12px; border-radius: 8px; border: none; background: #2E4374; color: white; font-weight: 700; font-size: 11.5px; }
   .pantalla-login { position: fixed; inset: 0; background: #F3F5F7; z-index: 100; display: none; }
   #modalClaveRespaldo, #modalAviso { z-index: 110; }
+  /* Por encima de todo (incluso del login): se puede actualizar desde cualquier pantalla. */
+  .aviso-version-nueva {
+    position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+    z-index: 120; width: calc(100% - 24px); max-width: 440px; box-sizing: border-box;
+    display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px; border-radius: 14px;
+    background: #1A2530; color: white; font-size: 13.5px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  }
+  .aviso-version-nueva[hidden] { display: none; }
+  .aviso-version-nueva span { flex: 1; }
+  .aviso-version-nueva button { flex-shrink: 0; border: none; border-radius: 10px; background: white; color: #1A2530; font-weight: 700; font-size: 13px; padding: 9px 14px; }
   .pantalla-login.activa { display: flex; }
   .contenedor-login { flex: 1; display: flex; flex-direction: column; gap: 24px; padding: 48px 20px 24px; max-width: 400px; margin: 0 auto; width: 100%; box-sizing: border-box; overflow-y: auto; }
   .encabezado-login { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
@@ -5426,11 +5436,40 @@
     descargarArchivo(blob, `reporte_${estado.nombre_cliente.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`);
   }
 </script>
+<div class="aviso-version-nueva" id="avisoVersionNueva" role="status" hidden>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+  <span>Hay una versión nueva de la app</span>
+  <button type="button" onclick="aplicarVersionNueva()">Actualizar</button>
+</div>
 <script>
+  // Aviso de version nueva. El service worker nuevo se instala solo en
+  // segundo plano y toma el control apenas termina (skipWaiting +
+  // clients.claim) - pero esta pantalla sigue corriendo el codigo que ya
+  // habia cargado. En ese momento ("controllerchange") se avisa, y la
+  // persona decide cuando recargar (no se recarga sola: podria estar en
+  // medio de una venta).
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('service-worker.js').catch((e) => console.warn('No se pudo registrar el service worker:', e.message));
+    // Si al abrir no habia ningun service worker, es la primera instalacion
+    // (no una actualizacion) - ahi no hay nada que avisar.
+    const habiaVersionAnterior = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (habiaVersionAnterior) document.getElementById('avisoVersionNueva').hidden = false;
     });
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js').then((reg) => {
+        // El navegador solo busca version nueva al abrir la app - en una
+        // caja que queda abierta todo el dia eso casi no pasa. Se revisa cada
+        // 30 minutos y cada vez que la app vuelve a quedar a la vista.
+        const revisar = () => reg.update().catch(() => {});
+        setInterval(revisar, 30 * 60 * 1000);
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') revisar(); });
+      }).catch((e) => console.warn('No se pudo registrar el service worker:', e.message));
+    });
+  }
+  async function aplicarVersionNueva() {
+    if (typeof carrito !== 'undefined' && carrito.length > 0 &&
+        !(await confirmarModal('Hay una venta sin cobrar en el carrito — si actualizas ahora se pierde. ¿Actualizar igual?'))) return;
+    location.reload();
   }
 </script>
 </body>
