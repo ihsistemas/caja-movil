@@ -11,26 +11,43 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: 'IBM Plex Sans', -apple-system, system-ui, sans-serif; }
-  body { background: #F3F5F7; min-height: 100vh; padding: 20px; }
-  .encabezado-app { margin-bottom: 20px; }
-  .fila-negocio { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  body { background: #F3F5F7; min-height: 100vh; padding: 0 0 20px 0; }
+  .encabezado-app {
+    margin-bottom: 16px; padding: 18px 20px 14px; background: white; border-radius: 0 0 24px 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04); display: flex; flex-direction: column; gap: 12px;
+  }
+  .fila-negocio { display: flex; align-items: center; gap: 12px; }
   .logo-negocio {
-    width: 34px; height: 34px; border-radius: 8px; background: #2E4374;
-    color: white; font-weight: 700; font-size: 13px;
+    width: 42px; height: 42px; border-radius: 13px; background: #2E4374;
+    color: white; font-weight: 700; font-size: 17px;
     display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden;
   }
   .logo-negocio img { width: 100%; height: 100%; object-fit: cover; }
   .info-negocio { flex: 1; min-width: 0; }
-  .nombre-negocio { font-weight: 600; font-size: 14.5px; line-height: 1.2; color: #1A2530; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .nombre-equipo { font-size: 11.5px; color: #64707C; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nombre-negocio { font-weight: 600; font-size: 15px; line-height: 1.25; color: #1A2530; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nombre-equipo { font-size: 12px; color: #64707C; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .pill-usuario {
-    font-size: 12px; color: #64707C; background: white; border: 1px solid #DCE2E7; border-radius: 20px;
-    padding: 5px 10px 5px 5px; display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    font-size: 13px; font-weight: 600; color: #1A2530; background: white; border: 1px solid #DCE2E7; border-radius: 22px;
+    height: 44px; padding: 0 8px 0 5px; display: flex; align-items: center; gap: 7px; flex-shrink: 0;
   }
-  .avatar-mini { width: 20px; height: 20px; border-radius: 50%; background: #E8A23D; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; }
-  .flecha-mini { font-size: 9px; color: #64707C; }
-  .indicador-caja { display: block; margin-top: 8px; padding: 8px 12px; border-radius: 9px; border: none; font-size: 12px; font-weight: 700; background: #F7E5E3; color: #C5433A; }
+  .avatar-mini { width: 32px; height: 32px; border-radius: 50%; background: #E8A23D; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: white; flex-shrink: 0; }
+  .flecha-mini { display: flex; color: #64707C; flex-shrink: 0; }
+  .fila-estado-app { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .indicador-caja {
+    height: 44px; box-sizing: border-box; padding: 0 12px 0 14px; border: none; border-radius: 12px;
+    font-size: 13px; font-weight: 600; background: #F7E5E3; color: #C5433A;
+    display: flex; align-items: center; gap: 8px; width: 100%;
+  }
+  .indicador-caja .punto { width: 8px; height: 8px; border-radius: 4px; background: #C5433A; box-shadow: 0 0 0 3px rgba(197,67,58,.18); flex-shrink: 0; }
+  .indicador-caja .texto-caja { flex: 1; text-align: left; }
+  .indicador-caja .flecha-caja { display: flex; flex-shrink: 0; }
   .indicador-caja.abierta { background: #E3F0EA; color: #2F7A5C; }
+  .indicador-caja.abierta .punto { background: #2F7A5C; box-shadow: 0 0 0 3px rgba(47,122,92,.18); }
+  .pill-equipos {
+    height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #DCE2E7; border-radius: 12px;
+    background: white; color: #64707C; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px;
+    white-space: nowrap; flex-shrink: 0;
+  }
 
   .tarjeta { background: white; border-radius: 16px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
   .tarjeta h2 { font-size: 13.5px; color: #64707C; margin-bottom: 12px; }
@@ -60,29 +77,38 @@
 
   body { padding-bottom: 76px; }
 
-  .nav-app { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; align-items: flex-end;
-             box-shadow: 0 -2px 10px rgba(0,0,0,.06); z-index: 30; padding: 0 6px; }
-  .nav-item { flex: 1; border: none; background: none; padding: 10px 4px 8px 4px; font-size: 19px;
-              display: flex; flex-direction: column; align-items: center; gap: 2px; color: #96A2AC; }
-  .nav-item span { font-size: 10px; font-weight: 600; }
+  .nav-app { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; align-items: flex-start;
+             box-shadow: 0 -2px 10px rgba(0,0,0,.06); z-index: 30; padding: 8px 6px 0 6px; }
+  .nav-item { flex: 1; border: none; background: none; padding: 4px 4px 8px 4px;
+              display: flex; flex-direction: column; align-items: center; gap: 4px; color: #96A2AC; transition: color .15s; }
+  .nav-item span { font-size: 10.5px; font-weight: 600; }
   .nav-item.activo { color: #2E4374; }
   .nav-item-venta-cont { flex: 1; display: flex; justify-content: center; }
-  .nav-item-venta { border: none; background: none; display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: -26px; }
+  .nav-item-venta { border: none; background: none; display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: -30px; color: #96A2AC; }
   .circulo-venta {
-    width: 50px; height: 50px; border-radius: 50%; background: #96A2AC; color: white;
-    display: flex; align-items: center; justify-content: center; font-size: 21px;
-    box-shadow: 0 6px 16px rgba(0,0,0,.15); border: 4px solid white;
+    width: 58px; height: 58px; border-radius: 50%; background: #96A2AC; color: white;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 16px rgba(0,0,0,.15); border: 4px solid white; transition: background .15s, box-shadow .15s;
   }
-  .nav-item-venta.activo .circulo-venta { background: #2E4374; box-shadow: 0 6px 16px rgba(46,67,116,.35); }
-  .etiqueta-venta { font-size: 10px; font-weight: 700; color: #96A2AC; padding-bottom: 8px; }
+  .nav-item-venta.activo .circulo-venta { background: #2E4374; box-shadow: 0 8px 20px rgba(46,67,116,.35); }
+  .etiqueta-venta { font-size: 10.5px; font-weight: 700; color: #96A2AC; }
   .nav-item-venta.activo .etiqueta-venta { color: #2E4374; }
 
   .pantalla-app { display: none; padding-top: 4px; }
   .pantalla-app.activa { display: block; }
 
-  .buscador-venta { display: flex; gap: 8px; margin-bottom: 14px; }
-  .buscador-venta input { flex: 1; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #DCE2E7; font-size: 14px; }
-  .btn-escanear-venta { width: 46px; border-radius: 10px; border: none; background: #1A2530; color: white; font-size: 18px; }
+  .buscador-venta { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
+  .buscador-venta label {
+    flex: 1; min-width: 0;
+    height: 48px; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 0 14px;
+    background: white; border-radius: 14px; color: #96A2AC; border: 1.5px solid #DCE2E7;
+  }
+  .buscador-venta label svg { flex-shrink: 0; }
+  .buscador-venta input { border: 0; outline: 0; flex-grow: 1; min-width: 0; font-size: 14.5px; background: transparent; color: #1A2530; padding: 0; }
+  .btn-escanear-venta {
+    width: 48px; height: 48px; padding: 0; box-sizing: border-box; border-radius: 14px; flex-shrink: 0;
+    background: #2E4374; border: none; color: white; display: flex; align-items: center; justify-content: center;
+  }
 
   .fila-producto-venta { display: flex; align-items: center; gap: 10px; background: white; border-radius: 12px;
                           padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
@@ -92,6 +118,49 @@
     border: 1.5px dashed #DCE2E7; background: #F3F5F7;
     display: flex; align-items: center; justify-content: center; font-size: 18px; opacity: .5;
   }
+
+  /* ---- Tarjetas de producto de la pantalla Venta (grilla, distinto del listado de Inventario) ---- */
+  #listaProductosVenta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .tarjeta-producto-venta {
+    background: white; border-radius: 22px; padding: 8px 8px 10px; display: flex; flex-direction: column;
+    gap: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+  .tarjeta-producto-venta.agotada { opacity: .7; }
+  .imagen-producto-venta {
+    position: relative; height: 108px; border-radius: 16px; background: #F3F5F7;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .imagen-producto-venta img { width: 100%; height: 100%; object-fit: cover; }
+  .imagen-producto-venta .sin-foto { font-size: 26px; opacity: .35; }
+  .badge-producto-venta {
+    position: absolute; top: 8px; left: 8px; padding: 4px 9px; border-radius: 10px;
+    color: white; font-size: 11px; font-weight: 700;
+  }
+  .badge-producto-venta.promo { background: #C5433A; }
+  .badge-producto-venta.agotado { background: #1A2530; }
+  .info-producto-venta { padding: 0 6px; display: flex; flex-direction: column; gap: 2px; }
+  .nombre-producto-venta { font-size: 14px; font-weight: 600; line-height: 1.25; max-height: 35px; overflow: hidden; color: #1A2530; }
+  .fila-precio-venta { display: flex; align-items: baseline; gap: 6px; }
+  .precio-producto-venta { font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 600; color: #1A2530; }
+  .precio-lista-tachado { font-size: 12px; color: #96A2AC; text-decoration: line-through; }
+  .stock-producto-venta { font-size: 11px; color: #96A2AC; }
+  .btn-agregar-tarjeta {
+    height: 44px; border-radius: 14px; border: none; background: #EEF1F6; color: #2E4374;
+    font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-no-disponible {
+    height: 44px; border-radius: 14px; background: #F3F5F7; color: #96A2AC;
+    font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;
+  }
+  .stepper-producto-venta {
+    height: 44px; border-radius: 14px; background: #2E4374; color: white;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 4px;
+  }
+  .stepper-producto-venta button {
+    width: 36px; height: 36px; border-radius: 11px; border: none; background: rgba(255,255,255,.14);
+    color: white; display: flex; align-items: center; justify-content: center;
+  }
+  .stepper-producto-venta span { font-size: 15px; font-weight: 700; }
   .foto-upload-cont { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
   .preview-foto {
     width: 64px; height: 64px; border-radius: 10px; background: #F3F5F7; border: 1.5px dashed #DCE2E7;
@@ -109,15 +178,27 @@
   .fila-producto-venta .stock-medio { color: #B8860B; }
   .banner-stock-bajo { background:#FFF4E0; border:1.5px solid #F0C674; color:#8A6100; border-radius:10px; padding:10px 14px; font-size:12.5px; font-weight:600; margin-bottom:14px; }
 
-  .carrito-flotante { position: fixed; bottom: 66px; left: 0; right: 0; background: white; border-radius: 16px 16px 0 0;
-                       box-shadow: 0 -4px 16px rgba(0,0,0,.1); padding: 12px 16px; z-index: 25; }
-  .carrito-resumen { display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; font-weight: 700; color: #1A2530; padding: 4px 0; }
-  .carrito-total { color: #2E4374; }
-  .carrito-detalle { max-height: 200px; overflow-y: auto; margin: 8px 0; }
-  .fila-carrito { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #DCE2E7; font-size: 12.5px; }
+  .carrito-flotante { position: fixed; left: 16px; right: 16px; bottom: 100px; z-index: 25; display: flex; flex-direction: column; gap: 10px; }
+  .carrito-detalle {
+    max-height: 240px; overflow-y: auto; background: white; border-radius: 18px; padding: 6px 14px;
+    box-shadow: 0 -4px 16px rgba(0,0,0,.1);
+  }
+  .fila-carrito { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #DCE2E7; font-size: 12.5px; }
+  .fila-carrito:last-child { border-bottom: none; }
   .fila-carrito .cant-controles { display: flex; align-items: center; gap: 8px; }
-  .fila-carrito .cant-controles button { width: 22px; height: 22px; border-radius: 6px; border: 1px solid #DCE2E7; background: white; }
-  .btn-cobrar { width: 100%; padding: 13px; border-radius: 12px; border: none; background: #2E4374; color: white; font-weight: 700; font-size: 14px; margin-top: 6px; }
+  .fila-carrito .cant-controles button { width: 24px; height: 24px; border-radius: 7px; border: 1px solid #DCE2E7; background: white; }
+  .barra-cobrar {
+    height: 68px; border-radius: 20px; background: #2E4374; box-shadow: 0 12px 28px rgba(46,67,116,.35);
+    display: flex; align-items: center; gap: 12px; padding: 0 10px 0 18px; color: white; border: none; width: 100%;
+  }
+  .barra-cobrar .chevron-carrito { display: flex; color: #AFC0E6; flex-shrink: 0; }
+  .barra-cobrar .resumen-carrito { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; min-width: 0; }
+  .barra-cobrar .conteo-carrito { font-size: 12px; color: #C9D4EE; }
+  .barra-cobrar .total-carrito-grande { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; color: white; }
+  .btn-cobrar-pill {
+    height: 48px; padding: 0 22px; border-radius: 14px; background: white; color: #2E4374;
+    font-size: 15px; font-weight: 700; border: none; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  }
 
   .modal-full { position: fixed; inset: 0; background: black; z-index: 60; display: none; flex-direction: column; }
   .modal-full.activo { display: flex; }
@@ -175,18 +256,15 @@
     #pantallaVenta.activa { display: flex; align-items: flex-start; gap: 20px; }
     .columna-productos-venta { flex: 1; min-width: 0; }
     #pantallaVenta #listaProductosVenta {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-content: start;
+      grid-template-columns: repeat(3, 1fr); align-content: start;
     }
-    #pantallaVenta .fila-producto-venta { flex-direction: column; align-items: stretch; text-align: left; }
-    #pantallaVenta .fila-producto-venta img, #pantallaVenta .fila-producto-venta .sin-foto { height: 90px; border-radius: 8px 8px 0 0; margin: -10px -12px 8px -12px; width: calc(100% + 24px); }
 
     /* El carrito deja de flotar y pasa a ser un panel fijo al costado */
     .carrito-flotante {
       position: sticky; top: 20px; bottom: auto; left: auto; right: auto;
-      width: 320px; flex-shrink: 0; border-radius: 14px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06); max-height: calc(100vh - 40px); overflow-y: auto;
+      width: 320px; flex-shrink: 0; max-height: calc(100vh - 40px);
     }
-    .carrito-detalle { display: block !important; max-height: none; }
+    .carrito-detalle { display: block !important; max-height: none; overflow-y: auto; }
   }
 
   .seccion-label-usuarios { font-size: 12px; font-weight: 600; color: #64707C; margin: 16px 0 8px 2px; }
@@ -229,24 +307,26 @@
     <button class="pill-usuario" id="indicadorSesion" onclick="abrirModalUsuarios()">
       <div class="avatar-mini" id="avatarUsuarioMini">—</div>
       <span id="nombreUsuarioPill">—</span>
-      <span class="flecha-mini">▾</span>
+      <span class="flecha-mini"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
     </button>
   </div>
-  <button class="indicador-caja" id="indicadorCaja" onclick="abrirModalCaja()">Caja cerrada — abrir</button>
+  <div class="fila-estado-app">
+    <button class="indicador-caja" id="indicadorCaja" onclick="abrirModalCaja()">
+      <span class="punto"></span>
+      <span class="texto-caja" id="textoIndicadorCaja">Caja cerrada — abrir</span>
+      <span class="flecha-caja"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
+    </button>
+    <button class="pill-equipos" id="pillEquipos" onclick="alternarTarjetaEquipos()" style="display:none;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg>
+      <span id="cupoInfo">—</span>
+    </button>
+  </div>
 </div>
 
 <div class="tarjeta" id="tarjetaEquipos" style="display:none;">
-  <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="alternarTarjetaEquipos()">
-    <div style="min-width:0;">
-      <h2 style="margin-bottom:2px;">Equipos vinculados</h2>
-      <div class="cupo-info" id="cupoInfo" style="font-size:12px; color:#64707C;"></div>
-    </div>
-    <span id="flechaTarjetaEquipos" style="font-size:14px; color:#96A2AC; flex-shrink:0; margin-left:10px;">▾</span>
-  </div>
-  <div id="detalleTarjetaEquipos" style="display:none; margin-top:12px;">
-    <div id="listaEquipos"></div>
-    <button class="btn-invitar" id="btnInvitar" onclick="abrirInvitacion()">+ Sumar equipo</button>
-  </div>
+  <h2 style="margin-bottom:12px;">Equipos vinculados</h2>
+  <div id="listaEquipos"></div>
+  <button class="btn-invitar" id="btnInvitar" onclick="abrirInvitacion()">+ Sumar equipo</button>
 </div>
 
 <div class="tarjeta" id="tarjetaSub" style="display:none;">
@@ -311,42 +391,70 @@
 </div>
 
 <div class="nav-app" id="navApp" style="display:none;">
-  <button class="nav-item" data-pantalla="inventario" onclick="irAPantallaApp('inventario')">📦<span>Inventario</span></button>
-  <button class="nav-item" data-pantalla="devolucion" onclick="irAPantallaApp('devolucion')">↩️<span>Devolución</span></button>
+  <button class="nav-item" data-pantalla="inventario" onclick="irAPantallaApp('inventario')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg>
+    <span>Inventario</span>
+  </button>
+  <button class="nav-item" data-pantalla="devolucion" onclick="irAPantallaApp('devolucion')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>
+    <span>Devolución</span>
+  </button>
   <div class="nav-item-venta-cont">
     <button class="nav-item-venta activo" data-pantalla="venta" onclick="irAPantallaApp('venta')">
-      <span class="circulo-venta">🛒</span><span class="etiqueta-venta">Venta</span>
+      <span class="circulo-venta">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.4 11.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.5L21 7H6"/></svg>
+      </span>
+      <span class="etiqueta-venta">Venta</span>
     </button>
   </div>
-  <button class="nav-item" id="navBotonHistorial" data-pantalla="historial" onclick="irAPantallaApp('historial')">🧾<span>Historial</span></button>
-  <button class="nav-item" id="navBotonCaja" data-pantalla="caja" onclick="irAPantallaApp('caja')" style="display:none;">🏪<span>Caja</span></button>
+  <button class="nav-item" id="navBotonHistorial" data-pantalla="historial" onclick="irAPantallaApp('historial')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+    <span>Historial</span>
+  </button>
+  <button class="nav-item" id="navBotonCaja" data-pantalla="caja" onclick="irAPantallaApp('caja')" style="display:none;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 4.5 4h15L21 9"/><path d="M4 9v11h16V9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M10 20v-5h4v5"/></svg>
+    <span>Caja</span>
+  </button>
 </div>
 
 <!-- ===== PANTALLA VENTA ===== -->
 <div class="pantalla-app" id="pantallaVenta">
   <div class="columna-productos-venta">
     <div class="buscador-venta">
-      <input type="text" id="inputBuscarProducto" placeholder="Buscar producto por nombre..." oninput="filtrarProductosVenta()">
-      <button class="btn-escanear-venta" onclick="abrirEscanerVenta()">📷</button>
+      <label>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="text" id="inputBuscarProducto" placeholder="Buscar producto" oninput="filtrarProductosVenta()">
+      </label>
+      <button class="btn-escanear-venta" onclick="abrirEscanerVenta()" aria-label="Escanear código de barra">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M11 8v8M15 8v8M18 8v8"/></svg>
+      </button>
     </div>
     <div id="listaProductosVenta"></div>
   </div>
 
   <div class="carrito-flotante" id="carritoFlotante" style="display:none;">
     <div id="bannerCombo" style="display:none;"></div>
-    <div class="carrito-resumen" onclick="toggleCarritoAbierto()">
-      <span id="carritoResumenTexto">0 items</span>
-      <span class="carrito-total" id="carritoResumenTotal">$0</span>
-    </div>
     <div class="carrito-detalle" id="carritoDetalle" style="display:none;"></div>
-    <button class="btn-cobrar" onclick="abrirCobrar()">Cobrar</button>
+    <button class="barra-cobrar" onclick="toggleCarritoAbierto()">
+      <span class="chevron-carrito"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></span>
+      <span class="resumen-carrito">
+        <span class="conteo-carrito" id="carritoResumenTexto">0 items</span>
+        <span class="total-carrito-grande" id="carritoResumenTotal">$0</span>
+      </span>
+      <span class="btn-cobrar-pill" onclick="event.stopPropagation(); abrirCobrar();">Cobrar
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </span>
+    </button>
   </div>
 </div>
 
 <!-- ===== PANTALLA INVENTARIO ===== -->
 <div class="pantalla-app" id="pantallaInventario">
   <div class="buscador-venta">
-    <input type="text" id="inputBuscarInventario" placeholder="Buscar producto..." oninput="pintarInventario()">
+    <label>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="text" id="inputBuscarInventario" placeholder="Buscar producto..." oninput="pintarInventario()">
+    </label>
   </div>
   <div class="fila-2" style="margin-bottom:10px;">
     <button class="nav-item-toggle activo" id="btnVerActivos" onclick="cambiarVistaInventario(false)">Activos</button>
@@ -931,7 +1039,7 @@
     document.getElementById('nombreEquipoMostrado').textContent = textoEquipo;
 
     if (estado.rol === 'maestro') {
-      document.getElementById('tarjetaEquipos').style.display = 'block';
+      document.getElementById('pillEquipos').style.display = 'flex';
       // _negocioEquipoOriginal, no estado.negocio_id - los equipos son del
       // local físico de ESTE dispositivo, no del local que haya elegido
       // operar quien esté logueado ahora (ver activarLocalDeSesion).
@@ -941,16 +1049,14 @@
     }
   }
 
-  // Plegada por defecto - esta tarjeta vive arriba de TODAS las pantallas
-  // (Inventario, Venta, Devolución, Historial), no solo una, asi que si
-  // queda siempre abierta le come pantalla en algo que casi nunca hace
-  // falta mirar en el dia a dia. Un toque la despliega igual.
+  // Plegada por defecto - la tarjeta de equipos vive arriba de TODAS las
+  // pantallas (Inventario, Venta, Devolución, Historial), no solo una, asi
+  // que si quedara siempre abierta le come pantalla en algo que casi nunca
+  // hace falta mirar en el dia a dia. Un toque en el pill "X de N equipos"
+  // del encabezado la despliega igual (ver #pillEquipos).
   function alternarTarjetaEquipos() {
-    const detalle = document.getElementById('detalleTarjetaEquipos');
-    const flecha = document.getElementById('flechaTarjetaEquipos');
-    const abierto = detalle.style.display === 'block';
-    detalle.style.display = abierto ? 'none' : 'block';
-    flecha.textContent = abierto ? '▾' : '▴';
+    const tarjeta = document.getElementById('tarjetaEquipos');
+    tarjeta.style.display = tarjeta.style.display === 'block' ? 'none' : 'block';
   }
 
   function pintarEquipos() {
@@ -1559,11 +1665,12 @@
   async function pintarIndicadorCaja() {
     const turno = await turnoActual();
     const btn = document.getElementById('indicadorCaja');
+    const texto = document.getElementById('textoIndicadorCaja');
     if (turno) {
-      btn.textContent = 'Caja abierta — ' + new Date(turno.fecha_apertura).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+      texto.textContent = 'Caja abierta — ' + new Date(turno.fecha_apertura).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
       btn.classList.add('abierta');
     } else {
-      btn.textContent = 'Caja cerrada — abrir';
+      texto.textContent = 'Caja cerrada — abrir';
       btn.classList.remove('abierta');
     }
   }
@@ -1702,18 +1809,61 @@
       const mensaje = !escuchaProductosActiva()
         ? 'Cargando productos…'
         : (productos.length === 0 ? 'Todavía no hay productos — agrégalos en Inventario' : 'Sin resultados');
-      cont.innerHTML = `<p style="text-align:center; color:#96A2AC; font-size:13px; padding:30px 0;">${mensaje}</p>`;
+      cont.innerHTML = `<p style="text-align:center; color:#96A2AC; font-size:13px; padding:30px 0; grid-column:1/-1;">${mensaje}</p>`;
       return;
     }
-    cont.innerHTML = filtrados.map((p) => `
-      <div class="fila-producto-venta" onclick="agregarAlCarrito('${p.id}')">
-        ${p.imagen_data ? `<img src="${p.imagen_data}">` : `<div class="sin-foto">📷</div>`}
-        <div class="info">
-          <div class="nombre">${p.nombre}</div>
-          <div class="precio-stock">${formatoMoneda(p.precio_venta)} · <span class="${claseStock(p)}">${p.stock} ${p.unidad_medida}</span></div>
+    cont.innerHTML = filtrados.map((p) => {
+      const agotado = Number(p.stock) <= 0;
+      // Con presentacion (ej: "tambien se vende por caja") el toque abre el
+      // selector de siempre - el stepper en la tarjeta solo aplica al caso
+      // simple (sin presentacion), para no mezclar 2 unidades distintas
+      // (sueltas vs. pack) en un solo contador.
+      const tienePresentaciones = listarPresentacionesDeProducto(p.id).length > 0;
+      const promos = tienePresentaciones ? [] : listarPromocionesDeProducto(p.id);
+      const tienePromo = promos.length > 0;
+      const precioFinal = tienePromo ? precioConPromocion(p.precio_venta, promos[0]) : p.precio_venta;
+      const claveSimple = p.id + '-unidad';
+      const enCarrito = !tienePresentaciones ? carrito.find((it) => it.clave === claveSimple) : null;
+
+      let acciones;
+      if (agotado) {
+        acciones = `<div class="btn-no-disponible">No disponible</div>`;
+      } else if (enCarrito) {
+        acciones = `
+          <div class="stepper-producto-venta">
+            <button onclick="event.stopPropagation(); cambiarCantidadCarrito('${claveSimple}', -1);" aria-label="Quitar uno">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14"/></svg>
+            </button>
+            <span>${enCarrito.cantidad}</span>
+            <button onclick="event.stopPropagation(); agregarAlCarrito('${p.id}');" aria-label="Agregar uno">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>`;
+      } else {
+        acciones = `
+          <button class="btn-agregar-tarjeta" onclick="event.stopPropagation(); agregarAlCarrito('${p.id}');">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Agregar
+          </button>`;
+      }
+
+      return `
+        <div class="tarjeta-producto-venta ${agotado ? 'agotada' : ''}" onclick="agregarAlCarrito('${p.id}')">
+          <div class="imagen-producto-venta">
+            ${p.imagen_data ? `<img src="${p.imagen_data}">` : `<span class="sin-foto">📷</span>`}
+            ${agotado ? `<span class="badge-producto-venta agotado">Sin stock</span>` : (tienePromo ? `<span class="badge-producto-venta promo">Oferta</span>` : '')}
+          </div>
+          <div class="info-producto-venta">
+            <div class="nombre-producto-venta">${p.nombre}</div>
+            <div class="fila-precio-venta">
+              <span class="precio-producto-venta">${formatoMoneda(precioFinal)}</span>
+              ${tienePromo ? `<span class="precio-lista-tachado">${formatoMoneda(p.precio_venta)}</span>` : ''}
+            </div>
+            <div class="stock-producto-venta"><span class="${claseStock(p)}">${p.stock} ${p.unidad_medida}</span></div>
+          </div>
+          ${acciones}
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
   function filtrarProductosVenta() { pintarProductosVenta(); }
 
@@ -1819,11 +1969,15 @@
     return carrito.reduce((s, it) => s + it.precio_venta * it.cantidad, 0);
   }
   function pintarCarrito() {
+    // Tambien repinta la grilla de Venta - el stepper +/- que se muestra en
+    // cada tarjeta (para productos simples, sin presentacion) tiene que
+    // reflejar la cantidad actualizada del carrito al instante.
+    if (document.getElementById('pantallaVenta').classList.contains('activa')) pintarProductosVenta();
     const flotante = document.getElementById('carritoFlotante');
     if (carrito.length === 0) { flotante.style.display = 'none'; return; }
-    flotante.style.display = 'block';
+    flotante.style.display = 'flex';
     const cantidadTotal = carrito.reduce((s, it) => s + it.cantidad, 0);
-    document.getElementById('carritoResumenTexto').textContent = `${cantidadTotal} item(s)`;
+    document.getElementById('carritoResumenTexto').textContent = `${cantidadTotal} producto(s)`;
     document.getElementById('carritoResumenTotal').textContent = formatoMoneda(totalCarrito());
     document.getElementById('carritoDetalle').innerHTML = carrito.map((it) => `
       <div class="fila-carrito">
