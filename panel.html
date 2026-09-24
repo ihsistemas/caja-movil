@@ -110,15 +110,6 @@
     background: #2E4374; border: none; color: white; display: flex; align-items: center; justify-content: center;
   }
 
-  .fila-producto-venta { display: flex; align-items: center; gap: 10px; background: white; border-radius: 12px;
-                          padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
-  .fila-producto-venta img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; background: #DCE2E7; flex-shrink: 0; }
-  .fila-producto-venta .sin-foto {
-    width: 60px; height: 60px; border-radius: 8px; flex-shrink: 0;
-    border: 1.5px dashed #DCE2E7; background: #F3F5F7;
-    display: flex; align-items: center; justify-content: center; font-size: 18px; opacity: .5;
-  }
-
   /* ---- Tarjetas de producto de la pantalla Venta (grilla, distinto del listado de Inventario) ---- */
   #listaProductosVenta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .tarjeta-producto-venta {
@@ -171,12 +162,56 @@
     padding: 10px 16px; border-radius: 9px; border: 1.5px solid #DCE2E7; background: white;
     color: #2E4374; font-weight: 600; font-size: 12.5px; cursor: pointer;
   }
-  .fila-producto-venta .info { flex: 1; min-width: 0; }
-  .fila-producto-venta .nombre { font-size: 13.5px; font-weight: 600; color: #1A2530; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .fila-producto-venta .precio-stock { font-size: 11.5px; color: #64707C; }
-  .fila-producto-venta .stock-bajo { color: #C5433A; }
-  .fila-producto-venta .stock-medio { color: #B8860B; }
-  .banner-stock-bajo { background:#FFF4E0; border:1.5px solid #F0C674; color:#8A6100; border-radius:10px; padding:10px 14px; font-size:12.5px; font-weight:600; margin-bottom:14px; }
+  .stock-bajo { color: #C5433A; }
+  .stock-medio { color: #B8860B; }
+
+  /* ---- Pantalla Inventario ---- */
+  .header-inventario { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .header-inventario h1 { margin: 0; font-size: 21px; font-weight: 700; color: #1A2530; letter-spacing: -.01em; }
+  .header-inventario span { font-size: 12.5px; color: #64707C; }
+  .grid-acciones-inventario { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .btn-accion-inventario {
+    height: 44px; border-radius: 12px; border: 1px solid #DCE2E7; background: white; color: #2E4374;
+    display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 0 4px;
+  }
+  .btn-accion-inventario.primaria { background: #2E4374; color: white; border: none; }
+  .fila-filtro-inventario { display: flex; gap: 8px; margin-bottom: 14px; }
+  .segmentado-inventario { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 4px; background: #E6EAEE; border-radius: 12px; flex: 1; }
+  .segmentado-inventario button { height: 36px; border: none; border-radius: 9px; background: transparent; color: #64707C; font-size: 12.5px; font-weight: 600; }
+  .segmentado-inventario button.activo { background: white; color: #1A2530; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .pill-reponer {
+    height: 44px; padding: 0 12px; border: 1px solid #F0C674; border-radius: 12px; background: #FFF4E0; color: #8A6100;
+    font-size: 12.5px; font-weight: 700; align-items: center; gap: 6px; flex-shrink: 0; white-space: nowrap;
+  }
+  #listaInventario { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .tarjeta-producto-inventario {
+    position: relative; background: white; border-radius: 22px; padding: 8px 8px 12px;
+    display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+  .tarjeta-producto-inventario.pausado { opacity: .55; }
+  .imagen-producto-inventario {
+    position: relative; height: 100px; border-radius: 16px; background: #F3F5F7;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .imagen-producto-inventario img { width: 100%; height: 100%; object-fit: cover; }
+  .imagen-producto-inventario .sin-foto { font-size: 24px; opacity: .35; }
+  .btn-pausar-tarjeta {
+    position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; padding: 0; border: none; border-radius: 11px;
+    background: rgba(255,255,255,.85); color: #64707C; display: flex; align-items: center; justify-content: center;
+  }
+  .info-producto-inventario { padding: 0 6px; display: flex; flex-direction: column; gap: 3px; }
+  .nombre-producto-inventario { font-size: 13.5px; font-weight: 600; line-height: 1.25; max-height: 34px; overflow: hidden; color: #1A2530; }
+  .nombre-producto-inventario .categoria-chica { color: #96A2AC; font-weight: 400; }
+  .fila-precio-stock-inventario { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+  .columna-precio-inventario { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .precio-inventario { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; color: #1A2530; }
+  .costo-inventario { font-size: 11px; color: #96A2AC; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .badge-stock-inventario { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; padding: 4px 8px; border-radius: 10px; flex-shrink: 0; }
+  .badge-stock-inventario .numero { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; line-height: 1.1; }
+  .badge-stock-inventario .unidad { font-size: 10px; }
+  .badge-stock-inventario.ok { background: #E3F0EA; color: #2F7A5C; }
+  .badge-stock-inventario.medio { background: #FFF4E0; color: #8A6100; }
+  .badge-stock-inventario.bajo { background: #F7E5E3; color: #C5433A; }
 
   .carrito-flotante { position: fixed; left: 16px; right: 16px; bottom: 100px; z-index: 25; display: flex; flex-direction: column; gap: 10px; }
   .carrito-detalle {
@@ -205,7 +240,6 @@
   .header-escaner { color: white; padding: 16px; display: flex; justify-content: space-between; font-size: 14px; }
 
   .titulo-pantalla { font-size: 13px; color: #64707C; margin-bottom: 12px; font-weight: 600; }
-  .btn-agregar-producto { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #1A2530; color: white; font-weight: 700; font-size: 13px; margin-bottom: 14px; }
 
   .fila-2 { display: flex; gap: 8px; }
   .fila-2 input, .fila-2 select { flex: 1; }
@@ -269,8 +303,6 @@
   .btn-reporte { padding: 11px; border-radius: 10px; border: 1.5px solid #DCE2E7; background: white; color: #64707C; font-weight: 700; font-size: 12.5px; }
   .nav-item-toggle { padding: 9px; border-radius: 9px; border: 1.5px solid #DCE2E7; background: white; color: #64707C; font-weight: 700; font-size: 12px; }
   .nav-item-toggle.activo { background: #1A2530; color: white; border-color: #1A2530; }
-  .fila-producto-venta.pausado { opacity: .55; }
-  .btn-pausar { background: none; border: none; padding: 6px; font-size: 15px; }
   .opcion-presentacion { width: 100%; padding: 13px; border-radius: 10px; border: 1.5px solid #DCE2E7; background: white; font-size: 13.5px; font-weight: 600; color: #1A2530; margin-bottom: 8px; text-align: left; }
   .banner-combo { background: #E7EBF3; border: 1.5px solid #2E4374; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
   .banner-combo .texto { font-size: 12px; color: #22345C; font-weight: 600; }
@@ -490,22 +522,37 @@
 
 <!-- ===== PANTALLA INVENTARIO ===== -->
 <div class="pantalla-app" id="pantallaInventario">
+  <div class="header-inventario">
+    <h1>Inventario</h1>
+    <span id="contadorInventario">0 productos</span>
+  </div>
   <div class="buscador-venta">
     <label>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input type="text" id="inputBuscarInventario" placeholder="Buscar producto..." oninput="pintarInventario()">
     </label>
   </div>
-  <div class="fila-2" style="margin-bottom:10px;">
-    <button class="nav-item-toggle activo" id="btnVerActivos" onclick="cambiarVistaInventario(false)">Activos</button>
-    <button class="nav-item-toggle" id="btnVerPausados" onclick="cambiarVistaInventario(true)">Pausados</button>
+  <div class="grid-acciones-inventario">
+    <button class="btn-accion-inventario primaria" onclick="abrirFormProducto(null)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Producto
+    </button>
+    <button class="btn-accion-inventario" onclick="abrirFormCombo()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>Combo
+    </button>
+    <button class="btn-accion-inventario" onclick="abrirFormFactura()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v10H3z"/><path d="M14 10h4l3 3v4h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg>Mercadería
+    </button>
   </div>
-  <div class="fila-2" style="margin-bottom:14px;">
-    <button class="btn-agregar-producto" style="margin-bottom:0;" onclick="abrirFormProducto(null)">+ Producto</button>
-    <button class="btn-agregar-producto" style="margin-bottom:0; background:#2E4374;" onclick="abrirFormCombo()">+ Combo</button>
+  <div class="fila-filtro-inventario">
+    <div class="segmentado-inventario">
+      <button class="activo" id="btnVerActivos" onclick="cambiarVistaInventario(false)">Activos</button>
+      <button id="btnVerPausados" onclick="cambiarVistaInventario(true)">Pausados</button>
+    </div>
+    <div class="pill-reponer" id="avisoStockBajo" style="display:none;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></svg>
+      <span id="textoAvisoStockBajo"></span>
+    </div>
   </div>
-  <button class="btn-secundario" style="width:100%; margin-bottom:14px;" onclick="abrirFormFactura()">📋 Agregar mercadería (factura de proveedor)</button>
-  <div id="avisoStockBajo" style="display:none;"></div>
   <div id="listaInventario"></div>
 </div>
 
@@ -2245,37 +2292,55 @@
     const filtrados = texto ? porEstado.filter((p) => p.nombre.toLowerCase().includes(texto)) : porEstado;
     const cont = document.getElementById('listaInventario');
 
+    const activos = todos.filter((p) => p.activo !== false);
+    const pausados = todos.filter((p) => p.activo === false);
+    document.getElementById('contadorInventario').textContent = `${todos.length} producto${todos.length === 1 ? '' : 's'}`;
+    document.getElementById('btnVerPausados').textContent = `Pausados · ${pausados.length}`;
+
     // Alerta de stock bajo - solo mira productos activos, sin importar el
     // buscador (para que no se pierda de vista con un filtro puesto).
     const avisoDiv = document.getElementById('avisoStockBajo');
-    const activos = todos.filter((p) => p.activo !== false);
     const agotados = activos.filter((p) => Number(p.stock) <= 0).length;
     const bajos = activos.filter((p) => Number(p.stock) > 0 && Number(p.stock) <= (p.stock_minimo ?? 5)).length;
     if (agotados + bajos > 0) {
-      const partes = [];
-      if (agotados > 0) partes.push(`${agotados} sin stock`);
-      if (bajos > 0) partes.push(`${bajos} con stock bajo`);
-      avisoDiv.innerHTML = `<div class="banner-stock-bajo">⚠️ ${partes.join(' · ')}</div>`;
-      avisoDiv.style.display = 'block';
+      document.getElementById('textoAvisoStockBajo').textContent = `${agotados + bajos} por reponer`;
+      avisoDiv.style.display = 'flex';
     } else {
       avisoDiv.style.display = 'none';
     }
     if (filtrados.length === 0) {
-      cont.innerHTML = `<p style="text-align:center; color:#96A2AC; font-size:13px; padding:30px 0;">${verPausadosInventario ? 'Sin productos pausados' : 'Sin productos todavía'}</p>`;
+      cont.innerHTML = `<p style="text-align:center; color:#96A2AC; font-size:13px; padding:30px 0; grid-column:1/-1;">${verPausadosInventario ? 'Sin productos pausados' : 'Sin productos todavía'}</p>`;
       return;
     }
-    cont.innerHTML = filtrados.map((p) => `
-      <div class="fila-producto-venta ${p.activo === false ? 'pausado' : ''}">
-        <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;" onclick="abrirFormProducto('${p.id}')">
-          ${p.imagen_data ? `<img src="${p.imagen_data}">` : `<div class="sin-foto">📷</div>`}
-          <div class="info">
-            <div class="nombre">${p.nombre}${p.categoria ? ` <span style="color:#96A2AC; font-weight:400;">· ${p.categoria}</span>` : ''}</div>
-            <div class="precio-stock">${formatoMoneda(p.precio_venta)} · costo ${formatoMoneda(p.precio_costo)} · <span class="${claseStock(p)}">${p.stock} ${p.unidad_medida}</span></div>
+    cont.innerHTML = filtrados.map((p) => {
+      const pausado = p.activo === false;
+      const estado = Number(p.stock) <= 0 ? 'bajo' : (Number(p.stock) <= (p.stock_minimo ?? 5) ? 'medio' : 'ok');
+      return `
+        <div class="tarjeta-producto-inventario ${pausado ? 'pausado' : ''}" onclick="abrirFormProducto('${p.id}')">
+          <div class="imagen-producto-inventario">
+            ${p.imagen_data ? `<img src="${p.imagen_data}">` : `<span class="sin-foto">📷</span>`}
+            <button class="btn-pausar-tarjeta" onclick="event.stopPropagation(); ${pausado ? `reactivarProductoUI('${p.id}')` : `pausarProductoUI('${p.id}')`}" aria-label="${pausado ? 'Reactivar' : 'Pausar'}">
+              ${pausado
+                ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`
+                : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6v12M15 6v12"/></svg>`}
+            </button>
+          </div>
+          <div class="info-producto-inventario">
+            <div class="nombre-producto-inventario">${p.nombre}${p.categoria ? ` <span class="categoria-chica">· ${p.categoria}</span>` : ''}</div>
+            <div class="fila-precio-stock-inventario">
+              <div class="columna-precio-inventario">
+                <span class="precio-inventario">${formatoMoneda(p.precio_venta)}</span>
+                <span class="costo-inventario">costo ${formatoMoneda(p.precio_costo)}</span>
+              </div>
+              <div class="badge-stock-inventario ${estado}">
+                <span class="numero">${p.stock}</span>
+                <span class="unidad">${p.unidad_medida}</span>
+              </div>
+            </div>
           </div>
         </div>
-        <button class="btn-pausar" onclick="event.stopPropagation(); ${p.activo === false ? `reactivarProductoUI('${p.id}')` : `pausarProductoUI('${p.id}')`}">${p.activo === false ? '▶️' : '⏸️'}</button>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   async function pausarProductoUI(id) {
