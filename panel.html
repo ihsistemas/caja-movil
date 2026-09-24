@@ -152,16 +152,56 @@
     color: white; display: flex; align-items: center; justify-content: center;
   }
   .stepper-producto-venta span { font-size: 15px; font-weight: 700; }
-  .foto-upload-cont { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
-  .preview-foto {
-    width: 64px; height: 64px; border-radius: 10px; background: #F3F5F7; border: 1.5px dashed #DCE2E7;
-    display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; overflow: hidden;
+  /* ---- Ficha de producto (pantalla completa) ---- */
+  #modalProducto { align-items: stretch; justify-content: stretch; padding: 0; background: #F3F5F7; }
+  #modalProducto .caja { max-width: none; width: 100%; height: 100%; max-height: none; border-radius: 0; padding: 0; text-align: left; overflow-y: auto; }
+  .hero-foto-producto { position: relative; height: 210px; background: #EDEFF2; overflow: hidden; flex-shrink: 0; }
+  .contenido-foto-producto { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+  .contenido-foto-producto img { width: 100%; height: 100%; object-fit: cover; }
+  .contenido-foto-producto span { font-size: 46px; opacity: .3; }
+  .btn-volver-ficha {
+    position: absolute; top: 18px; left: 16px; width: 44px; height: 44px; border-radius: 22px; border: none;
+    background: white; color: #1A2530; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,.08);
   }
-  .preview-foto img { width: 100%; height: 100%; object-fit: cover; }
-  .btn-elegir-foto {
-    padding: 10px 16px; border-radius: 9px; border: 1.5px solid #DCE2E7; background: white;
-    color: #2E4374; font-weight: 600; font-size: 12.5px; cursor: pointer;
+  .btn-cambiar-foto {
+    position: absolute; right: 16px; bottom: 16px; height: 40px; padding: 0 14px; border: none; border-radius: 20px;
+    background: white; color: #1A2530; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer;
   }
+  .cuerpo-ficha-producto { margin-top: -20px; position: relative; background: #F3F5F7; border-radius: 24px 24px 0 0; padding: 18px 16px 30px; display: flex; flex-direction: column; gap: 12px; }
+  .etiqueta-ficha-producto { font-size: 11.5px; font-weight: 700; color: #96A2AC; text-transform: uppercase; letter-spacing: .04em; }
+  .tarjeta-campo-ficha { background: white; border-radius: 16px; padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .tarjeta-campo-ficha label { font-size: 12px; font-weight: 600; color: #64707C; }
+  .tarjeta-campo-ficha input#inputPNombre { border: none; outline: none; padding: 0; background: transparent; font-size: 17px; font-weight: 600; color: #1A2530; }
+  .grid-precio-stock-ficha { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .grid-precio-stock-ficha input { border: none; outline: none; padding: 0; background: transparent; font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; color: #1A2530; width: 100%; }
+  .grid-precio-stock-ficha input:disabled { color: #64707C; -webkit-text-fill-color: #64707C; opacity: 1; }
+  .tarjeta-lista-ficha { background: white; border-radius: 18px; display: flex; flex-direction: column; overflow: hidden; }
+  .fila-lista-ficha {
+    height: 54px; padding: 0 14px; border: none; background: transparent; width: 100%;
+    display: flex; align-items: center; gap: 12px; color: #1A2530; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer;
+  }
+  .icono-lista-ficha { width: 34px; height: 34px; border-radius: 10px; background: #EEF1F8; color: #2E4374; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .icono-lista-ficha.rojo { background: #F7E5E3; color: #C5433A; }
+  .texto-fila-lista { flex: 1; min-width: 0; }
+  .sub-fila-lista { font-size: 12px; color: #96A2AC; font-weight: 500; }
+  .chevron-fila-lista { display: flex; color: #96A2AC; flex-shrink: 0; transition: transform .15s; }
+  .chevron-fila-lista.abierto { transform: rotate(90deg); }
+  .separador-fila-lista { height: 1px; background: #EEF1F4; margin: 0 14px; }
+  .contenido-fila-ficha { padding: 4px 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .contenido-fila-ficha input, .contenido-fila-ficha select {
+    width: 100%; padding: 11px 13px; border-radius: 9px; border: 1.5px solid #DCE2E7; font-size: 13.5px; background: white;
+  }
+  .switch-visual { position: relative; display: inline-block; width: 46px; height: 28px; flex-shrink: 0; }
+  .switch-visual input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+  .switch-track {
+    position: absolute; inset: 0; background: #CBD1DA; border-radius: 14px; transition: background .15s;
+    display: flex; align-items: center; padding: 2px; box-sizing: border-box;
+  }
+  .switch-dot { width: 24px; height: 24px; border-radius: 12px; background: white; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+  .switch-visual input:checked ~ .switch-track { background: #2F7A5C; }
+  .switch-visual input:checked ~ .switch-track .switch-dot { transform: translateX(18px); }
+  .info-pack-ficha { font-size: 12px; color: #2F7A5C; font-weight: 600; margin-top: 1px; }
+  .btn-guardar-ficha { height: 56px; border-radius: 14px; border: none; background: #2E4374; color: white; font-size: 16px; font-weight: 700; margin-top: 6px; }
   .stock-bajo { color: #C5433A; }
   .stock-medio { color: #B8860B; }
 
@@ -806,77 +846,122 @@
 
 <!-- ===== MODAL: Formulario producto ===== -->
 <div class="modal" id="modalProducto">
-  <div class="caja" style="max-height:85vh; overflow-y:auto;">
-    <h3 id="tituloFormProducto">Nuevo producto</h3>
-
-    <div class="foto-upload-cont">
-      <div class="preview-foto" id="previewFotoProducto"><span>📷</span></div>
-      <label class="btn-elegir-foto" for="inputPFotoArchivo" id="labelElegirFoto">Elegir foto</label>
+  <div class="caja">
+    <div class="hero-foto-producto">
+      <div class="contenido-foto-producto" id="previewFotoProducto"><span>📷</span></div>
+      <button type="button" class="btn-volver-ficha" onclick="cerrarFormProducto()" aria-label="Volver">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+      </button>
+      <label class="btn-cambiar-foto" for="inputPFotoArchivo" id="labelElegirFoto">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        Cambiar foto
+      </label>
       <input type="file" id="inputPFotoArchivo" accept="image/*" style="display:none;" onchange="alElegirFotoProducto(event)">
     </div>
 
-    <input type="text" id="inputPNombre" placeholder="Nombre del producto">
-    <div class="fila-2">
-      <input type="number" id="inputPPrecioVenta" placeholder="Precio venta">
-      <input type="number" id="inputPStock" placeholder="Stock">
-    </div>
-    <button type="button" class="btn-secundario" id="btnAbrirAjusteStock" style="display:none; margin:-6px 0 10px 0;" onclick="abrirModalAjusteStock()">📦 Ajustar stock (con motivo)</button>
+    <div class="cuerpo-ficha-producto">
+      <div class="etiqueta-ficha-producto" id="tituloFormProducto">Nuevo producto</div>
 
-    <button type="button" class="btn-secundario" id="btnMasOpcionesProducto" onclick="alternarMasOpcionesProducto()" style="margin-bottom:12px; text-align:left;">
-      <span id="flechaMasOpcionesProducto">▾</span> Más opciones (código de barra, costo, categoría...)
-    </button>
-    <div id="masOpcionesProducto" style="display:none;">
-      <input type="text" id="inputPCodigo" placeholder="Código de barra (opcional)">
-      <input type="text" id="inputPCategoria" placeholder="Categoría (opcional)" list="listaCategoriasDatalist">
-      <datalist id="listaCategoriasDatalist"></datalist>
-      <div class="fila-2">
-        <input type="number" id="inputPPrecioCosto" placeholder="Precio costo">
-        <select id="inputPUnidad">
-          <option value="unidad">Unidad</option>
-          <option value="kg">Kilo</option>
-          <option value="gramo">Gramo</option>
-        </select>
+      <div class="tarjeta-campo-ficha">
+        <label for="inputPNombre">Nombre</label>
+        <input type="text" id="inputPNombre" placeholder="Nombre del producto">
       </div>
-      <input type="number" id="inputPPrecioLista" placeholder="Precio de lista (opcional, para mostrar tachado)">
-      <label style="font-size:12px; color:#64707C; font-weight:600; display:block; margin-bottom:4px;">Avisar cuando el stock llegue a (opcional)</label>
-      <input type="number" id="inputPStockMinimo" placeholder="Ej: 5">
-      <label style="font-size:12px; color:#64707C; font-weight:600; display:block; margin-bottom:4px;">Vence (opcional)</label>
-      <input type="date" id="inputPVencimiento">
-      <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin-bottom:12px;">
-        <input type="checkbox" id="inputPAplicaIva" checked style="width:auto; margin:0;"> Aplica IVA
-      </label>
 
-      <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin-bottom:10px;">
-        <input type="checkbox" id="inputPVendePorCaja" onchange="document.getElementById('camposPresentacion').style.display = this.checked ? 'block' : 'none'" style="width:auto; margin:0;">
-        También se vende por caja o paquete
-      </label>
-      <div id="camposPresentacion" style="display:none; background:#F3F5F7; border-radius:9px; padding:10px; margin-bottom:10px;">
-        <input type="text" id="inputPresNombre" placeholder="Ej: Caja x6">
-        <div class="fila-2">
-          <input type="number" id="inputPresCantidad" placeholder="Unidades por caja">
-          <input type="number" id="inputPresPrecio" placeholder="Precio de la caja">
+      <div class="grid-precio-stock-ficha">
+        <div class="tarjeta-campo-ficha">
+          <label for="inputPPrecioVenta">Precio de venta</label>
+          <input type="number" id="inputPPrecioVenta" placeholder="0">
+        </div>
+        <div class="tarjeta-campo-ficha">
+          <label for="inputPStock">Stock</label>
+          <input type="number" id="inputPStock" placeholder="0">
         </div>
       </div>
-      <div id="presentacionesExistentes"></div>
-      <div id="historialPreciosProducto"></div>
-      <div id="historialAjustesProducto"></div>
 
-      <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px; margin:10px 0;">
-        <input type="checkbox" id="inputPTienePromo" onchange="document.getElementById('camposPromo').style.display = this.checked ? 'block' : 'none'" style="width:auto; margin:0;">
-        Tiene promoción activa
-      </label>
-      <div id="camposPromo" style="display:none; background:#E7EBF3; border-radius:9px; padding:10px; margin-bottom:10px;">
-        <select id="inputPromoTipo" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid #DCE2E7; margin-bottom:8px;">
-          <option value="porcentaje">% de descuento</option>
-          <option value="monto_fijo">Monto fijo de descuento</option>
-          <option value="precio_fijo">Precio final fijo</option>
-        </select>
-        <input type="number" id="inputPromoValor" placeholder="Valor">
+      <button type="button" class="fila-lista-ficha" id="btnAbrirAjusteStock" style="display:none; background:white; border-radius:16px;" onclick="abrirModalAjusteStock()">
+        <span class="icono-lista-ficha"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l3-8 4 16 3-8h2"/></svg></span>
+        <span class="texto-fila-lista">Ajustar stock (con motivo)</span>
+      </button>
+
+      <div class="tarjeta-lista-ficha">
+        <button type="button" class="fila-lista-ficha" id="btnMasOpcionesProducto" onclick="alternarMasOpcionesProducto()">
+          <span class="icono-lista-ficha"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
+          <span class="texto-fila-lista">Más opciones</span>
+          <span class="sub-fila-lista">código, categoría, costo…</span>
+          <span class="chevron-fila-lista" id="flechaMasOpcionesProducto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button>
+        <div id="masOpcionesProducto" class="contenido-fila-ficha" style="display:none;">
+          <input type="text" id="inputPCodigo" placeholder="Código de barra (opcional)">
+          <input type="text" id="inputPCategoria" placeholder="Categoría (opcional)" list="listaCategoriasDatalist">
+          <datalist id="listaCategoriasDatalist"></datalist>
+          <div class="fila-2">
+            <input type="number" id="inputPPrecioCosto" placeholder="Precio costo">
+            <select id="inputPUnidad">
+              <option value="unidad">Unidad</option>
+              <option value="kg">Kilo</option>
+              <option value="gramo">Gramo</option>
+            </select>
+          </div>
+          <input type="number" id="inputPPrecioLista" placeholder="Precio de lista (opcional, para mostrar tachado)">
+          <label style="font-size:12px; color:#64707C; font-weight:600;">Avisar cuando el stock llegue a (opcional)</label>
+          <input type="number" id="inputPStockMinimo" placeholder="Ej: 5">
+          <label style="font-size:12px; color:#64707C; font-weight:600;">Vence (opcional)</label>
+          <input type="date" id="inputPVencimiento">
+          <label style="font-size:12.5px; color:#64707C; display:flex; align-items:center; gap:6px;">
+            <input type="checkbox" id="inputPAplicaIva" checked style="width:auto; margin:0;"> Aplica IVA
+          </label>
+        </div>
+
+        <div class="separador-fila-lista"></div>
+        <label class="fila-lista-ficha">
+          <span class="icono-lista-ficha"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V4h8v3"/></svg></span>
+          <span class="texto-fila-lista">Se vende por pack</span>
+          <span class="switch-visual">
+            <input type="checkbox" id="inputPVendePorCaja" onchange="document.getElementById('camposPresentacion').style.display = this.checked ? 'block' : 'none'">
+            <span class="switch-track"><span class="switch-dot"></span></span>
+          </span>
+        </label>
+        <div id="camposPresentacion" class="contenido-fila-ficha" style="display:none;">
+          <input type="text" id="inputPresNombre" placeholder="Ej: Caja x6">
+          <div class="fila-2">
+            <input type="number" id="inputPresCantidad" placeholder="Unidades por caja">
+            <input type="number" id="inputPresPrecio" placeholder="Precio de la caja">
+          </div>
+          <div id="presentacionesExistentes"></div>
+        </div>
+
+        <div class="separador-fila-lista"></div>
+        <label class="fila-lista-ficha">
+          <span class="icono-lista-ficha rojo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></span>
+          <span class="texto-fila-lista">Promoción activa</span>
+          <span class="switch-visual">
+            <input type="checkbox" id="inputPTienePromo" onchange="document.getElementById('camposPromo').style.display = this.checked ? 'block' : 'none'">
+            <span class="switch-track"><span class="switch-dot"></span></span>
+          </span>
+        </label>
+        <div id="camposPromo" class="contenido-fila-ficha" style="display:none;">
+          <select id="inputPromoTipo">
+            <option value="porcentaje">% de descuento</option>
+            <option value="monto_fijo">Monto fijo de descuento</option>
+            <option value="precio_fijo">Precio final fijo</option>
+          </select>
+          <input type="number" id="inputPromoValor" placeholder="Valor">
+        </div>
+
+        <div class="separador-fila-lista"></div>
+        <button type="button" class="fila-lista-ficha" id="btnHistorialFicha" onclick="alternarHistorialFicha()">
+          <span class="icono-lista-ficha"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></span>
+          <span class="texto-fila-lista">Historial de precios y stock</span>
+          <span class="chevron-fila-lista" id="flechaHistorialFicha"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
+        </button>
+        <div id="contenidoHistorialFicha" class="contenido-fila-ficha" style="display:none;">
+          <div id="historialPreciosProducto"></div>
+          <div id="historialAjustesProducto"></div>
+        </div>
       </div>
-    </div>
 
-    <button class="btn-cerrar-modal" onclick="guardarProducto()">Guardar</button>
-    <button class="btn-secundario" onclick="cerrarFormProducto()">Cancelar</button>
+      <button class="btn-guardar-ficha" onclick="guardarProducto()">Guardar cambios</button>
+    </div>
   </div>
 </div>
 
@@ -2392,12 +2477,20 @@
   }
   function mostrarMasOpcionesProducto(mostrar) {
     document.getElementById('masOpcionesProducto').style.display = mostrar ? 'block' : 'none';
-    document.getElementById('flechaMasOpcionesProducto').textContent = mostrar ? '▴' : '▾';
+    document.getElementById('flechaMasOpcionesProducto').classList.toggle('abierto', mostrar);
+  }
+  function alternarHistorialFicha() {
+    const cont = document.getElementById('contenidoHistorialFicha');
+    const abierto = cont.style.display === 'block';
+    cont.style.display = abierto ? 'none' : 'block';
+    document.getElementById('flechaHistorialFicha').classList.toggle('abierto', !abierto);
   }
   async function abrirFormProducto(id) {
     productoEditandoId = id;
     document.getElementById('tituloFormProducto').textContent = id ? 'Editar producto' : 'Nuevo producto';
     mostrarMasOpcionesProducto(!!id);
+    document.getElementById('contenidoHistorialFicha').style.display = 'none';
+    document.getElementById('flechaHistorialFicha').classList.remove('abierto');
 
     const categorias = await listarCategorias();
     document.getElementById('listaCategoriasDatalist').innerHTML = categorias.map((c) => `<option value="${c}">`).join('');
