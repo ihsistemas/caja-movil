@@ -211,17 +211,57 @@
   .fila-2 input, .fila-2 select { flex: 1; }
   #modalProducto input, #modalProducto select { width: 100%; padding: 11px 13px; border-radius: 9px; border: 1.5px solid #DCE2E7; font-size: 13.5px; margin-bottom: 10px; }
 
-  .total-cobrar { font-size: 26px; font-weight: 800; color: #1A2530; text-align: center; margin: 10px 0 16px 0; }
-  .fila-item-cobro { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid #DCE2E7; }
-  .fila-item-cobro img, .sin-foto-chica { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
-  .sin-foto-chica { background: #F3F5F7; border: 1.5px dashed #DCE2E7; display: flex; align-items: center; justify-content: center; font-size: 15px; opacity: .5; }
-  .info-item-cobro { flex: 1; min-width: 0; }
-  .nombre-item-cobro { font-size: 13.5px; font-weight: 600; color: #1A2530; }
-  .detalle-item-cobro { font-size: 11px; color: #64707C; margin-top: 1px; }
-  .monto-item-cobro { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 13.5px; white-space: nowrap; color: #1A2530; }
-  .opciones-pago { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
   .opcion-pago { padding: 12px; border-radius: 10px; border: 1.5px solid #DCE2E7; background: white; font-size: 12.5px; font-weight: 600; color: #64707C; }
   .opcion-pago.elegido { border-color: #2E4374; background: #E7EBF3; color: #22345C; }
+
+  /* ---- Pantalla completa de Cobro (antes era un modal chico centrado) ---- */
+  #modalCobrar { align-items: stretch; justify-content: stretch; padding: 0; background: #F3F5F7; }
+  #modalCobrar .caja {
+    max-width: none; width: 100%; height: 100%; max-height: none; border-radius: 0; padding: 0;
+    text-align: left; display: flex; flex-direction: column; overflow: hidden;
+  }
+  .header-cobro { padding: 18px 20px 14px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .header-cobro h3 { margin: 0; font-size: 20px; font-weight: 800; color: #1A2530; }
+  .btn-volver-cobro {
+    width: 46px; height: 46px; border-radius: 23px; background: white; border: none; flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06); display: flex; align-items: center; justify-content: center; color: #1A2530;
+  }
+  .subtitulo-cobro { font-size: 12.5px; color: #64707C; margin-top: 1px; }
+  .lista-cobro-scroll { flex: 1; overflow-y: auto; padding: 0 20px 20px; }
+  .tarjeta-items-cobro { background: white; border-radius: 20px; padding: 4px 14px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+  .fila-item-cobro { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #F0F2F4; }
+  .fila-item-cobro:last-child { border-bottom: none; }
+  .fila-item-cobro img, .sin-foto-chica { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; flex-shrink: 0; }
+  .sin-foto-chica { background: #F3F5F7; border: 1.5px dashed #DCE2E7; display: flex; align-items: center; justify-content: center; font-size: 16px; opacity: .5; }
+  .info-item-cobro { flex: 1; min-width: 0; }
+  .nombre-item-cobro { font-size: 12.5px; font-weight: 600; color: #64707C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .detalle-item-cobro { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 700; color: #1A2530; margin-top: 1px; }
+  .stepper-item-cobro { display: flex; align-items: center; gap: 2px; height: 38px; border-radius: 19px; background: #F3F5F7; padding: 0 3px; flex-shrink: 0; }
+  .stepper-item-cobro button { width: 32px; height: 32px; border-radius: 16px; border: none; background: white; color: #1A2530; display: flex; align-items: center; justify-content: center; }
+  .stepper-item-cobro button.mas { background: #2E4374; color: white; }
+  .stepper-item-cobro span { min-width: 20px; text-align: center; font-size: 13.5px; font-weight: 700; }
+  .btn-agregar-otro-cobro {
+    height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 13px; font-weight: 700; color: #2E4374; background: none; border: none; width: 100%; margin-top: 4px;
+  }
+  .hoja-pago {
+    flex-shrink: 0; padding: 18px 20px calc(22px + env(safe-area-inset-bottom, 0px)); background: white;
+    border-radius: 24px 24px 0 0; box-shadow: 0 -6px 20px rgba(0,0,0,.06); display: flex; flex-direction: column; gap: 14px;
+  }
+  .fila-total-cobro { display: flex; justify-content: space-between; align-items: baseline; }
+  .fila-total-cobro span:first-child { font-size: 13.5px; font-weight: 600; color: #64707C; }
+  .fila-total-cobro span:last-child { font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-weight: 700; color: #1A2530; }
+  .label-como-paga { font-size: 13px; font-weight: 700; color: #1A2530; display: block; margin-bottom: 8px; }
+  .grid-medios-pago { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .opcion-medio-pago {
+    height: 56px; border-radius: 16px; border: none; background: #F3F5F7; color: #1A2530;
+    display: flex; align-items: center; gap: 10px; padding: 0 8px; font-size: 13px; font-weight: 700; box-sizing: border-box;
+  }
+  .icono-medio-pago { width: 38px; height: 38px; border-radius: 19px; background: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #64707C; }
+  .opcion-medio-pago.elegido { background: #2E4374; color: white; }
+  .opcion-medio-pago.elegido .icono-medio-pago { background: rgba(255,255,255,.16); color: white; }
+  #btnConfirmarCobro { height: 58px; border-radius: 29px; font-size: 15.5px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  #btnConfirmarCobro:disabled { opacity: .45; }
 
   .fila-historial { background: white; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
   .fila-historial .top { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #1A2530; }
@@ -542,22 +582,53 @@
   <div id="readerVenta"></div>
 </div>
 
-<!-- ===== MODAL: Cobrar ===== -->
+<!-- ===== MODAL: Cobrar (pantalla completa) ===== -->
 <div class="modal" id="modalCobrar">
-  <div class="caja" style="max-height:85vh; overflow-y:auto;">
-    <h3>Cobrar</h3>
-    <div class="total-cobrar" id="totalCobrar">$0</div>
-    <div id="itemsCobrar" style="margin-bottom:14px;"></div>
-    <label>Medio de pago</label>
-    <div class="opciones-pago">
-      <button class="opcion-pago" data-medio="efectivo" onclick="elegirMedioPago('efectivo')">💵 Efectivo</button>
-      <button class="opcion-pago" data-medio="debito" onclick="elegirMedioPago('debito')">💳 Débito</button>
-      <button class="opcion-pago" data-medio="credito" onclick="elegirMedioPago('credito')">💳 Crédito</button>
-      <button class="opcion-pago" data-medio="transferencia" onclick="elegirMedioPago('transferencia')">📱 Transferencia</button>
+  <div class="caja">
+    <header class="header-cobro">
+      <button class="btn-volver-cobro" onclick="cerrarCobrar()" aria-label="Volver a la venta">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+      </button>
+      <div>
+        <h3>Cobrar</h3>
+        <div class="subtitulo-cobro" id="subtituloCobro">0 productos</div>
+      </div>
+    </header>
+    <div class="lista-cobro-scroll">
+      <div class="tarjeta-items-cobro" id="itemsCobrar"></div>
+      <button class="btn-agregar-otro-cobro" onclick="cerrarCobrar()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Agregar otro producto
+      </button>
     </div>
-    <button class="btn-cerrar-modal" id="btnConfirmarCobro" onclick="confirmarCobro()" disabled>Confirmar venta</button>
-    <button class="btn-secundario" id="btnEnviarACajaDesdeCobrar" onclick="confirmarEnviarACaja()" style="display:none;">📤 Enviar a caja (sin cobrar aquí)</button>
-    <button class="btn-secundario" onclick="cerrarCobrar()">Cancelar</button>
+    <section class="hoja-pago">
+      <div class="fila-total-cobro">
+        <span>Total</span>
+        <span id="totalCobrar">$0</span>
+      </div>
+      <div>
+        <span class="label-como-paga">¿Cómo paga?</span>
+        <div class="grid-medios-pago">
+          <button class="opcion-medio-pago" data-medio="efectivo" onclick="elegirMedioPago('efectivo')">
+            <span class="icono-medio-pago"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg></span>Efectivo
+          </button>
+          <button class="opcion-medio-pago" data-medio="debito" onclick="elegirMedioPago('debito')">
+            <span class="icono-medio-pago"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>Débito
+          </button>
+          <button class="opcion-medio-pago" data-medio="credito" onclick="elegirMedioPago('credito')">
+            <span class="icono-medio-pago"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>Crédito
+          </button>
+          <button class="opcion-medio-pago" data-medio="transferencia" onclick="elegirMedioPago('transferencia')">
+            <span class="icono-medio-pago"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg></span>Transferencia
+          </button>
+        </div>
+      </div>
+      <button class="btn-cerrar-modal" id="btnConfirmarCobro" onclick="confirmarCobro()" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>
+        <span id="textoBtnConfirmarCobro">Confirmar venta</span>
+      </button>
+      <button class="btn-secundario" id="btnEnviarACajaDesdeCobrar" onclick="confirmarEnviarACaja()" style="display:none;">📤 Enviar a caja (sin cobrar aquí)</button>
+    </section>
   </div>
 </div>
 
@@ -1999,10 +2070,16 @@
   function abrirCobrar() {
     if (carrito.length === 0) return;
     medioPagoElegido = null;
-    document.querySelectorAll('.opcion-pago').forEach((b) => b.classList.remove('elegido'));
+    document.querySelectorAll('.opcion-medio-pago').forEach((b) => b.classList.remove('elegido'));
     document.getElementById('btnConfirmarCobro').disabled = true;
-    document.getElementById('totalCobrar').textContent = formatoMoneda(totalCarrito());
-
+    document.getElementById('textoBtnConfirmarCobro').textContent = 'Confirmar venta';
+    pintarItemsCobro();
+    document.getElementById('modalCobrar').classList.add('activo');
+  }
+  // Los items se pueden seguir ajustando (+/-) desde la propia pantalla de
+  // cobro, sin tener que volver a Venta - por eso esto es una funcion
+  // aparte, para poder repintar solo esto cada vez que cambia una cantidad.
+  function pintarItemsCobro() {
     const productos = listarProductosRemoto(true);
     document.getElementById('itemsCobrar').innerHTML = carrito.map((it) => {
       const producto = it.producto_id ? productos.find((p) => p.id === it.producto_id) : null;
@@ -2013,22 +2090,38 @@
           ${foto}
           <div class="info-item-cobro">
             <div class="nombre-item-cobro">${it.nombre}</div>
-            <div class="detalle-item-cobro">${it.cantidad} × ${formatoMoneda(it.precio_venta)} c/u</div>
+            <div class="detalle-item-cobro">${formatoMoneda(it.precio_venta * it.cantidad)}</div>
           </div>
-          <div class="monto-item-cobro">${formatoMoneda(it.precio_venta * it.cantidad)}</div>
+          <div class="stepper-item-cobro">
+            <button onclick="cambiarCantidadCobro('${it.clave}', -1)" aria-label="Quitar uno">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M5 12h14"/></svg>
+            </button>
+            <span>${it.cantidad}</span>
+            <button class="mas" onclick="cambiarCantidadCobro('${it.clave}', 1)" aria-label="Agregar uno">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
         </div>
       `;
     }).join('');
-
-    document.getElementById('modalCobrar').classList.add('activo');
+    const cantidadTotal = carrito.reduce((s, it) => s + it.cantidad, 0);
+    document.getElementById('subtituloCobro').textContent = `${cantidadTotal} producto(s) · puedes seguir agregando`;
+    document.getElementById('totalCobrar').textContent = formatoMoneda(totalCarrito());
+  }
+  function cambiarCantidadCobro(clave, delta) {
+    cambiarCantidadCarrito(clave, delta); // ya llama a pintarCarrito(), que refresca la grilla de Venta
+    if (carrito.length === 0) { cerrarCobrar(); return; }
+    pintarItemsCobro();
   }
   function cerrarCobrar() {
     document.getElementById('modalCobrar').classList.remove('activo');
   }
   function elegirMedioPago(medio) {
     medioPagoElegido = medio;
-    document.querySelectorAll('.opcion-pago').forEach((b) => b.classList.toggle('elegido', b.dataset.medio === medio));
+    const etiquetas = { efectivo: 'Efectivo', debito: 'Débito', credito: 'Crédito', transferencia: 'Transferencia' };
+    document.querySelectorAll('.opcion-medio-pago').forEach((b) => b.classList.toggle('elegido', b.dataset.medio === medio));
     document.getElementById('btnConfirmarCobro').disabled = false;
+    document.getElementById('textoBtnConfirmarCobro').textContent = `Confirmar · ${etiquetas[medio]}`;
   }
   async function confirmarCobro() {
     if (!medioPagoElegido || carrito.length === 0) return;
