@@ -310,6 +310,48 @@ async function obtenerNegocioParaActivarRemoto(clienteId, negocioId) {
   return [{ negocio_id: snap.id, ...snap.data() }, 'OK'];
 }
 
+// Codigo de "primer ingreso" que genera Manager IH al pre-crear un jefe (o
+// cualquier usuario) para un cliente todavia sin activar - ver
+// CONTEXTO_HANDOFF_JEFE_QR.md. Formato real (confirmado contra el codigo de
+// Manager IH, `carrito_compartido.js` de app_soporte, funcion
+// crearJefeRemoto): "{clienteId}#{negocioId}#{usuarioId}" - 3 partes, NO 2
+// como decia la primera version del handoff.
+//
+// OJO con las mayusculas: clienteId y negocioId son codigos cortos que
+// siempre van en mayuscula (obtenerClienteRemoto ya asume esto, y
+// generarNegocioId en Manager IH arma "N1"/"N2" directamente en mayuscula),
+// pero usuarioId es un id automatico de Firestore (mayusculas Y minusculas
+// mezcladas) - pasarlo por .toUpperCase() como hace parsearCodigoNegocio
+// con el codigo completo lo hubiera roto, buscando un documento que no
+// existe con ese casing. Por eso esta funcion NO uppercasea el string
+// entero de una, solo los 2 primeros segmentos.
+function parsearCodigoUsuarioDirecto(codigo) {
+  const raw = (codigo || '').trim();
+  const mayus = raw.toUpperCase();
+  if (mayus.startsWith('CLI-') || mayus.startsWith('IHINV-')) return null;
+  const partes = raw.split('#');
+  if (partes.length !== 3) return null;
+  const [clienteId, negocioId, usuarioId] = partes;
+  if (!clienteId || !negocioId || !usuarioId) return null;
+  return { clienteId: clienteId.toUpperCase(), negocioId: negocioId.toUpperCase(), usuarioId };
+}
+
+// Lectura puntual del usuario ANTES de que exista sesion (misma idea que
+// obtenerClienteRemoto/obtenerNegocioParaActivarRemoto) - hace de chequeo de
+// seguridad real, no solo de conveniencia: si el usuario ya eligio su clave
+// definitiva (clave_temporal ya en false) o fue dado de baja, este codigo NO
+// debe volver a meter a nadie automatico - la persona cae al login normal
+// de nombre+clave, como pide el handoff.
+async function obtenerUsuarioParaActivarRemoto(clienteId, usuarioId) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'usuarios', usuarioId);
+  const snap = await FirebaseSync.getDoc(ref);
+  if (!snap.exists()) return [null, 'Este código ya no es válido — pide uno nuevo.'];
+  const usuario = { id: snap.id, ...snap.data() };
+  if (usuario.activo === false) return [null, 'Este usuario fue dado de baja.'];
+  if (!usuario.clave_temporal) return [null, 'Este código ya se usó — inicia sesión con tu nombre y tu clave.'];
+  return [usuario, 'OK'];
+}
+
 // ============================================================================
 // USO DIARIO POR CLIENTE - para poder avisarle a Nacho si un negocio se
 // esta acercando al cupo gratis de Firebase, sin depender de que revise la

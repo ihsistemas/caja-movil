@@ -11,25 +11,43 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: 'IBM Plex Sans', -apple-system, system-ui, sans-serif; }
-  body { background: #F3F5F7; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .tarjeta { background: white; border-radius: 20px; padding: 28px 24px; max-width: 380px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
-  .icono { width: 56px; height: 56px; border-radius: 16px; background: #E7EBF3; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px auto; }
-  h1 { font-size: 19px; text-align: center; color: #1A2530; margin-bottom: 4px; }
-  .sub { font-size: 13px; text-align: center; color: #64707C; margin-bottom: 22px; }
+  body { background: #F3F5F7; min-height: 100vh; }
+  .contenedor-activar { display: flex; flex-direction: column; gap: 18px; padding: 40px 20px 28px; max-width: 420px; margin: 0 auto; min-height: 100vh; }
 
-  .caja-id { background: #F3F5F7; border: 1.5px dashed #DCE2E7; border-radius: 12px; padding: 14px; margin-bottom: 18px; }
-  .caja-id .etiqueta { font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: #64707C; margin-bottom: 5px; }
-  .caja-id .id-valor { font-family: monospace; font-size: 14px; font-weight: 700; color: #1A2530; word-break: break-all; }
+  .barra-progreso { display: flex; align-items: center; gap: 8px; }
+  .barra-progreso span { height: 6px; flex-grow: 1; border-radius: 3px; background: #DCE2E7; }
+  .barra-progreso span.activo { background: #2E4374; }
+  .paso-actual { font-size: 13px; font-weight: 600; color: #64707C; margin-bottom: 6px; }
+  h1 { font-size: 26px; line-height: 1.15; font-weight: 700; color: #1A2530; letter-spacing: -.01em; margin-bottom: 6px; }
+  .sub { font-size: 14.5px; line-height: 1.45; color: #64707C; }
+
+  .btn-escanear-grande {
+    height: 140px; border-radius: 24px; border: 2px dashed #AFC0E6; background: #EEF1F8; color: #2E4374;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; font-size: 15px; font-weight: 700; width: 100%;
+  }
+  .icono-escanear-grande { width: 54px; height: 54px; border-radius: 18px; background: #2E4374; color: white; display: flex; align-items: center; justify-content: center; }
+  .divisor-o { display: flex; align-items: center; gap: 12px; color: #96A2AC; font-size: 12.5px; }
+  .divisor-o .linea { height: 1px; flex-grow: 1; background: #DCE2E7; }
 
   label { font-size: 12.5px; color: #64707C; font-weight: 600; display: block; margin-bottom: 6px; }
-  textarea, input[type=text] { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #DCE2E7; font-size: 13px; margin-bottom: 12px; }
-  textarea { font-family: monospace; resize: none; height: 70px; }
-  .btn-activar { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #2E4374; color: white; font-weight: 700; font-size: 14.5px; }
-  .btn-activar:disabled { opacity: .4; }
-  .btn-secundario { width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid #DCE2E7; background: white; color: #1A2530; font-weight: 600; font-size: 13px; margin-bottom: 10px; }
-  .error { background: #F7E5E3; color: #C5433A; border-radius: 10px; padding: 10px 12px; font-size: 12.5px; margin-bottom: 12px; }
+  textarea, input[type=text] { width: 100%; box-sizing: border-box; padding: 0 16px; height: 54px; border-radius: 14px; border: 1.5px solid #DCE2E7; background: white; outline: 0; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #1A2530; }
+  textarea { font-family: 'IBM Plex Mono', monospace; resize: none; height: 60px; padding-top: 12px; }
 
-  .paso2 { display: none; }
+  .grid-info-codigo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .tarjeta-info-codigo { padding: 12px; border-radius: 14px; background: white; display: flex; flex-direction: column; gap: 4px; }
+  .tarjeta-info-codigo .prefijo { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #2E4374; }
+  .tarjeta-info-codigo .desc { font-size: 11.5px; line-height: 1.35; color: #64707C; }
+
+  .pie-activar { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 14px; background: white; font-size: 12px; color: #64707C; }
+  .pie-activar span:last-child { font-family: 'IBM Plex Mono', monospace; color: #1A2530; word-break: break-all; text-align: right; }
+
+  .btn-activar { width: 100%; height: 56px; border-radius: 14px; border: none; background: #2E4374; color: white; font-weight: 700; font-size: 16px; }
+  .btn-activar:disabled { opacity: .4; }
+  .btn-secundario { width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid #DCE2E7; background: white; color: #1A2530; font-weight: 600; font-size: 13px; }
+  .error { background: #F7E5E3; color: #C5433A; border-radius: 10px; padding: 10px 12px; font-size: 12.5px; }
+
+  #pasoCodigo { display: flex; flex-direction: column; gap: 14px; }
+  .paso2 { display: none; flex-direction: column; gap: 14px; }
 
   .modal-full { position: fixed; inset: 0; background: black; z-index: 60; display: none; flex-direction: column; }
   .modal-full.activo { display: flex; }
@@ -39,32 +57,51 @@
 </head>
 <body>
 
-<div class="tarjeta">
-  <div class="icono">🔒</div>
-  <h1 id="tituloActivar">Activar este equipo</h1>
-  <p class="sub" id="subActivar">Pega el código que te dieron, o escanéalo si viene como QR</p>
-
-  <div class="caja-id">
-    <div class="etiqueta">ID de este equipo</div>
-    <div class="id-valor" id="deviceIdMostrado">generando...</div>
-    <div style="font-size:10.5px; color:#96A2AC; margin-top:6px;">No hace falta que hagas nada con esto — solo lo vamos a pedir si necesitás ayuda técnica.</div>
+<div class="contenedor-activar">
+  <div class="barra-progreso" id="barraProgreso">
+    <span class="activo"></span>
+    <span></span>
+  </div>
+  <div>
+    <div class="paso-actual" id="pasoActualTexto">Paso 1 de 2</div>
+    <h1 id="tituloActivar">Activa este equipo</h1>
+    <p class="sub" id="subActivar">Solo se hace una vez. Pega o escanea el código que te dieron.</p>
   </div>
 
-  <div id="cajaError"></div>
-
   <div id="pasoCodigo">
-    <label>Código</label>
-    <textarea id="inputCodigo" placeholder="CLI-...#N1 o IHINV-..."></textarea>
-    <button class="btn-secundario" onclick="abrirEscanerActivacion()">📷 Escanear código QR</button>
-    <button class="btn-activar" id="btnValidar" onclick="validarCodigo()">Continuar</button>
+    <button type="button" class="btn-escanear-grande" onclick="abrirEscanerActivacion()">
+      <span class="icono-escanear-grande">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 8h3v3H8zM13 13h3v3h-3zM13 8h3M8 13v3"/></svg>
+      </span>
+      Escanear código QR
+    </button>
+    <div class="divisor-o"><span class="linea"></span>o pégalo<span class="linea"></span></div>
+    <div>
+      <label for="inputCodigo">Código</label>
+      <textarea id="inputCodigo" placeholder="CLI-...#N1 o IHINV-..."></textarea>
+    </div>
+    <div class="grid-info-codigo">
+      <div class="tarjeta-info-codigo"><span class="prefijo">CLI-…</span><span class="desc">Equipo principal del local</span></div>
+      <div class="tarjeta-info-codigo"><span class="prefijo">IHINV-…</span><span class="desc">Equipo adicional · vale 15 min</span></div>
+    </div>
   </div>
 
   <div id="pasoNombre" class="paso2">
-    <p class="sub" id="infoCliente" style="margin-bottom:14px;"></p>
-    <label>¿Cómo le quieres llamar a este equipo?</label>
-    <input type="text" id="inputNombreEquipo" placeholder="Ej: Caja 2, Celular de Juan...">
-    <button class="btn-activar" onclick="confirmarActivacion()">Activar</button>
+    <p class="sub" id="infoCliente"></p>
+    <div>
+      <label for="inputNombreEquipo">¿Cómo le quieres llamar a este equipo?</label>
+      <input type="text" id="inputNombreEquipo" placeholder="Ej: Caja 2, Celular de Juan...">
+    </div>
   </div>
+
+  <div id="cajaError"></div>
+  <div style="flex-grow:1;"></div>
+  <div class="pie-activar">
+    <span>ID de este equipo</span>
+    <span id="deviceIdMostrado">generando...</span>
+  </div>
+  <button class="btn-activar" id="btnValidar" onclick="validarCodigo()">Validar código</button>
+  <button class="btn-activar" id="btnActivarPaso2" onclick="confirmarActivacion()" style="display:none;">Activar</button>
 </div>
 
 <!-- ===== ESCANER DE CAMARA (activacion) ===== -->
@@ -190,13 +227,62 @@
       document.getElementById('infoCliente').textContent =
         `Te vas a sumar a "${cliente.nombre} · ${negocio.nombre}" como equipo adicional.`;
     } else {
-      cajaError.innerHTML = `<div class="error">No reconozco este código — revisa que esté completo y sin espacios de más.</div>`;
-      btn.disabled = false;
-      return;
+      // Código de "primer ingreso" que Manager IH pre-genera para un jefe
+      // (o cualquier usuario) antes de que exista ningún equipo activado -
+      // ver CONTEXTO_HANDOFF_JEFE_QR.md. No tiene un prefijo fijo como
+      // CLI-/IHINV- (viene tal cual de Manager IH), por eso se prueba recién
+      // acá, después de descartar los otros 2 formatos.
+      const partesUsuario = parsearCodigoUsuarioDirecto(texto);
+      if (!partesUsuario) {
+        cajaError.innerHTML = `<div class="error">No reconozco este código — revisa que esté completo y sin espacios de más.</div>`;
+        btn.disabled = false;
+        return;
+      }
+      const [cliente, msgCliente] = await obtenerClienteRemoto(partesUsuario.clienteId);
+      if (!cliente) {
+        cajaError.innerHTML = `<div class="error">${msgCliente}</div>`;
+        btn.disabled = false;
+        return;
+      }
+      const [negocio, msgNegocio] = await obtenerNegocioParaActivarRemoto(partesUsuario.clienteId, partesUsuario.negocioId);
+      if (!negocio) {
+        cajaError.innerHTML = `<div class="error">${msgNegocio}</div>`;
+        btn.disabled = false;
+        return;
+      }
+      const [usuario, msgUsuario] = await obtenerUsuarioParaActivarRemoto(partesUsuario.clienteId, partesUsuario.usuarioId);
+      if (!usuario) {
+        cajaError.innerHTML = `<div class="error">${msgUsuario}</div>`;
+        btn.disabled = false;
+        return;
+      }
+      // Este código no dice si el equipo que lo escanea debe ser el
+      // principal o uno adicional (a diferencia de CLI-/IHINV-, que ya lo
+      // saben de antemano) - se decide mirando si el local todavía no tiene
+      // NINGÚN equipo activado (caso típico: es la primera vez que alguien
+      // de ese negocio entra) o si ya tiene alguno (este QR se está usando
+      // para sumar a un empleado nuevo a un negocio que ya está andando).
+      const equiposActuales = await listarEquiposRemoto(cliente.cliente_id, negocio.negocio_id);
+      const rolEquipo = equiposActuales.length === 0 ? 'maestro' : 'sub';
+      if (rolEquipo === 'sub' && !hayCupoDisponibleRemoto(negocio, equiposActuales)) {
+        cajaError.innerHTML = `<div class="error">Ya no hay cupo disponible para este local — pide al equipo principal que suelte uno primero.</div>`;
+        btn.disabled = false;
+        return;
+      }
+      codigoValidado = { tipo: 'usuario_directo', cliente, negocio, usuario, rolEquipo };
+      document.getElementById('infoCliente').textContent =
+        `Vas a activar "${cliente.nombre} · ${negocio.nombre}" y entrar directo como ${usuario.nombre}.`;
     }
 
     document.getElementById('pasoCodigo').style.display = 'none';
-    document.getElementById('pasoNombre').style.display = 'block';
+    document.getElementById('pasoNombre').style.display = 'flex';
+    document.getElementById('btnValidar').style.display = 'none';
+    document.getElementById('btnActivarPaso2').style.display = 'block';
+    document.getElementById('pasoActualTexto').textContent = 'Paso 2 de 2';
+    document.getElementById('tituloActivar').textContent = 'Nombra este equipo';
+    document.getElementById('subActivar').textContent = 'Así lo vas a reconocer entre los equipos vinculados.';
+    document.getElementById('subActivar').style.color = '';
+    document.querySelectorAll('#barraProgreso span')[1].classList.add('activo');
   }
 
   async function confirmarActivacion() {
@@ -206,7 +292,10 @@
 
     const deviceId = getDeviceId();
     const { cliente, negocio } = codigoValidado;
-    const rol = codigoValidado.tipo === 'cliente' ? 'maestro' : 'sub';
+    // "usuario_directo" (código de Manager IH) ya trae decidido si este
+    // equipo es el principal o uno adicional (ver validarCodigo) - los
+    // otros 2 tipos lo saben por el formato del código nomás.
+    const rol = codigoValidado.rolEquipo || (codigoValidado.tipo === 'cliente' ? 'maestro' : 'sub');
 
     if (rol === 'sub') {
       // Antes este chequeo lo hacia el maestro al escanear la confirmacion
@@ -231,7 +320,14 @@
       await confirmarEquipoRemoto(cliente.cliente_id, negocio.negocio_id, deviceId, nombreEquipo, codigoValidado.codigoInvitacion);
     }
 
-    window.location.href = 'panel.html';
+    if (codigoValidado.tipo === 'usuario_directo') {
+      // panel.html lee este parametro UNA vez (lo saca de la URL de
+      // inmediato con history.replaceState) para entrar directo como este
+      // usuario sin pedir nombre ni clave - ver obtenerUsuarioParaActivarRemoto.
+      window.location.href = `panel.html?loginUsuarioId=${encodeURIComponent(codigoValidado.usuario.id)}`;
+    } else {
+      window.location.href = 'panel.html';
+    }
   }
 </script>
 <script>

@@ -213,21 +213,26 @@ function listarTurnosCerrados() {
     .filter((t) => t.estado === 'cerrado')
     .sort((a, b) => new Date(b.fecha_cierre) - new Date(a.fecha_cierre));
 }
-async function calcularEfectivoEsperado(clienteId, turno) {
+// Mismo calculo de siempre, pero separado en sus 4 partes (antes solo
+// devolvia el total) - la pantalla de Cerrar caja del rediseño muestra el
+// desglose completo, no solo el numero final, para que quede claro DE DONDE
+// sale el efectivo esperado.
+async function desgloseEfectivoEsperado(clienteId, turno) {
   const ventas = await listarVentas(clienteId);
   const ventasDelTurno = ventas.filter((v) => v.turno_id === turno.id);
-  let efectivo = Number(turno.monto_apertura) || 0;
+  let ventasEfectivo = 0;
+  let devoluciones = 0;
   for (const v of ventasDelTurno) {
     // Una venta anulada nunca cuenta como efectivo esperado - es como si no
     // hubiera pasado (a diferencia de una devolucion parcial, que sigue
     // restando aparte mas abajo si la venta no esta anulada).
     if (v.anulado) continue;
-    if (v.medio_pago === 'efectivo') efectivo += v.total;
+    if (v.medio_pago === 'efectivo') ventasEfectivo += v.total;
     if (v.devoluciones) {
       for (const d of v.devoluciones) {
         if (v.medio_pago === 'efectivo') {
           const totalDevuelto = d.items.reduce((s, it) => s + (it.precio_venta * it.cantidad), 0);
-          efectivo -= totalDevuelto;
+          devoluciones += totalDevuelto;
         }
       }
     }
@@ -235,10 +240,13 @@ async function calcularEfectivoEsperado(clienteId, turno) {
   // Los ingresos/gastos de caja chica tambien mueven el efectivo fisico -
   // se suman/restan igual que las ventas, solo se cuentan los de ESTE turno.
   const movimientos = await listarMovimientosCajaChica();
-  for (const m of movimientos.filter((m) => m.turno_id === turno.id)) {
-    efectivo += m.monto; // ya viene con signo (positivo ingreso, negativo gasto)
-  }
-  return efectivo;
+  const cajaChica = movimientos.filter((m) => m.turno_id === turno.id).reduce((s, m) => s + m.monto, 0);
+  const apertura = Number(turno.monto_apertura) || 0;
+  const total = apertura + ventasEfectivo - devoluciones + cajaChica;
+  return { apertura, ventasEfectivo, devoluciones, cajaChica, total };
+}
+async function calcularEfectivoEsperado(clienteId, turno) {
+  return (await desgloseEfectivoEsperado(clienteId, turno)).total;
 }
 async function cerrarTurno(clienteId, efectivoContado, nota) {
   const turno = await turnoActual();
