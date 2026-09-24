@@ -1227,6 +1227,7 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg> Transferencia
     </button>
   </div>
+  <div class="fila-filtro-medio-historial" id="chipsVendedorHistorial" style="display:none;"></div>
   <div class="fila-acciones-historial">
     <button class="btn-reporte" onclick="generarPDFVentas()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> PDF</button>
     <button class="btn-reporte" onclick="generarExcelVentas()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg> Excel</button>
@@ -4626,15 +4627,40 @@
     document.getElementById(ids[medio]).classList.add('activo');
     pintarHistorial();
   }
+  // Vendedor: los chips salen de quienes vendieron en el periodo elegido
+  // (usuario_id/usuario_nombre, guardados en cada venta desde el 24-sep-2026).
+  // Con un solo vendedor no hay nada que filtrar, asi que la fila ni aparece.
+  // Indice al onclick, no el nombre (texto libre, podria traer comillas).
+  let filtroVendedorActual = null;
+  let vendedoresChips = [];
+  function pintarChipsVendedor(ventasDelPeriodo) {
+    const cont = document.getElementById('chipsVendedorHistorial');
+    const porId = new Map();
+    for (const v of ventasDelPeriodo) if (v.usuario_id) porId.set(v.usuario_id, v.usuario_nombre || 'Sin nombre');
+    vendedoresChips = Array.from(porId, ([id, nombre]) => ({ id, nombre })).sort((a, b) => a.nombre.localeCompare(b.nombre));
+    if (filtroVendedorActual && !porId.has(filtroVendedorActual)) filtroVendedorActual = null;
+    if (vendedoresChips.length < 2) { cont.style.display = 'none'; cont.innerHTML = ''; filtroVendedorActual = null; return null; }
+    cont.style.display = 'flex';
+    const icono = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+    cont.innerHTML = `<button type="button" class="pill-filtro-medio ${filtroVendedorActual === null ? 'activo' : ''}" onclick="elegirFiltroVendedor(-1)">${icono} Todos</button>`
+      + vendedoresChips.map((u, i) => `<button type="button" class="pill-filtro-medio ${filtroVendedorActual === u.id ? 'activo' : ''}" onclick="elegirFiltroVendedor(${i})">${u.nombre}</button>`).join('');
+    return filtroVendedorActual;
+  }
+  function elegirFiltroVendedor(idx) {
+    filtroVendedorActual = idx < 0 ? null : vendedoresChips[idx].id;
+    pintarHistorial();
+  }
   async function pintarHistorial() {
     const todasDelPeriodo = await listarVentas(estado.cliente_id, periodoActual.desde, periodoActual.hasta);
-    const ventas = filtroMedioPagoActual ? todasDelPeriodo.filter((v) => v.medio_pago === filtroMedioPagoActual) : todasDelPeriodo;
+    const vendedor = pintarChipsVendedor(todasDelPeriodo);
+    const ventas = todasDelPeriodo.filter((v) =>
+      (!filtroMedioPagoActual || v.medio_pago === filtroMedioPagoActual) && (!vendedor || v.usuario_id === vendedor));
     const cont = document.getElementById('listaHistorial');
     document.getElementById('etiquetaResumenHistorial').textContent =
       `${etiquetaPeriodoActivo} · ${ventas.length} VENTA${ventas.length === 1 ? '' : 'S'}`;
     document.getElementById('pistaDevolverHistorial').style.display = ventas.length > 0 ? 'inline' : 'none';
     if (ventas.length === 0) {
-      const mensaje = filtroMedioPagoActual ? 'Sin ventas con ese medio de pago en este período' : 'Sin ventas en este período';
+      const mensaje = (filtroMedioPagoActual || vendedor) ? 'Sin ventas con esos filtros en este período' : 'Sin ventas en este período';
       cont.innerHTML = `<p style="text-align:center; color:#96A2AC; font-size:13px; padding:30px 0;">${mensaje}</p>`;
       return;
     }
