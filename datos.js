@@ -401,7 +401,12 @@ async function listarMovimientosDeCuentaFiado(cuentaId) {
 }
 
 // ---- Ventas ----
-async function registrarVenta(clienteId, { items, total, medio_pago, cuenta_fiado_id }) {
+// numeroVentaPreasignado: si esta venta viene de un carrito que ya recibio
+// su numero al mandarse a caja (ver enviarCarritoACaja/
+// numeroVentaEntranteEnProceso en panel.html), se reusa ese mismo numero en
+// vez de sacar uno nuevo - asi el "Venta #148" que vio el empleado al
+// mandarla sigue siendo el mismo numero una vez cobrada.
+async function registrarVenta(clienteId, { items, total, medio_pago, cuenta_fiado_id, numeroVentaPreasignado }) {
   const turno = await turnoActual();
   if (!turno) throw new Error('No se puede vender sin abrir la caja primero.');
   const cuentaFiado = medio_pago === 'fiado' ? validarCargoFiado(cuenta_fiado_id, total) : null;
@@ -410,8 +415,9 @@ async function registrarVenta(clienteId, { items, total, medio_pago, cuenta_fiad
   // siquiera se crea, para no quedar con un registro de una venta que en
   // los hechos no se pudo completar.
   await venderConTransaccionSegura(clienteId, estado.negocio_id, items);
+  const numeroVenta = numeroVentaPreasignado || await obtenerSiguienteNumeroVenta(clienteId, estado.negocio_id);
   const venta = {
-    fecha: new Date().toISOString(), items, total, medio_pago,
+    fecha: new Date().toISOString(), items, total, medio_pago, numero_venta: numeroVenta,
     turno_id: turno.id, nombre_equipo: estado.nombre_equipo,
     // Quien cobro (no solo desde que equipo) - base para filtrar/evaluar por
     // vendedor mas adelante. Ventas anteriores a este cambio no lo tienen.
@@ -428,7 +434,7 @@ async function registrarVenta(clienteId, { items, total, medio_pago, cuenta_fiad
       usuario_nombre: venta.usuario_nombre,
     });
   }
-  return ventaId;
+  return { id: ventaId, numero_venta: numeroVenta };
 }
 async function listarVentas(clienteId, desde, hasta) {
   return await listarVentasRemoto(clienteId, estado.negocio_id, desde, hasta);

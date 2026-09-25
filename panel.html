@@ -690,6 +690,14 @@
   .logo-login img { width: 100%; height: 100%; object-fit: cover; }
   .encabezado-login h1 { margin: 0; font-size: 22px; font-weight: 700; color: #1A2530; letter-spacing: -.01em; }
   .encabezado-login span { font-size: 13px; color: #64707C; }
+  /* Fondo de login personalizado por local (negocio.foto_data, cargado desde
+     Manager IH) - la imagen se oscurece con un degrade en el propio
+     background-image (ver aplicarFondoLoginSiHayFoto), esta clase solo
+     ajusta el texto que queda directo sobre la imagen (fuera de la tarjeta
+     blanca, que ya tiene su propio contraste). */
+  .pantalla-login.con-foto { background-size: cover; background-position: center; }
+  .pantalla-login.con-foto .encabezado-login h1 { color: #fff; }
+  .pantalla-login.con-foto .encabezado-login span { color: rgba(255,255,255,.85); }
   .caja-login { background: white; border-radius: 22px; padding: 22px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.04); text-align: left; }
 
   .saludo-elegir-local { display: flex; align-items: center; gap: 12px; }
@@ -2200,6 +2208,7 @@
   <div class="caja" style="text-align:center;">
     <div style="font-size:40px; margin-bottom:10px;">✓</div>
     <h3>Venta registrada</h3>
+    <p id="numeroVentaOk" style="font-size:12.5px; color:#64707C; margin:0 0 2px;"></p>
     <p class="total-cobrar" id="totalVentaOk">$0</p>
     <p id="detalleFiadoVentaOk" style="display:none; font-size:13px; color:#64707C; margin:-4px 0 14px;"></p>
     <button class="btn-cerrar-modal" onclick="cerrarVentaOk()">Listo</button>
@@ -2391,6 +2400,7 @@
   } else {
     document.getElementById('nombreCliente').textContent = estado.nombre_cliente + (estado.nombre_negocio ? ' · ' + estado.nombre_negocio : '');
     pintarLogoNegocio();
+    aplicarFondoLoginSiHayFoto();
     let textoEquipo = estado.nombre_equipo;
     if (estado.tipo_licencia === 'trial' && estado.vence) {
       textoEquipo += ` · Prueba vence ${estado.vence}`;
@@ -2644,6 +2654,16 @@
     const color = colorSinFoto(producto?.categoria || producto?.id);
     return `<div class="${claseDiv || 'sin-foto'}" style="background:${color};">${svgSinFoto(tamano || 26)}</div>`;
   }
+  // Foto de perfil de usuario - la asigna solo Manager IH (campo foto_data,
+  // mismo patron base64 que ya usan los productos). Si no tiene, se sigue
+  // mostrando la inicial de siempre - esto solo cambia el contenido interno
+  // del circulo, no el color/tamano que ya define cada div.avatar-* con CSS.
+  function contenidoAvatarUsuario(usuario) {
+    if (usuario && usuario.foto_data) {
+      return `<img src="${usuario.foto_data}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    }
+    return (usuario && usuario.nombre) ? usuario.nombre.charAt(0).toUpperCase() : '?';
+  }
 
   // ============================================================
   // CAJA (abrir/cerrar turno)
@@ -2752,7 +2772,7 @@
     document.getElementById('loginElegirLocal').style.display = 'block';
     localesLoginDisponibles = disponibles;
     localElegidoLoginId = disponibles[0].negocio_id;
-    document.getElementById('avatarSaludoLocal').textContent = (sesionActual.nombre || '?').charAt(0).toUpperCase();
+    document.getElementById('avatarSaludoLocal').innerHTML = contenidoAvatarUsuario(sesionActual);
     document.getElementById('nombreSaludoLocal').textContent = sesionActual.nombre;
     document.getElementById('subSaludoLocal').textContent = `${estado.nombre_cliente} · equipo ${estado.nombre_equipo}`;
     document.getElementById('conteoLocalesLogin').textContent =
@@ -2860,8 +2880,8 @@
     document.getElementById('pantallaLogin').classList.remove('activa');
     document.getElementById('pantallaVenta').classList.add('activa');
     document.getElementById('navApp').style.display = 'flex';
-    document.getElementById('avatarUsuarioMini').textContent = sesionActual.nombre.charAt(0).toUpperCase();
-    document.getElementById('avatarNavAncho').textContent = sesionActual.nombre.charAt(0).toUpperCase();
+    document.getElementById('avatarUsuarioMini').innerHTML = contenidoAvatarUsuario(sesionActual);
+    document.getElementById('avatarNavAncho').innerHTML = contenidoAvatarUsuario(sesionActual);
     document.getElementById('nombreUsuarioPill').textContent = sesionActual.nombre;
     pintarProductosVenta();
     pintarIndicadorCaja();
@@ -2949,7 +2969,7 @@
   }
 
   async function abrirModalUsuarios() {
-    document.getElementById('avatarTarjetaPropia').textContent = sesionActual.nombre.charAt(0).toUpperCase();
+    document.getElementById('avatarTarjetaPropia').innerHTML = contenidoAvatarUsuario(sesionActual);
     document.getElementById('nombreTarjetaPropia').textContent = sesionActual.nombre;
     document.getElementById('rolTarjetaPropia').textContent = sesionActual.rol === 'jefe' ? 'Jefe · todos los permisos' : (sesionActual.puede_gestionar_usuarios ? 'Jefe delegado' : 'Empleado');
     const puedeGestionar = sesionActual.rol === 'jefe' || sesionActual.puede_gestionar_usuarios;
@@ -2998,7 +3018,7 @@
       const puedeQuitar = u.rol !== 'jefe' || sesionActual.rol === 'jefe';
       return `
       <div class="fila-usuario-lista">
-        <div class="avatar-usuario-lista" style="background:${colorSinFoto(u.id || u.nombre)};">${u.nombre.charAt(0).toUpperCase()}</div>
+        <div class="avatar-usuario-lista" style="background:${colorSinFoto(u.id || u.nombre)};">${contenidoAvatarUsuario(u)}</div>
         <div class="info-usuario">
           <div class="nombre-rol-usuario-lista"><b>${u.nombre}</b> <span>· ${rolTexto}</span></div>
           ${pills.length ? `<div class="pills-permisos-usuario">${pills.map((p) => `<span class="pill-permiso-usuario">${p}</span>`).join('')}</div>` : ''}
@@ -3379,6 +3399,7 @@
   // ============================================================
   let carrito = []; // [{producto_id, nombre, precio_venta, cantidad}]
   let idCarritoEntranteEnProceso = null; // si se esta cobrando un carrito que llego de otro dispositivo
+  let numeroVentaEntranteEnProceso = null; // el numero que ese carrito ya tenia, para que la venta lo reuse
   let carritoAbierto = false;
 
   // Chips de categoria (Venta e Inventario) - salen solos de las categorias
@@ -3714,11 +3735,14 @@
     if (!medioPagoElegido || carrito.length === 0) return;
     const total = totalCarrito();
     const esFiado = medioPagoElegido === 'fiado';
+    let numeroVentaConfirmada = null;
     try {
-      await registrarVenta(estado.cliente_id, {
+      const resultado = await registrarVenta(estado.cliente_id, {
         items: carrito, total, medio_pago: medioPagoElegido,
         cuenta_fiado_id: esFiado ? cuentaFiadoElegidaId : null,
+        numeroVentaPreasignado: numeroVentaEntranteEnProceso,
       });
+      numeroVentaConfirmada = resultado.numero_venta;
     } catch (e) {
       // Caja cerrada: no hace falta un alert() feo interrumpiendo - se
       // abre "Abrir caja" directo, y al confirmarla vuelve solo al cobro
@@ -3746,11 +3770,13 @@
     if (idCarritoEntranteEnProceso) {
       await marcarCarritoProcesado(estado.cliente_id, estado.negocio_id, idCarritoEntranteEnProceso);
       idCarritoEntranteEnProceso = null;
+      numeroVentaEntranteEnProceso = null;
     }
     carrito = [];
     pintarCarrito();
     cerrarCobrar();
     document.getElementById('totalVentaOk').textContent = formatoMoneda(total);
+    document.getElementById('numeroVentaOk').textContent = numeroVentaConfirmada ? `Venta #${numeroVentaConfirmada}` : '';
     document.getElementById('modalVentaOk').classList.add('activo');
     pintarProductosVenta();
   }
@@ -4078,7 +4104,7 @@
   function pintarChipsCarritosCaja() {
     document.getElementById('chipsCarritosCaja').innerHTML = carritosEntrantesCache.map((c) => `
       <button type="button" class="chip-carrito-caja ${c.id === carritoSeleccionadoIdCaja ? 'seleccionado' : ''}" onclick="seleccionarCarritoCaja('${c.id}')">
-        <span class="quien">${c.enviado_por || 'Sin nombre'}</span>
+        <span class="quien">${c.numero_venta ? `#${c.numero_venta}` : (c.enviado_por || 'Sin nombre')}</span>
         <span class="tiempo">${tiempoRelativoCorto(c.fecha_envio)}</span>
       </button>
     `).join('');
@@ -4096,7 +4122,7 @@
     cont.innerHTML = `
       <div class="tarjeta-detalle-caja">
         <div class="fila-encabezado-detalle-caja">
-          <span class="etiqueta-venta-caja">Venta</span>
+          <span class="etiqueta-venta-caja">${c.numero_venta ? `Venta #${c.numero_venta}` : 'Venta'}</span>
           <span class="pill-enviado-por-caja">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
             Hace ${tiempoRelativoCorto(c.fecha_envio)}
@@ -4119,7 +4145,7 @@
         }).join('')}
         <div class="fila-total-detalle-caja"><span>Total</span><span>${formatoMoneda(c.total)}</span></div>
         <button type="button" class="btn-cobrar-carrito-caja" onclick="procesarCarritoEntrante('${c.id}')">
-          Cobrar venta
+          ${c.numero_venta ? `Cobrar venta #${c.numero_venta}` : 'Cobrar venta'}
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="margin-left:6px;"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
         <p class="texto-ayuda-caja">Puedes seguir agregando productos antes de cobrar</p>
@@ -4132,6 +4158,7 @@
     carrito = c.items;
     pintarCarrito();
     idCarritoEntranteEnProceso = idCarrito;
+    numeroVentaEntranteEnProceso = c.numero_venta || null;
     abrirCobrar();
   }
 
@@ -4832,7 +4859,7 @@
         <button type="button" class="fila-venta-historial ${v.anulado ? 'anulada' : ''}" onclick="abrirDevolucionDeVenta('${v.id}')">
           ${iconoMedioPago(v.medio_pago)}
           <div class="info-venta-historial">
-            <div class="nombre-venta-historial">${resumen}</div>
+            <div class="nombre-venta-historial">${v.numero_venta ? `#${v.numero_venta} · ` : ''}${resumen}</div>
             <div class="detalle-venta-historial">
               <span>${hora} · ${etiquetaMedioPago(v.medio_pago)}</span>
               ${v.anulado ? '<span class="pill-estado-venta anulada">Anulada</span>' : ''}
@@ -4858,7 +4885,8 @@
     document.getElementById('errorDevolucion').textContent = '';
 
     document.getElementById('iconoMedioDevolucion').innerHTML = svgMedioPago(venta.medio_pago);
-    document.getElementById('montoVentaDevolucion').textContent = `Venta · ${formatoMoneda(venta.total)}`;
+    document.getElementById('montoVentaDevolucion').textContent =
+      `${venta.numero_venta ? `Venta #${venta.numero_venta}` : 'Venta'} · ${formatoMoneda(venta.total)}`;
     const esHoy = new Date(venta.fecha).toDateString() === new Date().toDateString();
     const cuando = (esHoy ? 'Hoy ' : '') + cuandoVenta(venta.fecha);
     document.getElementById('detalleVentaDevolucion').textContent =
@@ -5012,6 +5040,23 @@
     // hasta que se confirma la identidad del equipo.
     const logoLogin = document.getElementById('logoLogin');
     if (logoLogin) logoLogin.innerHTML = contenido;
+  }
+  // Fondo de login personalizable por local (1.1 de CAMBIOS_PEDIDOS_
+  // REDISENO_CAJA_MOVIL.md) - reusa negocio.foto_data (mismo campo que la
+  // miniatura de "¿Dónde vas a trabajar?"), asignado solo desde Manager IH.
+  // Si el local no tiene foto, se queda con el fondo claro de siempre.
+  async function aplicarFondoLoginSiHayFoto() {
+    const pantalla = document.getElementById('pantallaLogin');
+    try {
+      const negocio = await obtenerNegocioRemoto(estado.cliente_id, estado.negocio_id);
+      if (negocio && negocio.foto_data) {
+        pantalla.style.backgroundImage = `linear-gradient(rgba(20,24,30,.5), rgba(20,24,30,.5)), url(${negocio.foto_data})`;
+        pantalla.classList.add('con-foto');
+      } else {
+        pantalla.style.backgroundImage = '';
+        pantalla.classList.remove('con-foto');
+      }
+    } catch (e) { /* sin conexion o sin foto - se queda con el fondo claro de siempre */ }
   }
   // Mostrar/ocultar una clave mientras se escribe - el ojito no cambia
   // nada del dato en si, solo el type del input entre password y text.
@@ -5241,7 +5286,7 @@
         <button type="button" class="fila-venta-historial ${anulada ? 'anulada' : ''}" onclick="abrirDevolucionDeVenta('${v.id}')">
           ${iconoMedioPago(v.medio_pago)}
           <div class="info-venta-historial">
-            <div class="nombre-venta-historial">${resumen}</div>
+            <div class="nombre-venta-historial">${v.numero_venta ? `#${v.numero_venta} · ` : ''}${resumen}</div>
             <div class="detalle-venta-historial">
               <span>${hora} · ${etiquetaMedioPago(v.medio_pago)}${v.cuenta_fiado_nombre ? ` a ${v.cuenta_fiado_nombre}` : ''}${v.usuario_nombre ? ` · ${v.usuario_nombre}` : ''}</span>
               ${parcial ? '<span class="pill-estado-venta parcial">Devolución parcial</span>' : ''}

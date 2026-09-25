@@ -55,14 +55,26 @@ function dejarDeEscuchar() {
   }
 }
 
+// Version simulada del contador de numero de venta (ver la real en
+// carrito_compartido.js) - un contador simple en localStorage por local,
+// suficiente para probar la numeracion sin Firestore.
+async function obtenerSiguienteNumeroVenta(clienteId, negocioId) {
+  const clave = 'caja_sim_contador_' + _clave(clienteId, negocioId);
+  const siguiente = (Number(localStorage.getItem(clave)) || 0) + 1;
+  localStorage.setItem(clave, String(siguiente));
+  return siguiente;
+}
+
 async function enviarCarritoACaja(clienteId, negocioId, items, total, nombreEquipo) {
+  const numeroVenta = await obtenerSiguienteNumeroVenta(clienteId, negocioId);
   const carritos = _leerCarritos(clienteId, negocioId);
   carritos.push({
     id: 'carrito-' + (_contadorId++) + '-' + Date.now(),
-    items, total, enviado_por: nombreEquipo, fecha_envio: Date.now(), estado: 'pendiente',
+    items, total, enviado_por: nombreEquipo, numero_venta: numeroVenta, fecha_envio: Date.now(), estado: 'pendiente',
   });
   _escribirCarritos(clienteId, negocioId, carritos);
   if (_listeners.claveEscuchada === _clave(clienteId, negocioId)) _listeners.emitir();
+  return numeroVenta;
 }
 
 // ============================================================================

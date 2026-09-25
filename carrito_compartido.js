@@ -87,14 +87,35 @@ function dejarDeEscuchar() {
   if (unsubscribeActual) { unsubscribeActual(); unsubscribeActual = null; }
 }
 
+// Numero correlativo de venta/carrito (1.2 de CAMBIOS_PEDIDOS_REDISENO_
+// CAJA_MOVIL.md) - un solo contador por local, compartido entre ventas
+// cobradas directo y carritos enviados a caja (para que un carrito mandado
+// como "#148" siga siendo la misma "Venta #148" si despues se cobra - ver
+// numeroVentaEntranteEnProceso en panel.html). Se guarda como campo del
+// propio documento del negocio (contador_ventas) y se lee/escribe dentro de
+// una transaccion para que 2 cajas cobrando al mismo tiempo nunca reciban
+// el mismo numero.
+async function obtenerSiguienteNumeroVenta(clienteId, negocioId) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId);
+  return await FirebaseSync.runTransaction(db, async (transaccion) => {
+    const snap = await transaccion.get(ref);
+    const actual = (snap.exists() && Number(snap.data().contador_ventas)) || 0;
+    const siguiente = actual + 1;
+    transaccion.update(ref, { contador_ventas: siguiente });
+    return siguiente;
+  });
+}
+
 async function enviarCarritoACaja(clienteId, negocioId, items, total, nombreEquipo) {
+  const numeroVenta = await obtenerSiguienteNumeroVenta(clienteId, negocioId);
   const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'carritos_recibidos');
   await FirebaseSync.addDoc(col, {
-    items, total, enviado_por: nombreEquipo,
+    items, total, enviado_por: nombreEquipo, numero_venta: numeroVenta,
     fecha_envio: FirebaseSync.serverTimestamp(),
     estado: 'pendiente',
   });
   incrementarUsoDiario(clienteId, 'carrito_enviado');
+  return numeroVenta;
 }
 
 // ============================================================================
