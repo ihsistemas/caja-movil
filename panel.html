@@ -2849,6 +2849,10 @@
     sesionActual = usuario;
     document.getElementById('inputLoginNombre').value = '';
     document.getElementById('inputLoginClave').value = '';
+    if (usuario.clave_temporal) {
+      abrirPantallaElegirClave();
+      return;
+    }
     await resolverLocalYCompletarLogin();
   }
   function completarLogin() {
@@ -2872,9 +2876,7 @@
     const puedeVerHistorial = sesionActual.rol === 'jefe' || sesionActual.puede_gestionar_usuarios;
     document.getElementById('navBotonHistorial').style.display = puedeVerHistorial ? 'flex' : 'none';
     if (sesionActual.modo_caja) {
-      asegurarCajaDelNegocio(estado.cliente_id).then(() => {
-        escucharCarritosEntrantes(estado.cliente_id, pintarCarritosEntrantes);
-      });
+      escucharCarritosEntrantes(estado.cliente_id, estado.negocio_id, pintarCarritosEntrantes);
     }
     // Si este equipo es "sub", si el maestro cierra su sesion, este tambien
     // se cierra solo - asi al terminar el turno no queda ningun equipo
@@ -3742,7 +3744,7 @@
       detalleFiado.style.display = 'none';
     }
     if (idCarritoEntranteEnProceso) {
-      await marcarCarritoProcesado(estado.cliente_id, idCarritoEntranteEnProceso);
+      await marcarCarritoProcesado(estado.cliente_id, estado.negocio_id, idCarritoEntranteEnProceso);
       idCarritoEntranteEnProceso = null;
     }
     carrito = [];
@@ -4034,7 +4036,7 @@
   async function confirmarEnviarACaja() {
     if (carrito.length === 0) return;
     const total = totalCarrito();
-    await enviarCarritoACaja(estado.cliente_id, carrito, total, sesionActual.nombre);
+    await enviarCarritoACaja(estado.cliente_id, estado.negocio_id, carrito, total, sesionActual.nombre);
     carrito = [];
     pintarCarrito();
     cerrarCobrar();

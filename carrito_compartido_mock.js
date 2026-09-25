@@ -10,43 +10,42 @@ let _contadorId = 0;
 function inicializarFirebase() {}
 function conectarAEmulador() {}
 
-function _leerCarritos(clienteId) {
-  const raw = localStorage.getItem('caja_sim_' + clienteId);
+// Los carritos se guardan por LOCAL (clienteId + negocioId), igual que la
+// version real - antes era solo por clienteId, lo que mezclaba carritos de
+// distintos locales del mismo cliente.
+function _clave(clienteId, negocioId) { return clienteId + '#' + negocioId; }
+
+function _leerCarritos(clienteId, negocioId) {
+  const raw = localStorage.getItem('caja_sim_' + _clave(clienteId, negocioId));
   return raw ? JSON.parse(raw) : [];
 }
-function _escribirCarritos(clienteId, carritos) {
-  localStorage.setItem('caja_sim_' + clienteId, JSON.stringify(carritos));
-  _canalSimulado.postMessage({ clienteId });
+function _escribirCarritos(clienteId, negocioId, carritos) {
+  localStorage.setItem('caja_sim_' + _clave(clienteId, negocioId), JSON.stringify(carritos));
+  _canalSimulado.postMessage({ clave: _clave(clienteId, negocioId) });
 }
 
-async function asegurarCajaDelNegocio(clienteId) {
-  if (localStorage.getItem('caja_meta_sim_' + clienteId) === null) {
-    localStorage.setItem('caja_meta_sim_' + clienteId, JSON.stringify({ cliente_id: clienteId }));
-    _escribirCarritos(clienteId, []);
-  }
-}
-
-function escucharCarritosEntrantes(clienteId, callback, errorCallback) {
+function escucharCarritosEntrantes(clienteId, negocioId, callback, errorCallback) {
   dejarDeEscuchar();
+  const clave = _clave(clienteId, negocioId);
   const emitir = () => {
-    const pendientes = _leerCarritos(clienteId).filter((c) => c.estado === 'pendiente');
+    const pendientes = _leerCarritos(clienteId, negocioId).filter((c) => c.estado === 'pendiente');
     pendientes.sort((a, b) => b.fecha_envio - a.fecha_envio);
     callback(pendientes);
   };
   emitir();
-  const handler = (evento) => { if (evento.data.clienteId === clienteId) emitir(); };
+  const handler = (evento) => { if (evento.data.clave === clave) emitir(); };
   _canalSimulado.addEventListener('message', handler);
   _listeners.actual = handler;
-  _listeners.clienteEscuchado = clienteId;
+  _listeners.claveEscuchada = clave;
   _listeners.emitir = emitir;
   return handler;
 }
 
-async function marcarCarritoProcesado(clienteId, idCarrito) {
-  const carritos = _leerCarritos(clienteId);
+async function marcarCarritoProcesado(clienteId, negocioId, idCarrito) {
+  const carritos = _leerCarritos(clienteId, negocioId);
   const actualizado = carritos.map((c) => c.id === idCarrito ? { ...c, estado: 'procesado' } : c);
-  _escribirCarritos(clienteId, actualizado);
-  if (_listeners.clienteEscuchado === clienteId) _listeners.emitir();
+  _escribirCarritos(clienteId, negocioId, actualizado);
+  if (_listeners.claveEscuchada === _clave(clienteId, negocioId)) _listeners.emitir();
 }
 
 function dejarDeEscuchar() {
@@ -56,15 +55,14 @@ function dejarDeEscuchar() {
   }
 }
 
-async function enviarCarritoACaja(clienteId, items, total, nombreEquipo) {
-  await asegurarCajaDelNegocio(clienteId);
-  const carritos = _leerCarritos(clienteId);
+async function enviarCarritoACaja(clienteId, negocioId, items, total, nombreEquipo) {
+  const carritos = _leerCarritos(clienteId, negocioId);
   carritos.push({
     id: 'carrito-' + (_contadorId++) + '-' + Date.now(),
     items, total, enviado_por: nombreEquipo, fecha_envio: Date.now(), estado: 'pendiente',
   });
-  _escribirCarritos(clienteId, carritos);
-  if (_listeners.clienteEscuchado === clienteId) _listeners.emitir();
+  _escribirCarritos(clienteId, negocioId, carritos);
+  if (_listeners.claveEscuchada === _clave(clienteId, negocioId)) _listeners.emitir();
 }
 
 // ============================================================================

@@ -51,23 +51,19 @@ function conectarAEmulador(host, puerto) {
   FirebaseSync.connectFirestoreEmulator(db, host, puerto);
 }
 
-// El documento de la caja usa el mismo cliente_id de siempre como su ID -
-// asi cualquier equipo del mismo negocio la encuentra sola, sin codigo.
-// Se puede llamar de los 2 lados (carrito o caja) sin problema - crea el
-// documento si no existe, no hace nada si ya existia (idempotente).
-async function asegurarCajaDelNegocio(clienteId) {
-  const ref = FirebaseSync.doc(db, 'cajas', clienteId);
-  const snap = await FirebaseSync.getDoc(ref);
-  if (!snap.exists()) {
-    await FirebaseSync.setDoc(ref, { cliente_id: clienteId, creada: FirebaseSync.serverTimestamp() });
-  }
-}
+// Los carritos viven por LOCAL (negocioId), igual que productos/ventas/
+// turnos desde la migracion multi-local - antes vivian en 'cajas/{clienteId}'
+// (a nivel cliente, de antes de esa migracion), lo que hacia que un carrito
+// enviado desde un local apareciera en el "Caja" de TODOS los locales del
+// mismo cliente. Corregido moviendolos bajo negocios/{negocioId}, sin
+// necesitar ningun documento contenedor aparte (a diferencia de antes, el
+// documento del negocio ya existe siempre desde que se crea el local).
 
 // callback(listaCarritos) cada vez que cambia algo - solo carritos
 // pendientes, mas recientes primero.
-function escucharCarritosEntrantes(clienteId, callback, errorCallback) {
+function escucharCarritosEntrantes(clienteId, negocioId, callback, errorCallback) {
   dejarDeEscuchar();
-  const col = FirebaseSync.collection(db, 'cajas', clienteId, 'carritos_recibidos');
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'carritos_recibidos');
   const consulta = FirebaseSync.query(col, FirebaseSync.where('estado', '==', 'pendiente'));
   unsubscribeActual = FirebaseSync.onSnapshot(consulta,
     (snap) => {
@@ -81,8 +77,8 @@ function escucharCarritosEntrantes(clienteId, callback, errorCallback) {
   return unsubscribeActual;
 }
 
-async function marcarCarritoProcesado(clienteId, idCarrito) {
-  const ref = FirebaseSync.doc(db, 'cajas', clienteId, 'carritos_recibidos', idCarrito);
+async function marcarCarritoProcesado(clienteId, negocioId, idCarrito) {
+  const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId, 'carritos_recibidos', idCarrito);
   await FirebaseSync.updateDoc(ref, { estado: 'procesado' });
   incrementarUsoDiario(clienteId, 'carrito_procesado');
 }
@@ -91,9 +87,8 @@ function dejarDeEscuchar() {
   if (unsubscribeActual) { unsubscribeActual(); unsubscribeActual = null; }
 }
 
-async function enviarCarritoACaja(clienteId, items, total, nombreEquipo) {
-  await asegurarCajaDelNegocio(clienteId);
-  const col = FirebaseSync.collection(db, 'cajas', clienteId, 'carritos_recibidos');
+async function enviarCarritoACaja(clienteId, negocioId, items, total, nombreEquipo) {
+  const col = FirebaseSync.collection(db, 'clientes', clienteId, 'negocios', negocioId, 'carritos_recibidos');
   await FirebaseSync.addDoc(col, {
     items, total, enviado_por: nombreEquipo,
     fecha_envio: FirebaseSync.serverTimestamp(),
