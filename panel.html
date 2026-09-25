@@ -2931,9 +2931,9 @@
   const DIAS_MAXIMOS_SIN_CONFIRMAR_PRUEBA = 6; // solo aplica a pruebas gratis, nunca a licencias permanentes
 
   async function verificarLicenciaConServidorEnSegundoPlano() {
-    let clienteFresco, msg;
+    let clienteFresco, msg, motivo;
     try {
-      [clienteFresco, msg] = await obtenerClienteRemoto(estado.cliente_id);
+      [clienteFresco, msg, motivo] = await obtenerClienteRemoto(estado.cliente_id);
     } catch (e) {
       // No se pudo ni siquiera preguntarle al servidor (sin internet, o
       // alguien bloqueando el acceso a proposito). Si es una PRUEBA GRATIS
@@ -2953,7 +2953,7 @@
     }
     if (!clienteFresco) {
       localStorage.removeItem('ih_estado_equipo');
-      window.location.href = 'activar.html?vencida=1';
+      window.location.href = 'activar.html?' + (motivo === 'pausado' ? 'pausado=1' : 'vencida=1');
       return;
     }
     // Se confirmo con el servidor de verdad - guarda la hora, para el
@@ -2966,6 +2966,16 @@
     estado = { ...estado, capacidad: clienteFresco.capacidad, tipo_licencia: clienteFresco.tipo_licencia, vence: clienteFresco.vence, logo_data: clienteFresco.logo_data || null };
     guardarEstadoEquipo(estado);
     pintarLogoNegocio();
+    // El local (negocio) tambien se puede pausar por separado del cliente
+    // entero - mismo servidor, un chequeo extra liviano (ya se hizo el
+    // viaje de red de arriba, este es el mismo tipo de consulta simple).
+    try {
+      const negocioFresco = await obtenerNegocioRemoto(estado.cliente_id, estado.negocio_id);
+      if (negocioFresco && negocioFresco.activo === false) {
+        localStorage.removeItem('ih_estado_equipo');
+        window.location.href = 'activar.html?pausado=1';
+      }
+    } catch (e) { /* sin conexion - no bloquea, ya se confirmo el cliente arriba */ }
   }
 
   async function abrirModalUsuarios() {

@@ -126,14 +126,18 @@
     // (por ejemplo, al tocar "atras" en el navegador). Se manda derecho al
     // panel, que ahi sí pide iniciar sesion con el usuario de cada persona.
     const { vigente } = estadoEquipoVigente();
-    if (vigente && new URLSearchParams(location.search).get('vencida') !== '1') {
+    const parametros = new URLSearchParams(location.search);
+    if (vigente && parametros.get('vencida') !== '1' && parametros.get('pausado') !== '1') {
       window.location.href = 'panel.html';
       return;
     }
 
     document.getElementById('deviceIdMostrado').textContent = getDeviceId();
-    if (new URLSearchParams(location.search).get('vencida') === '1') {
+    if (parametros.get('vencida') === '1') {
       document.getElementById('subActivar').textContent = 'Tu período de prueba venció — pide una clave nueva para seguir usando el programa.';
+      document.getElementById('subActivar').style.color = '#C5433A';
+    } else if (parametros.get('pausado') === '1') {
+      document.getElementById('subActivar').textContent = 'Esta cuenta fue pausada — contacta a IH Sistemas para reactivarla.';
       document.getElementById('subActivar').style.color = '#C5433A';
     }
   });

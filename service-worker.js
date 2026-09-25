@@ -8,7 +8,7 @@
 // es "cache primero", asi que sin un nombre nuevo los equipos que ya tienen
 // la app siguen mostrando la version vieja para siempre (el navegador solo
 // instala un service worker nuevo si este archivo cambia).
-const VERSION_CACHE = 'caja-movil-v10';
+const VERSION_CACHE = 'caja-movil-v11';
 // TODOS los archivos propios que cargan panel.html y activar.html - antes
 // faltaban algunos (reportes, qrcode, el lector de codigos, el modal de
 // historial), que se guardaban recien al usarse y podian quedar de otra

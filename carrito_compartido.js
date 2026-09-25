@@ -296,12 +296,20 @@ async function crearClienteRemoto({ nombre, capacidad, capacidadUsuarios, tipoLi
 async function obtenerClienteRemoto(clienteId) {
   const ref = FirebaseSync.doc(db, 'clientes', (clienteId || '').trim().toUpperCase());
   const snap = await FirebaseSync.getDoc(ref);
-  if (!snap.exists()) return [null, 'Ese código de cliente no existe.'];
+  if (!snap.exists()) return [null, 'Ese código de cliente no existe.', 'no_existe'];
   const cliente = { cliente_id: snap.id, ...snap.data() };
+  // Pausado desde Manager IH (ciclo de vida del cliente) - se revisa antes
+  // que el vencimiento de prueba, es un bloqueo mas fundamental. El motivo
+  // ('pausado'/'vencida') deja elegir el mensaje correcto en activar.html
+  // sin que los demas llamadores (que solo miran si cliente es null) se
+  // vean afectados - un array con un elemento extra no les rompe nada.
+  if (cliente.activo === false) {
+    return [null, 'Esta cuenta fue pausada — contacta a IH Sistemas para reactivarla.', 'pausado'];
+  }
   if (cliente.tipo_licencia === 'trial' && cliente.vence) {
     const horaServidor = await horaServidorActual();
     const hoyServidor = horaServidor.toISOString().slice(0, 10);
-    if (hoyServidor > cliente.vence) return [null, `La prueba venció el ${cliente.vence}`];
+    if (hoyServidor > cliente.vence) return [null, `La prueba venció el ${cliente.vence}`, 'vencida'];
   }
   return [cliente, 'OK'];
 }
@@ -323,7 +331,9 @@ async function obtenerNegocioParaActivarRemoto(clienteId, negocioId) {
   const ref = FirebaseSync.doc(db, 'clientes', clienteId, 'negocios', negocioId);
   const snap = await FirebaseSync.getDoc(ref);
   if (!snap.exists()) return [null, 'Ese local no existe o fue eliminado.'];
-  return [{ negocio_id: snap.id, ...snap.data() }, 'OK'];
+  const negocio = { negocio_id: snap.id, ...snap.data() };
+  if (negocio.activo === false) return [null, 'Este local fue pausado — contacta a IH Sistemas para reactivarlo.'];
+  return [negocio, 'OK'];
 }
 
 // Codigo de "primer ingreso" que genera Manager IH al pre-crear un jefe (o
